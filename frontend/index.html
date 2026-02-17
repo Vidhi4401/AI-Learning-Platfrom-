@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnAI - AI-Powered Education</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            scroll-behavior: smooth;
+        }
+        
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e40af;
+        }
+        
+        .logo-icon {
+            background: #3b82f6;
+            color: white;
+            padding: 0.4rem 0.6rem;
+            border-radius: 8px;
+            margin-right: 0.5rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #3b82f6;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
+        
+        .btn-signup {
+  background-color: #3b82f6;   /* Blue background */
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Style the link INSIDE the button */
+.btn-signup a {
+  color: #000000;              /* Black text */
+  text-decoration: none;       /* Remove underline */
+  font-weight: 600;
+  display: block;              /* Makes whole button clickable */
+}
+
+/* Hover effect (optional, nice UX) */
+.btn-signup:hover {
+  background-color: #2563eb;
+}
+
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Main content with padding for fixed navbar */
+        main {
+            padding-top: 80px;
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            padding: 4rem 10%;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+        }
+        
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+        
+        .hero-title-blue {
+            color: #3b82f6;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .hero-buttons {
+            margin-top: 2rem;
+        }
+        
+        .hero-btn-primary {
+            background: #3b82f6;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .hero-btn-secondary {
+            background: white;
+            color: #3b82f6;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            border: 2px solid #3b82f6;
+            transition: all 0.3s;
+        }
+        
+        .hero-btn-primary:hover,
+        .hero-btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+        }
+        
+        .hero-image {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        /* Section Styles */
+        section {
+            padding: 4rem 10%;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+        
+        /* Features Section */
+        .features-section {
+            background: white;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+        }
+        
+        .feature-description {
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        /* Courses Section */
+        .courses-section {
+            background: #f8fafc;
+        }
+        
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+        
+        .course-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .course-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        
+        .course-content {
+            padding: 1.5rem;
+        }
+        
+        .course-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+        
+        .course-description {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .course-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+        
+        /* How It Works Section */
+        .how-section {
+            background: white;
+        }
+        
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        
+        .step-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .step-number {
+            background: #3b82f6;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin: 0 auto 1rem auto;
+        }
+        
+        .step-icon {
+            background: #dbeafe;
+            color: #3b82f6;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1rem auto;
+        }
+        
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+        }
+        
+        .step-description {
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        /* Built For Section */
+        .built-for-section {
+            background: #f8fafc;
+        }
+        
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        
+        .user-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .user-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+        
+        .user-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        /* Testimonials Section */
+        .testimonials-section {
+            background: white;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        
+        .testimonial-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .stars {
+            color: #fbbf24;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .testimonial-text {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            text-align: center;
+            color: white;
+        }
+        
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .cta-btn {
+            background: white;
+            color: #3b82f6;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .cta-btn-outline {
+            background: transparent;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0 0.5rem;
+            border: 2px solid white;
+            transition: all 0.3s;
+        }
+        
+        .cta-btn:hover,
+        .cta-btn-outline:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            padding: 3rem 10%;
+            color: white;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-title {
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .footer-link {
+            color: #cbd5e1;
+            display: block;
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .footer-link:hover {
+            color: #3b82f6;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #334155;
+            padding-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .social-icon {
+            font-size: 1.5rem;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+        
+        .social-icon:hover {
+            opacity: 1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-content,
+            .features-grid,
+            .courses-grid,
+            .steps-grid,
+            .users-grid,
+            .testimonials-grid,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <span class="logo-icon">🎓</span>
+            LearnAI
+        </div>
+        <ul class="nav-links">
+            <li><a href="#home" class="active">Home</a></li>
+            <li><a href="#courses">Courses</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+        <div class="nav-buttons">
+            <button class="btn btn-signup"><a href="auth.html">Signup</a></button>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero-section">
+            <div class="hero-content">
+                <div>
+                    <h1 class="hero-title">
+                        Learn Smarter with<br>
+                        <span class="hero-title-blue">AI-Powered</span><br>
+                        Education
+                    </h1>
+                    <p class="hero-subtitle">
+                        Experience personalized learning, intelligent progress tracking, and actionable insights 
+                        that help you achieve your educational goals faster.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="auth.html" class="hero-btn-primary">Get Started →</a>
+                        <a href="#courses" class="hero-btn-secondary">📚 Explore Courses</a>
+                    </div>
+                </div>
+                <div>
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop" 
+                         class="hero-image" alt="Students learning">
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section">
+            <h2 class="section-title">Powerful Features for Modern Learning</h2>
+            <p class="section-subtitle">
+                Everything you need to create, manage, and deliver exceptional educational experiences
+            </p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">AI-Powered Learning Paths</h3>
+                    <p class="feature-description">
+                        Personalized curriculum adapts to your learning style and pace, 
+                        ensuring optimal knowledge retention.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3 class="feature-title">Progress Tracking & Reports</h3>
+                    <p class="feature-description">
+                        Real-time analytics and detailed reports help you monitor your 
+                        growth and identify areas for improvement.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3 class="feature-title">Smart Assignments & Quizzes</h3>
+                    <p class="feature-description">
+                        Intelligent assessments that adapt to your skill level, providing 
+                        the right challenge at the right time.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3 class="feature-title">Secure & Scalable Platform</h3>
+                    <p class="feature-description">
+                        Enterprise-grade security with reliable infrastructure that grows 
+                        with your learning needs.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Courses Section -->
+        <section id="courses" class="courses-section">
+            <h2 class="section-title">Explore Our Courses</h2>
+            <p class="section-subtitle">
+                Browse our comprehensive catalog of courses across various domains
+            </p>
+            <div class="courses-grid">
+                <div class="course-card">
+                    <div class="course-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        💻
+                    </div>
+                    <div class="course-content">
+                        <h3 class="course-title">Programming</h3>
+                        <p class="course-description">Master Python, JavaScript, Java, C++ and more</p>
+                        <div class="course-meta">
+                            <span>50+ Courses</span>
+                            <span>⭐ 4.8</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="course-card">
+                    <div class="course-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        🤖
+                    </div>
+                    <div class="course-content">
+                        <h3 class="course-title">AI & Machine Learning</h3>
+                        <p class="course-description">Deep Learning, NLP, Computer Vision</p>
+                        <div class="course-meta">
+                            <span>30+ Courses</span>
+                            <span>⭐ 4.9</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="course-card">
+                    <div class="course-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        🎨
+                    </div>
+                    <div class="course-content">
+                        <h3 class="course-title">Design</h3>
+                        <p class="course-description">UI/UX, Graphic Design, Web Design</p>
+                        <div class="course-meta">
+                            <span>40+ Courses</span>
+                            <span>⭐ 4.7</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="course-card">
+                    <div class="course-image" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        📊
+                    </div>
+                    <div class="course-content">
+                        <h3 class="course-title">Data Science</h3>
+                        <p class="course-description">Analytics, Visualization, Big Data</p>
+                        <div class="course-meta">
+                            <span>35+ Courses</span>
+                            <span>⭐ 4.8</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="how-section">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">
+                Get started on your learning journey in three simple steps
+            </p>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">👤</div>
+                    <h3 class="step-title">Sign Up</h3>
+                    <p class="step-description">
+                        Create your free account in seconds and set up your learning profile 
+                        with personalized preferences.
+                    </p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">⭐</div>
+                    <h3 class="step-title">Learn with AI Guidance</h3>
+                    <p class="step-description">
+                        Follow personalized learning paths powered by AI that adapt to your 
+                        pace and learning style.
+                    </p>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">📊</div>
+                    <h3 class="step-title">Track Progress & Improve</h3>
+                    <p class="step-description">
+                        Monitor your growth with detailed analytics and receive insights 
+                        to accelerate your learning journey.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Built For Everyone Section -->
+        <section id="about" class="built-for-section">
+            <h2 class="section-title">Built for Everyone</h2>
+            <p class="section-subtitle">
+                Whether you're a student, instructor, or institution, our platform delivers value at every level
+            </p>
+            <div class="users-grid">
+                <div class="user-card">
+                    <div class="feature-icon">📚</div>
+                    <h3 class="user-title">For Students</h3>
+                    <div class="user-item">✓ Personalized learning paths tailored to your goals</div>
+                    <div class="user-item">✓ Interactive assignments and real-time feedback</div>
+                    <div class="user-item">✓ Progress tracking and performance insights</div>
+                    <div class="user-item">✓ Access to expert instructors and peer community</div>
+                </div>
+                <div class="user-card">
+                    <div class="feature-icon">👨‍🏫</div>
+                    <h3 class="user-title">For Instructors</h3>
+                    <div class="user-item">✓ Easy-to-use course creation tools</div>
+                    <div class="user-item">✓ Automated grading and student analytics</div>
+                    <div class="user-item">✓ Engage students with interactive content</div>
+                    <div class="user-item">✓ Streamlined communication and collaboration</div>
+                </div>
+                <div class="user-card">
+                    <div class="feature-icon">🏢</div>
+                    <h3 class="user-title">For Institutions</h3>
+                    <div class="user-item">✓ Scalable platform for thousands of users</div>
+                    <div class="user-item">✓ Comprehensive reporting and insights</div>
+                    <div class="user-item">✓ Custom branding and integration options</div>
+                    <div class="user-item">✓ Enterprise-grade security and compliance</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section class="testimonials-section">
+            <h2 class="section-title">What Our Users Say</h2>
+            <p class="section-subtitle">
+                Join thousands of learners and educators who are achieving their goals with LearnAI
+            </p>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">
+                        "The AI-powered learning paths helped me master machine learning concepts 
+                        in faster time than I ever thought possible!"
+                    </p>
+                    <p style="font-weight: 600; color: #1e293b;">- Sarah Johnson, Student</p>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">
+                        "Amazing platform! I needed flexible learning. LearnAI's curriculum 
+                        adapts to my schedule. Really it works for me!"
+                    </p>
+                    <p style="font-weight: 600; color: #1e293b;">- Mark Chen, Professional</p>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">
+                        "This platform transformed how I deliver courses. The analytics help 
+                        me understand each student's needs perfectly!"
+                    </p>
+                    <p style="font-weight: 600; color: #1e293b;">- Dr. Emily Rodriguez, Instructor</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section id="contact" class="cta-section">
+            <h2 class="cta-title">Start Your Learning Journey Today</h2>
+            <p class="cta-subtitle">
+                Join thousands of students and educators who are transforming education with AI-powered learning
+            </p>
+            <div style="margin-top: 2rem;">
+                <a href="auth.html" class="cta-btn">Sign Up Free</a>
+                <a href="auth.html" class="cta-btn-outline">Learn More</a>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-grid">
+                <div>
+                    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <span class="logo-icon">🎓</span>
+                        <span style="font-size: 1.3rem; font-weight: bold; margin-left: 0.5rem;">LearnAI</span>
+                    </div>
+                    <p style="color: #cbd5e1; line-height: 1.6;">
+                        An AI-powered education platform designed to deliver exceptional 
+                        learning experiences for students, instructors, and institutions.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="footer-title">Quick Links</h4>
+                    <a href="#home" class="footer-link">Home</a>
+                    <a href="#courses" class="footer-link">Courses</a>
+                    <a href="#features" class="footer-link">Features</a>
+                    <a href="#about" class="footer-link">About Us</a>
+                    <!-- <a href="#contact" class="footer-link">Pricing</a> -->
+                </div>
+                
+                <div>
+                    <h4 class="footer-title">Resources</h4>
+                    <a href="#" class="footer-link">Help Center</a>
+                    <a href="#" class="footer-link">Documentation</a>
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Blog</a>
+                </div>
+                
+                <div>
+                    <h4 class="footer-title">Contact Us</h4>
+                    <p style="color: #cbd5e1; margin-bottom: 0.5rem;">📧 support@learnai.com</p>
+                    <p style="color: #cbd5e1; margin-bottom: 0.5rem;">📞 +1 (555) 123-4567</p>
+                    <p style="color: #cbd5e1; margin-bottom: 0.5rem;">📍 123 Education Street</p>
+                    <p style="color: #cbd5e1;">San Francisco, CA 94105</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p style="color: #94a3b8;">© 2026 LearnAI. All rights reserved.</p>
+                <div class="social-icons">
+                    <span class="social-icon">📘</span>
+                    <span class="social-icon">🐦</span>
+                    <span class="social-icon">💼</span>
+                    <span class="social-icon">📷</span>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // Active nav link on scroll
+        window.addEventListener('scroll', () => {
+            let current = '';
+            const sections = document.querySelectorAll('section');
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - 100)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LearnAI | Login & Register</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f8fafc, #e0e7ff);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Card */
+    .auth-card {
+      background: #fff;
+      width: 100%;
+      max-width: 420px;
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Header */
+    .logo {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 1rem;
+    }
+
+    .logo span {
+      background: #3b82f6;
+      color: #fff;
+      padding: .3rem .6rem;
+      border-radius: 8px;
+      margin-right: .3rem;
+    }
+
+    .auth-title {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #1e293b;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: .9rem;
+      color: #475569;
+      margin-bottom: .3rem;
+    }
+
+    input {
+      width: 100%;
+      padding: .65rem .75rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 1rem;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    /* Button */
+    .btn {
+      width: 100%;
+      margin-top: 1rem;
+      padding: .7rem;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #2563eb;
+    }
+
+    /* Toggle */
+    .toggle {
+      text-align: center;
+      margin-top: 1.2rem;
+      font-size: .9rem;
+      color: #475569;
+    }
+
+    .toggle span {
+      color: #3b82f6;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* Hide */
+    .hidden {
+      display: none;
+    }
+
+    /* Optional text */
+    .optional {
+      font-size: .75rem;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="auth-card">
+
+    <!-- LOGO -->
+    <div class="logo"><span>🎓</span>LearnAI</div>
+
+    <!-- LOGIN -->
+    <div id="login-form">
+      <div class="auth-title">Login to your account</div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="your@email.com" required>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter password" required>
+      </div>
+
+      <button class="btn" onclick="login()">Login</button>
+      <div style="text-align:right;margin-top:.5rem;">
+        <span style="color:#3b82f6;cursor:pointer;font-size:.85rem;" onclick="showForgot()">Forgot Password?</span>
+      </div>
+
+      <div class="toggle">
+        Don’t have an account? <span onclick="showRegister()">Sign Up</span>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="register-form" class="hidden">
+      <div class="auth-title">Create your account</div>
+
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="reg-name" placeholder="John Doe" required>
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="your@email.com" required>
+      </div>
+      <div class="form-group">
+        <label>Organization</label>
+        <select id="reg-org" required style="width:100%;padding:.65rem;border-radius:8px;border:1px solid #cbd5e1;">
+          <option value="">Select Organization</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Create password" required>
+      </div>
+
+      <div class="form-group">
+        <label>
+          Enrollment Number
+          <span class="optional">(optional)</span>
+        </label>
+        <input type="text" id="reg-enroll" placeholder="Enrollment ID">
+      </div>
+
+      <button class="btn" onclick="register()">Create Account</button>
+
+      <div class="toggle">
+        Already have an account? <span onclick="showLogin()">Login</span>
+      </div>
+    </div>
+    <!-- FORGOT PASSWORD -->
+    <div id="forgot-form" class="hidden">
+      <div class="auth-title">Reset your password</div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="forgot-email" placeholder="Enter your email">
+      </div>
+
+      <button class="btn" onclick="sendReset()">Generate Reset Token</button>
+
+      <div class="form-group" style="margin-top:1rem;">
+        <label>Reset Token</label>
+        <input type="text" id="reset-token" placeholder="Paste token here">
+      </div>
+
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="new-password" placeholder="Enter new password">
+      </div>
+
+      <button class="btn" onclick="resetPassword()">Update Password</button>
+
+      <div class="toggle">
+        Back to <span onclick="showLogin()">Login</span>
+      </div>
+    </div>
+
+
+  </div>
+
+  <script>
+    function showRegister() {
+      document.getElementById("login-form").classList.add("hidden");
+      document.getElementById("forgot-form").classList.add("hidden");
+      document.getElementById("register-form").classList.remove("hidden");
+    }
+
+
+    function showLogin() {
+      document.getElementById("register-form").classList.add("hidden");
+      document.getElementById("forgot-form").classList.add("hidden");
+      document.getElementById("login-form").classList.remove("hidden");
+    }
+
+
+    async function login() {
+      const email = document.getElementById("login-email").value;
+      const pwd = document.getElementById("login-password").value;
+
+      if (!email || !pwd) {
+        alert("Please fill all fields");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email,
+            password: pwd
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          alert(errorData.detail || "Login failed");
+          return;
+        }
+
+        const data = await response.json();
+
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("user", JSON.stringify({
+          name: data.name,
+          role: data.role
+        }));
+
+        if (data.role === "admin") {
+          window.location.href = "admin/admin.html";
+        } else {
+          window.location.href = "student/student.html";
+        }
+
+      } catch (error) {
+        console.error(error);
+        alert("Backend not connected.");
+      }
+    }
+
+    async function loadOrganizations() {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/v1/organizations");
+        const data = await res.json();
+
+        const select = document.getElementById("reg-org");
+
+        data.forEach(org => {
+          const option = document.createElement("option");
+          option.value = org.id;
+          option.textContent = org.name;
+          select.appendChild(option);
+        });
+
+      } catch (err) {
+        console.error("Failed to load organizations");
+      }
+    }
+
+    window.onload = loadOrganizations;
+
+    async function register() {
+      const name = document.getElementById("reg-name").value;
+      const email = document.getElementById("reg-email").value;
+      const pwd = document.getElementById("reg-password").value;
+      const org = document.getElementById("reg-org").value;
+
+      if (!name || !email || !pwd || !org) {
+        alert("Please fill all required fields");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/v1/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            password: pwd,
+            organization_id: parseInt(org)
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          alert(errorData.detail || "Registration failed");
+          return;
+        }
+
+        const data = await response.json();
+
+        alert("Registration successful! Please login.");
+        showLogin();
+
+      } catch (error) {
+        console.error(error);
+        alert("Backend not connected. Make sure server is running.");
+      }
+    }
+    function showForgot() {
+      document.getElementById("login-form").classList.add("hidden");
+      document.getElementById("register-form").classList.add("hidden");
+      document.getElementById("forgot-form").classList.remove("hidden");
+    }
+
+    async function sendReset() {
+      const email = document.getElementById("forgot-email").value;
+
+      if (!email) {
+        alert("Enter your email");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/v1/auth/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          alert(data.detail || "Error generating token");
+          return;
+        }
+
+        alert("Reset token generated. Copy it below.");
+        document.getElementById("reset-token").value = data.reset_token;
+
+      } catch (err) {
+        alert("Server error");
+      }
+    }
+    async function resetPassword() {
+      const token = document.getElementById("reset-token").value;
+      const newPwd = document.getElementById("new-password").value;
+
+      if (!token || !newPwd) {
+        alert("Fill all fields");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/v1/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: token,
+            new_password: newPwd
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          alert(data.detail || "Reset failed");
+          return;
+        }
+
+        alert("Password updated successfully!");
+        showLogin();
+
+      } catch (err) {
+        alert("Server error");
+      }
+    }
+
+
+  </script>
+
+
+</body>
+
+</html>
