@@ -2,13 +2,14 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from database import Base
 from sqlalchemy import Boolean
+from sqlalchemy import Float
+
 class Organization(Base):
     __tablename__ = "organizations"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
 
 class User(Base):
     __tablename__ = "users"
@@ -22,21 +23,19 @@ class User(Base):
     status = Column(String, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-
-# ---------------- COURSES ----------------
-
 class Course(Base):
     __tablename__ = "courses"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     description = Column(String)
+    difficulty = Column(String(50))
+    logo = Column(String)  # store image path or URL
+    status = Column(Boolean, default=True)
+
     created_by = Column(Integer, ForeignKey("users.id"))
     organization_id = Column(Integer, ForeignKey("organizations.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-
-# ---------------- TOPICS ----------------
 
 class Topic(Base):
     __tablename__ = "topics"
@@ -44,9 +43,15 @@ class Topic(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     course_id = Column(Integer, ForeignKey("courses.id"))
+    order_number = Column(Integer, nullable=False, default=1)
 
+class TopicProgress(Base):
+    __tablename__ = "topic_progress"
 
-# ---------------- ENROLLMENTS ----------------
+    id = Column(Integer, primary_key=True, index=True)
+    topic_id = Column(Integer, ForeignKey("topics.id"))
+    student_id = Column(Integer, ForeignKey("users.id"))
+    completed = Column(Boolean, default=False)
 
 class Enrollment(Base):
     __tablename__ = "enrollments"
@@ -55,9 +60,6 @@ class Enrollment(Base):
     student_id = Column(Integer, ForeignKey("users.id"))
     course_id = Column(Integer, ForeignKey("courses.id"))
     enrolled_at = Column(DateTime(timezone=True), server_default=func.now())
-
-
-# ---------------- ASSIGNMENTS ----------------
 
 class Assignment(Base):
     __tablename__ = "assignments"
@@ -68,6 +70,7 @@ class Assignment(Base):
     description = Column(String)
     total_marks = Column(Integer)
 
+    model_answer = Column(String)   # ✅ ADD THIS
 
 class AssignmentSubmission(Base):
     __tablename__ = "assignment_submissions"
@@ -78,9 +81,6 @@ class AssignmentSubmission(Base):
     obtained_marks = Column(Integer)
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
 
-
-# ---------------- QUIZ ----------------
-
 class Quiz(Base):
     __tablename__ = "quizzes"
 
@@ -88,7 +88,6 @@ class Quiz(Base):
     topic_id = Column(Integer, ForeignKey("topics.id"))
     title = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
 
 class QuizQuestion(Base):
     __tablename__ = "quiz_questions"
@@ -112,9 +111,6 @@ class QuizAttempt(Base):
     score = Column(Integer)
     attempted_at = Column(DateTime(timezone=True), server_default=func.now())
 
-
-# ---------------- VIDEO ----------------
-
 class VideoProgress(Base):
     __tablename__ = "video_progress"
 
@@ -122,3 +118,37 @@ class VideoProgress(Base):
     student_id = Column(Integer, ForeignKey("users.id"))
     topic_id = Column(Integer, ForeignKey("topics.id"))
     watch_percentage = Column(Integer)
+
+class Video(Base):
+    __tablename__ = "videos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    topic_id = Column(Integer, ForeignKey("topics.id"))
+    video_url = Column(String)
+    duration = Column(Integer)  # duration in seconds
+    created_at = Column(DateTime, server_default=func.now())
+
+class Certificate(Base):
+    __tablename__ = "certificates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("users.id"))
+    course_id = Column(Integer, ForeignKey("courses.id"))
+    eligible = Column(Boolean, default=False)
+    issued = Column(Boolean, default=False)
+    issued_at = Column(DateTime)
+
+from sqlalchemy import Float
+
+class StudentPerformanceSummary(Base):
+    __tablename__ = "student_performance_summary"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    avg_quiz_score = Column(Float)
+    avg_assignment_score = Column(Float)
+    completion_rate = Column(Float)
+    weak_topic_count = Column(Integer)
+    strong_topic_count = Column(Integer)
+    learner_level = Column(String(20))
+    last_updated = Column(DateTime, server_default=func.now())
