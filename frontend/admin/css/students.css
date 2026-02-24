@@ -1,0 +1,237 @@
+/* Students Page Styles */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 20px;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1e293b;
+  flex-shrink: 0;
+}
+
+.search-box {
+  flex: 1;
+  max-width: 300px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.search-box:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Students Table Container */
+.students-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.students-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.students-table thead {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.students-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.students-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.students-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.students-table td {
+  padding: 16px 20px;
+  color: #334155;
+  font-size: 14px;
+}
+
+/* Student Name with Avatar */
+.student-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.student-avatar.color-1 { background: #3b82f6; }
+.student-avatar.color-2 { background: #8b5cf6; }
+.student-avatar.color-3 { background: #06b6d4; }
+.student-avatar.color-4 { background: #10b981; }
+.student-avatar.color-5 { background: #f59e0b; }
+
+.student-name-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.student-name-text strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.student-email {
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* Enrolled Courses */
+.enrolled-courses {
+  color: #334155;
+  font-weight: 500;
+}
+
+/* Progress Bar */
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #3b82f6;
+  border-radius: 4px;
+}
+
+.progress-text {
+  color: #334155;
+  font-weight: 600;
+  font-size: 13px;
+  min-width: 35px;
+  text-align: right;
+}
+
+/* Certificate Status */
+.cert-status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cert-issued {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.cert-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.cert-not-eligible {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+
+  .students-table {
+    font-size: 13px;
+  }
+
+  .students-table th,
+  .students-table td {
+    padding: 12px 14px;
+  }
+
+  .student-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .students-container {
+    overflow-x: auto;
+  }
+
+  .students-table {
+    font-size: 12px;
+    min-width: 700px;
+  }
+
+  .students-table th,
+  .students-table td {
+    padding: 10px 12px;
+  }
+
+  .student-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .progress-container {
+    gap: 8px;
+  }
+
+  .progress-text {
+    min-width: 30px;
+    font-size: 12px;
+  }
+
+  .cert-status {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
