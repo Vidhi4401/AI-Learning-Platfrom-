@@ -44,7 +44,7 @@ document.getElementById("sidebar").innerHTML = `
       
       <span>Quiz</span>
     </a>
-     <a href="student-perfromnace.html" class="${isActive("student-performnace.html")}">
+     <a href="student-performnace.html" class="${isActive("student-performnace.html")}">
       
       <span>performance</span>
     </a>
@@ -53,7 +53,7 @@ document.getElementById("sidebar").innerHTML = `
 
    
 
-    <a href="student-profile.html" class="${isActive("student-profile.html")}">
+    <a href="student-settings.html" class="${isActive("student-profile.html")}">
       
       <span>Profile</span>
     </a>

@@ -110,13 +110,15 @@ function renderTopicsTab(topics) {
         <div class="topic-section-label">🎬 Videos</div>
         <div class="video-list">
           ${topic.videos.map((v, vi) => `
-            <div class="video-item" onclick="playVideo('${getYoutubeEmbed(v.video_url)}', 'Video ${vi + 1}')">
+            <div class="video-item" id="vid-${v.id}" onclick="playVideo('${getYoutubeEmbed(v.video_url)}', 'Video ${vi + 1}', ${v.id}, ${topic.id})">
               <div class="video-play-btn">▶</div>
               <div class="video-info">
                 <div class="video-title">Video ${vi + 1}</div>
                 <div class="video-duration">${v.duration ? v.duration + " min" : "Watch now"}</div>
               </div>
-              <span style="font-size:12px;color:var(--muted);">▶ Play</span>
+              <div class="video-progress-bar-wrap">
+                <div class="video-progress-bar" id="vpbar-${v.id}" style="width:0%"></div>
+              </div>
             </div>
           `).join("")}
         </div>`;
@@ -293,31 +295,93 @@ function getYoutubeEmbed(url) {
     : url;
 }
 
-function playVideo(embedUrl, title) {
-  const modal = document.getElementById("videoModal");
-  const frame = document.getElementById("videoFrame");
+let _currentVideoId  = null;
+let _currentTopicId  = null;
+let _progressInterval= null;
+let _watchSeconds    = 0;
+
+async function playVideo(embedUrl, title, videoId, topicId) {
+  _currentVideoId = videoId;
+  _currentTopicId = topicId;
+
+  const modal  = document.getElementById("videoModal");
+  const frame  = document.getElementById("videoFrame");
   const mTitle = document.getElementById("modalTitle");
   mTitle.textContent = title;
   frame.src = embedUrl;
   modal.classList.add("open");
+
+  // Load saved progress
+  try {
+    const res = await fetch(`${API}/student/videos/${videoId}/progress`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    if (res.ok) {
+      const p = await res.json();
+      updateProgressBar(videoId, p.watch_percentage || 0);
+    }
+  } catch (_) {}
+
+  // Start tracking — increment watch time every 5 seconds = ~1% per 5s for a ~8min video
+  _watchSeconds = 0;
+  clearInterval(_progressInterval);
+  _progressInterval = setInterval(() => {
+    _watchSeconds += 5;
+    // Estimate percentage: assume average 10-minute video = 600s
+    // Use watch_percentage = min(99, floor(watchSeconds/600*100))
+    const pct = Math.min(99, Math.floor((_watchSeconds / 600) * 100));
+    saveVideoProgress(videoId, topicId, pct);
+    updateProgressBar(videoId, pct);
+  }, 5000);
+}
+
+function updateProgressBar(videoId, pct) {
+  const bar = document.getElementById(`vpbar-${videoId}`);
+  if (bar) bar.style.width = Math.min(100, pct) + "%";
+}
+
+async function saveVideoProgress(videoId, topicId, pct) {
+  try {
+    await fetch(`${API}/student/videos/${videoId}/progress`, {
+      method:  "POST",
+      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        watch_time:       _watchSeconds,
+        watch_percentage: pct,
+        skip_count:       0,
+        playback_speed:   1.0
+      })
+    });
+  } catch (_) {}
 }
 
 function closeVideoModal() {
+  clearInterval(_progressInterval);
+  _progressInterval = null;
+
+  // Mark as 100% if watched for > 80% of average duration
+  if (_currentVideoId && _currentTopicId && _watchSeconds >= 480) {
+    saveVideoProgress(_currentVideoId, _currentTopicId, 100);
+    updateProgressBar(_currentVideoId, 100);
+  }
+
   const modal = document.getElementById("videoModal");
   const frame = document.getElementById("videoFrame");
   frame.src = "";
   modal.classList.remove("open");
+  _currentVideoId = null;
+  _currentTopicId = null;
 }
 
 /* =========================
    QUIZ / ASSIGNMENT NAVIGATION
 =========================*/
 function startQuiz(quizId) {
-  window.location.href = `student-quiz-attempt.html?id=${quizId}&course=${courseId}`;
+  window.location.href = `student-quiz.html?id=${quizId}&course=${courseId}`;
 }
 
 function startAssignment(assignmentId) {
-  window.location.href = `student-assignment-submit.html?id=${assignmentId}&course=${courseId}`;
+  window.location.href = `student-assignment.html?id=${assignmentId}&course=${courseId}`;
 }
 
 /* =========================

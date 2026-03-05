@@ -116,10 +116,13 @@ class QuizAttempt(Base):
 class VideoProgress(Base):
     __tablename__ = "video_progress"
 
-    id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("users.id"))
-    topic_id = Column(Integer, ForeignKey("topics.id"))
-    watch_percentage = Column(Integer)
+    id               = Column(Integer, primary_key=True, index=True)
+    student_id       = Column(Integer, ForeignKey("users.id"))
+    video_id         = Column(Integer, ForeignKey("videos.id"))   # ← was topic_id
+    watch_time       = Column(Integer, default=0)                 # ← add this
+    watch_percentage = Column(Integer, default=0)
+    skip_count       = Column(Integer, default=0)                 # ← add this
+    playback_speed   = Column(Float,   default=1.0)      
 
 class Video(Base):
     __tablename__ = "videos"

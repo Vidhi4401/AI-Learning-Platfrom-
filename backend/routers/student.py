@@ -176,8 +176,8 @@ def get_course_detail(
 # ────────────────────────────────────────────
 
 class VideoProgressIn(BaseModel):
-    watch_time:       int
-    watch_percentage: float
+    watch_time:       int            # seconds watched
+    watch_percentage: int            # 0-100
     skip_count:       Optional[int]   = 0
     playback_speed:   Optional[float] = 1.0
 
@@ -189,22 +189,29 @@ def save_video_progress(
     db: Session = Depends(get_db)
 ):
     existing = db.query(models.VideoProgress).filter(
-        models.VideoProgress.student_id==current_user.id,
-        models.VideoProgress.video_id==video_id
+        models.VideoProgress.student_id == current_user.id,
+        models.VideoProgress.video_id   == video_id
     ).first()
+
     if existing:
-        existing.watch_time       = data.watch_time
-        existing.watch_percentage = data.watch_percentage
-        existing.skip_count       = data.skip_count
-        existing.playback_speed   = data.playback_speed
+        # Only update if progress increased
+        if data.watch_percentage > (existing.watch_percentage or 0):
+            existing.watch_percentage = data.watch_percentage
+        if data.watch_time > (existing.watch_time or 0):
+            existing.watch_time = data.watch_time
+        existing.skip_count     = data.skip_count
+        existing.playback_speed = data.playback_speed
     else:
         db.add(models.VideoProgress(
-            student_id=current_user.id, video_id=video_id,
-            watch_time=data.watch_time, watch_percentage=data.watch_percentage,
-            skip_count=data.skip_count, playback_speed=data.playback_speed
+            student_id=       current_user.id,
+            video_id=         video_id,
+            watch_time=       data.watch_time,
+            watch_percentage= data.watch_percentage,
+            skip_count=       data.skip_count,
+            playback_speed=   data.playback_speed
         ))
     db.commit()
-    return {"message":"Progress saved"}
+    return {"message": "Progress saved"}
 
 @router.get("/videos/{video_id}/progress")
 def get_video_progress(
@@ -213,13 +220,31 @@ def get_video_progress(
     db: Session = Depends(get_db)
 ):
     p = db.query(models.VideoProgress).filter(
-        models.VideoProgress.student_id==current_user.id,
-        models.VideoProgress.video_id==video_id
+        models.VideoProgress.student_id == current_user.id,
+        models.VideoProgress.video_id   == video_id
     ).first()
     if not p:
-        return {"watch_time":0,"watch_percentage":0.0,"skip_count":0,"playback_speed":1.0}
-    return {"watch_time":p.watch_time,"watch_percentage":p.watch_percentage,
-            "skip_count":p.skip_count,"playback_speed":p.playback_speed}
+        return {"watch_time": 0, "watch_percentage": 0, "skip_count": 0, "playback_speed": 1.0}
+    return {
+        "watch_time":       p.watch_time,
+        "watch_percentage": p.watch_percentage,
+        "skip_count":       p.skip_count,
+        "playback_speed":   p.playback_speed
+    }
+
+@router.get("/video-progress-all")
+def get_all_video_progress(
+    current_user: models.User = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    records = db.query(models.VideoProgress).filter(
+        models.VideoProgress.student_id == current_user.id
+    ).all()
+    return [{
+        "video_id":        r.video_id,
+        "watch_time":      r.watch_time,
+        "watch_percentage":r.watch_percentage
+    } for r in records]
 
 
 # ────────────────────────────────────────────
@@ -498,3 +523,80 @@ def submit_assignment(
         "total_marks":    assignment.total_marks,
         "feedback":       grading["feedback"]
     }
+
+
+# ────────────────────────────────────────────
+#  STUDENT PROFILE + ACCOUNT
+# ────────────────────────────────────────────
+
+from fastapi import Form
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+@router.get("/profile")
+def get_student_profile(
+    current_user: models.User = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    return {
+        "id":    current_user.id,
+        "name":  current_user.name,
+        "email": current_user.email,
+        "role":  current_user.role
+    }
+
+
+@router.put("/profile")
+def update_student_profile(
+    name:             str = Form(None),
+    email:            str = Form(None),
+    password:         str = Form(None),   # new password
+    current_password: str = Form(None),   # required only when changing password
+    current_user: models.User = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.id == current_user.id).first()
+
+    if name:  user.name  = name
+    if email: user.email = email
+
+    if password:
+        # Verify current password first
+        if not current_password:
+            raise HTTPException(status_code=400, detail="Current password required")
+        if not pwd_context.verify(current_password, user.password_hash):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+        user.password_hash = pwd_context.hash(password)
+
+    db.commit()
+    db.refresh(user)
+    return {"id": user.id, "name": user.name, "email": user.email}
+
+
+@router.delete("/account")
+def delete_student_account(
+    current_user: models.User = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    student_id = current_user.id
+
+    # Delete all related data
+    db.query(models.QuizAttempt).filter(
+        models.QuizAttempt.student_id == student_id).delete()
+    db.query(models.AssignmentSubmission).filter(
+        models.AssignmentSubmission.student_id == student_id).delete()
+    db.query(models.Enrollment).filter(
+        models.Enrollment.student_id == student_id).delete()
+
+    # Delete video progress if model exists
+    try:
+        db.query(models.VideoProgress).filter(
+            models.VideoProgress.student_id == student_id).delete()
+    except Exception:
+        pass
+
+    db.query(models.User).filter(models.User.id == student_id).delete()
+    db.commit()
+    return {"message": "Account deleted successfully"}
