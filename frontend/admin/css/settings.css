@@ -77,7 +77,30 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
 }
+.readonly-badge {
+  font-size: 10px;
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
 
+.hint {
+  font-size: 11.5px;
+  color: #9ca3af;
+  margin-left: 8px;
+  font-weight: 400;
+}
+
+.form-input.readonly {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
 /* Upload Box */
 .upload-box {
   border: 2px dashed #e5e7eb;

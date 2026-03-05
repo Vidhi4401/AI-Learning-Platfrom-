@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Courses</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/student-courses.css">
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <div class="page-content">
+
+      <div class="page-header">
+        <div>
+          <h1>All Courses</h1>
+          <p>Explore courses from your organization</p>
+        </div>
+      </div>
+
+      <!-- Summary Tabs -->
+      <div class="filter-tabs">
+        <button class="ftab active" data-filter="all">
+          All Courses <span class="ftab-count" id="count-all">0</span>
+        </button>
+        <button class="ftab" data-filter="enrolled">
+          Enrolled <span class="ftab-count" id="count-enrolled">0</span>
+        </button>
+        <button class="ftab" data-filter="completed">
+          Completed <span class="ftab-count" id="count-completed">0</span>
+        </button>
+      </div>
+
+      <!-- Courses Grid -->
+      <div class="courses-grid" id="coursesGrid">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading courses…</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/student-layout.js"></script>
+  <script src="js/student-courses.js"></script>
+</body>
+</html>

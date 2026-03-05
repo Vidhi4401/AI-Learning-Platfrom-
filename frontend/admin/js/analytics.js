@@ -1,6 +1,4 @@
-// Analytics Page Script
 
-// Mock data for most popular courses
 function getMockMostPopularCourses() {
   return {
     labels: ['React Fundamentals', 'Python Basics', 'UI/UX Design', 'Data Science', 'Web Development'],
@@ -8,7 +6,6 @@ function getMockMostPopularCourses() {
   };
 }
 
-// Mock data for completion rate by category
 function getMockCompletionRate() {
   return {
     labels: ['Web Dev', 'Design', 'Data Science', 'Programming', 'Business'],
@@ -16,7 +13,6 @@ function getMockCompletionRate() {
   };
 }
 
-// Mock analytics stats
 function getMockAnalyticsStats() {
   return {
     totalStudents: {
@@ -32,7 +28,6 @@ function getMockAnalyticsStats() {
   };
 }
 
-// Fetch analytics data from API with fallback to mock data
 async function fetchAnalyticsData() {
   try {
     const response = await fetch('/api/analytics', {
@@ -54,7 +49,6 @@ async function fetchAnalyticsData() {
   }
 }
 
-// Update stats cards
 function updateStats(data) {
   // Total Students
   const totalStudentsValue = document.getElementById('totalStudentsValue');
@@ -64,7 +58,6 @@ function updateStats(data) {
     totalStudentsChange.textContent = '↑ ' + data.totalStudents.change;
   }
 
-  // Total Courses
   const totalCoursesValue = document.getElementById('totalCoursesValue');
   const totalCoursesChange = document.getElementById('totalCoursesChange');
   if (totalCoursesValue && data.totalCourses) {
@@ -73,12 +66,10 @@ function updateStats(data) {
   }
 }
 
-// Initialize Most Popular Courses Chart
 function initMostPopularChart(data) {
   const ctx = document.getElementById('mostPopularChart');
   if (!ctx) return;
 
-  // Clear any existing chart
   if (window.mostPopularChartInstance) {
     window.mostPopularChartInstance.destroy();
   }
@@ -137,7 +128,6 @@ function initMostPopularChart(data) {
   });
 }
 
-// Initialize Completion Rate Chart
 function initCompletionRateChart(data) {
   const ctx = document.getElementById('completionRateChart');
   if (!ctx) return;
@@ -203,14 +193,11 @@ function initCompletionRateChart(data) {
   });
 }
 
-// Initialize page
 document.addEventListener('DOMContentLoaded', async function() {
   const analyticsData = await fetchAnalyticsData();
 
-  // Update stats
   updateStats(analyticsData);
 
-  // Initialize charts
   initMostPopularChart(analyticsData);
   initCompletionRateChart(analyticsData);
 });

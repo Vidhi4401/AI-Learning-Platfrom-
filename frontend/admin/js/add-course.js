@@ -124,20 +124,29 @@ async function addTopic() {
 
   if (!courseId) { showToast("Please select a course", "error"); return; }
 
+  // ── Get existing topics count to calculate next order number ──
+  const existingRes = await fetch(`${API}/admin/courses/${courseId}/topics`, {
+    headers: { Authorization: "Bearer " + token }
+  });
+  const existingTopics = await existingRes.json();
+  const nextOrder = Array.isArray(existingTopics) ? existingTopics.length + 1 : 1;
+
   await fetch(`${API}/admin/courses/${courseId}/topics`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer " + token
     },
-    body: JSON.stringify({ title: topicTitle.value })
+    body: JSON.stringify({
+      title: topicTitle.value,
+      order_number: nextOrder   // ← auto calculated
+    })
   });
 
   showToast("Topic added!");
   topicTitle.value = "";
   loadTopicsList();
 }
-
 /* =========================
    LOAD TOPICS LIST (with delete)
 =========================*/

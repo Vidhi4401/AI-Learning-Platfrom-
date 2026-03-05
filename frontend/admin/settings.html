@@ -27,28 +27,38 @@
       </div>
 
       <!-- Platform Information Section -->
-      <section class="settings-section">
-        <h2>Platform Information</h2>
+<section class="settings-section">
+  <h2>Platform Information</h2>
 
-        <div class="form-group">
-          <label>Platform Name</label>
-          <input type="text" class="form-input" id="platformName" placeholder="LearnHub" value="LearnHub">
-        </div>
+  <!-- Organization name — READ ONLY, just display -->
+  <div class="form-group">
+    <label>Organization Name <span class="readonly-badge">Read Only</span></label>
+    <input type="text" class="form-input readonly" id="orgName"
+           placeholder="Your organization name" disabled>
+  </div>
 
-        <div class="form-group">
-          <label>Platform Logo</label>
-          <div class="upload-box" id="uploadBox">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            <p>Upload platform logo</p>
-            <span>PNG, SVG up to 2MB</span>
-            <input type="file" id="logoUpload" accept="image/png,image/svg+xml" style="display:none;">
-          </div>
-        </div>
-      </section>
+  <!-- Platform name — EDITABLE -->
+  <div class="form-group">
+    <label>Platform Name <span class="hint"></span></label>
+    <input type="text" class="form-input" id="platformName" placeholder="LearnHub">
+  </div>
+
+  <!-- Logo -->
+  <div class="form-group">
+    <label>Platform Logo</label>
+    <div class="upload-box" id="uploadBox">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+      <p>Upload platform logo</p>
+      <span>PNG, SVG up to 2MB</span>
+      <input type="file" id="logoUpload" accept="image/*" style="display:none;">
+    </div>
+  </div>
+</section>
 
       <!-- Manage Categories Section -->
       <section class="settings-section">

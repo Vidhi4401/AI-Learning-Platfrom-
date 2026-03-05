@@ -19,37 +19,29 @@ async function fetchDashboardData() {
     return null;
   }
 }
-
 function updateDashboardUI(data) {
   if (!data) return;
 
-  document.getElementById("studentsCount").textContent =
-    data.total_students ?? 0;
+  // ── Use label from backend ──
+  const studentsLabel = document.getElementById("label-students");
+  if (studentsLabel && data.students_label) {
+    studentsLabel.textContent = data.students_label;
+  }
 
-  document.getElementById("coursesCount").textContent =
-    data.total_courses ?? 0;
-
-  document.getElementById("quizzesCount").textContent =
-    data.total_quizzes ?? 0;
-
-  document.getElementById("assignmentsCount").textContent =
-    data.total_assignments ?? 0;
-
-  document.getElementById("certificatesCount").textContent =
-    data.certificates_issued ?? 0;
+  document.getElementById("studentsCount").textContent     = data.total_students     ?? 0;
+  document.getElementById("coursesCount").textContent      = data.total_courses      ?? 0;
+  document.getElementById("quizzesCount").textContent      = data.total_quizzes      ?? 0;
+  document.getElementById("assignmentsCount").textContent  = data.total_assignments  ?? 0;
+  document.getElementById("certificatesCount").textContent = data.certificates_issued ?? 0;
 }
-
 document.addEventListener("DOMContentLoaded", async () => {
   const data = await fetchDashboardData();
   updateDashboardUI(data);
 });
 
-/* =================================================
-   COURSE FILTER — NEW CODE (existing code untouched)
-=================================================*/
 const API_BASE_FILTER = "http://127.0.0.1:8000/api/v1";
 
-/* Load all courses into the dropdown */
+
 async function loadCourseFilter() {
   const token = localStorage.getItem("token");
 
@@ -75,7 +67,6 @@ async function loadCourseFilter() {
   }
 }
 
-/* Called when user changes the dropdown */
 async function onCourseFilterChange() {
   const select = document.getElementById("courseFilterSelect");
   const courseId = select.value;
@@ -90,7 +81,6 @@ async function onCourseFilterChange() {
     return;
   }
 
-  /* Show loading state */
   badge.style.display = "flex";
   badge.textContent = "Loading…";
   setStatCounts("--", "--", "--", "--", "--");
@@ -106,14 +96,12 @@ async function onCourseFilterChange() {
 
     const data = await res.json();
 
-    /* Update labels to course-specific wording */
     document.getElementById("label-students").textContent    = "Enrolled Students";
     document.getElementById("label-courses").textContent     = "Total Topics";
     document.getElementById("label-quizzes").textContent     = "Total Quizzes";
     document.getElementById("label-assignments").textContent = "Total Assignments";
     document.getElementById("label-certificates").textContent= "Certificates Issued";
 
-    /* Update counts */
     setStatCounts(
       data.enrolled_students   ?? 0,
       data.total_topics        ?? 0,
@@ -132,7 +120,6 @@ async function onCourseFilterChange() {
   }
 }
 
-/* Helper — set all 5 stat counts at once */
 function setStatCounts(students, courses, quizzes, assignments, certs) {
   document.getElementById("studentsCount").textContent     = students;
   document.getElementById("coursesCount").textContent      = courses;
@@ -141,7 +128,6 @@ function setStatCounts(students, courses, quizzes, assignments, certs) {
   document.getElementById("certificatesCount").textContent = certs;
 }
 
-/* Helper — reset labels back to global wording */
 function resetStatLabels() {
   document.getElementById("label-students").textContent    = "Total Students";
   document.getElementById("label-courses").textContent     = "Total Courses";
@@ -150,7 +136,6 @@ function resetStatLabels() {
   document.getElementById("label-certificates").textContent= "Certificates Issued";
 }
 
-/* Load courses into filter on page ready */
 document.addEventListener("DOMContentLoaded", () => {
   loadCourseFilter();
 });

@@ -33,21 +33,38 @@
     }
 
     /* Header */
-    .logo {
-      text-align: center;
+    .logo-container {
+      display: flex;
+      /* Enables flexbox layout for children */
+      align-items: center;
+      /* Vertically centers the items */
+      justify-content: center;
+      /* Horizontally centers the items as a group */
+      margin-top: 0.2rem;
+      margin-bottom: 1rem;
+      width: 100%;
+      /* Ensures the container spans the full width for centering */
+    }
+
+    .logo-text {
       font-size: 1.6rem;
       font-weight: 700;
       color: #1e40af;
-      margin-bottom: 1rem;
+      /* Hex code for the requested color */
+      /* Add any other text styles here */
     }
 
-    .logo span {
-      background: #3b82f6;
+    .logo-img {
+      background-color: #3b82f6;
+      /* Hex code for the requested background */
       color: #fff;
-      padding: .3rem .6rem;
+      /* Text color if any text is inside the image (not typical, but as requested) */
       border-radius: 8px;
-      margin-right: .3rem;
+      height: 100px;
+      margin-right: 0.5rem;
+      /* Adds some space between the image and the text */
     }
+
 
     .auth-title {
       text-align: center;
@@ -132,7 +149,11 @@
   <div class="auth-card">
 
     <!-- LOGO -->
-    <div class="logo"><span>🎓</span>LearnAI</div>
+    <div class="logo-container">
+      <img src="image.png" alt="Company Logo" class="logo-img">
+      <span class="logo-text">LearnHub</span>
+    </div>
+
 
     <!-- LOGIN -->
     <div id="login-form">
@@ -244,50 +265,49 @@
 
 
     async function login() {
-      const email = document.getElementById("login-email").value;
-      const pwd = document.getElementById("login-password").value;
+  const email = document.getElementById("login-email").value;
+  const pwd   = document.getElementById("login-password").value;
 
-      if (!email || !pwd) {
-        alert("Please fill all fields");
-        return;
-      }
+  if (!email || !pwd) {
+    alert("Please fill all fields");
+    return;
+  }
 
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: email,
-            password: pwd
-          })
-        });
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password: pwd })
+    });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          alert(errorData.detail || "Login failed");
-          return;
-        }
-
-        const data = await response.json();
-
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("user", JSON.stringify({
-          name: data.name,
-          role: data.role
-        }));
-
-        if (data.role === "admin") {
-          window.location.href = "admin/dashboard.html";
-        } else {
-          window.location.href = "student/student.html";
-        }
-
-      } catch (error) {
-        console.error(error);
-        alert("Backend not connected.");
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      alert(errorData.detail || "Login failed");
+      return;
     }
 
+    const data = await response.json();
+
+    localStorage.setItem("token", data.access_token);
+    localStorage.setItem("user", JSON.stringify({
+      name:            data.name,           // ← directly on data
+      email:           data.email,          // ← directly on data
+      role:            data.role,           // ← directly on data
+      platform_name:   data.platform_name,  // ← directly on data
+      org_logo:        data.org_logo        // ← directly on data
+    }));
+
+    if (data.role === "admin") {
+      window.location.href = "admin/dashboard.html";
+    } else {
+      window.location.href = "student/student-courses.html";
+    }
+
+  } catch (error) {
+    console.error(error);
+    alert("Backend not connected.");
+  }
+}
     async function loadOrganizations() {
       try {
         const res = await fetch("http://127.0.0.1:8000/api/v1/organizations");

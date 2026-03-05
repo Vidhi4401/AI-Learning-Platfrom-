@@ -7,10 +7,14 @@ from sqlalchemy import Float
 class Organization(Base):
     __tablename__ = "organizations"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
+    id           = Column(Integer, primary_key=True, index=True)
+    name         = Column(String, unique=True)              # real org name — never changes
+    platform_name= Column(String, nullable=True)            # editable display name
+    logo         = Column(String, nullable=True)            # uploaded logo path
+    email        = Column(String, nullable=True)            # org contact email
+    status       = Column(Boolean, default=True)            # active/inactive
+    created_at   = Column(DateTime(timezone=True), server_default=func.now())
+    
 class User(Base):
     __tablename__ = "users"
 
@@ -30,9 +34,8 @@ class Course(Base):
     title = Column(String)
     description = Column(String)
     difficulty = Column(String(50))
-    logo = Column(String)  # store image path or URL
+    logo = Column(String) 
     status = Column(Boolean, default=True)
-
     created_by = Column(Integer, ForeignKey("users.id"))
     organization_id = Column(Integer, ForeignKey("organizations.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -69,8 +72,7 @@ class Assignment(Base):
     title = Column(String)
     description = Column(String)
     total_marks = Column(Integer)
-
-    model_answer = Column(String)   # ✅ ADD THIS
+    model_answer = Column(String)  
 
 class AssignmentSubmission(Base):
     __tablename__ = "assignment_submissions"
@@ -138,7 +140,6 @@ class Certificate(Base):
     issued = Column(Boolean, default=False)
     issued_at = Column(DateTime)
 
-from sqlalchemy import Float
 
 class StudentPerformanceSummary(Base):
     __tablename__ = "student_performance_summary"
