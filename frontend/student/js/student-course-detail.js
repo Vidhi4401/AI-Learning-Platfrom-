@@ -107,7 +107,7 @@ function renderTopicsTab(topics) {
     let videosHtml = "";
     if (videoCount > 0) {
       videosHtml = `
-        <div class="topic-section-label">🎬 Videos</div>
+        <div class="topic-section-label">Videos</div>
         <div class="video-list">
           ${topic.videos.map((v, vi) => `
             <div class="video-item" id="vid-${v.id}" onclick="playVideo('${getYoutubeEmbed(v.video_url)}', 'Video ${vi + 1}', ${v.id}, ${topic.id})">
@@ -128,7 +128,7 @@ function renderTopicsTab(topics) {
     let quizzesHtml = "";
     if (quizCount > 0) {
       quizzesHtml = `
-        <div class="topic-section-label">🧠 Quizzes</div>
+        <div class="topic-section-label"> Quizzes</div>
         <div class="resource-list">
           ${topic.quizzes.map(q => `
             <div class="resource-item">
@@ -143,7 +143,7 @@ function renderTopicsTab(topics) {
     let assignsHtml = "";
     if (assignCount > 0) {
       assignsHtml = `
-        <div class="topic-section-label">📝 Assignments</div>
+        <div class="topic-section-label"> Assignments</div>
         <div class="resource-list">
           ${topic.assignments.map(a => `
             <div class="resource-item">
@@ -166,11 +166,11 @@ function renderTopicsTab(topics) {
         <div class="topic-order">${topic.order_number || i + 1}</div>
         <div class="topic-title">${topic.title}</div>
         <div class="topic-meta">
-          <span>🎬 ${videoCount}</span>
-          <span>🧠 ${quizCount}</span>
-          <span>📝 ${assignCount}</span>
+          <span>video -> ${videoCount}</span>
+          <span>Quiz -> ${quizCount}</span>
+          <span>Assignment -> ${assignCount}</span>
         </div>
-        <span class="topic-chevron">›</span>
+        <span class="topic-chevron"></span>
       </div>
       <div class="topic-body">${bodyContent}</div>
     `;
@@ -377,11 +377,11 @@ function closeVideoModal() {
    QUIZ / ASSIGNMENT NAVIGATION
 =========================*/
 function startQuiz(quizId) {
-  window.location.href = `student-quiz.html?id=${quizId}&course=${courseId}`;
+  window.location.href = `student-quiz-attempt.html?id=${quizId}&course=${courseId}`;
 }
 
 function startAssignment(assignmentId) {
-  window.location.href = `student-assignment.html?id=${assignmentId}&course=${courseId}`;
+  window.location.href = `student-assignment-submit.html?id=${assignmentId}&course=${courseId}`;
 }
 
 /* =========================

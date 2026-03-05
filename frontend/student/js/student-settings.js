@@ -200,7 +200,7 @@ function loadNotifPrefs() {
 async function downloadMyData() {
   const btn = document.querySelector(".account-btns .btn-outline");
   btn.disabled    = true;
-  btn.textContent = "⏳ Preparing…";
+  btn.textContent = "Preparing…";
 
   try {
     // Fetch all student data
@@ -233,7 +233,7 @@ async function downloadMyData() {
     alert("Failed to download data. Try again.");
   } finally {
     btn.disabled    = false;
-    btn.textContent = "⬇️ Download My Data";
+    btn.textContent = " Download My Data";
   }
 }
 

@@ -173,7 +173,7 @@ function updateSubmitMsg() {
     el.innerHTML = `Answered <strong>${answered}</strong> of <strong>${total}</strong> questions.
       <br><span style="color:#d97706;font-size:13px;">⚠ ${unanswered} unanswered — they will be marked wrong.</span>`;
   } else {
-    el.innerHTML = `✅ All <strong>${total}</strong> questions answered. Ready to submit!`;
+    el.innerHTML = `All <strong>${total}</strong> questions answered. Ready to submit!`;
   }
 }
 
@@ -211,7 +211,7 @@ async function submitQuiz() {
   } catch (err) {
     console.error("Submit error:", err);
     btn.disabled    = false;
-    btn.textContent = "✓ Submit Quiz";
+    btn.textContent = "Submit Quiz";
     alert(err.message || "Submission failed. Please try again.");
   }
 }

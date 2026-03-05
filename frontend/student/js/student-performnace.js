@@ -417,13 +417,13 @@ function renderInsights(quizAvg, assignAvg, videoCompPct, attempts, submissions,
     msg = "🏆 Outstanding Performance!";
     sub = "You're in the top tier. Keep pushing your limits and inspiring others.";
   } else if (overall >= 60) {
-    msg = "👍 Keep Up the Good Work!";
+    msg = " Keep Up the Good Work!";
     sub = "You're making great progress. Continue engaging with course materials to reach excellence.";
   } else if (overall > 0) {
-    msg = "📚 Every Expert Was Once a Beginner";
+    msg = " Every Expert Was Once a Beginner";
     sub = "Focus on the weak areas and you'll see improvement very soon. You can do this!";
   } else {
-    msg = "🚀 Start Your Learning Journey!";
+    msg = " Start Your Learning Journey!";
     sub = "Attempt some quizzes and submit assignments to track your performance here.";
   }
   banner.innerHTML = `<strong>${msg}</strong><span>${sub}</span>`;

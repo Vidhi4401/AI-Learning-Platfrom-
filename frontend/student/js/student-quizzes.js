@@ -68,7 +68,7 @@ async function loadData() {
 
   } catch (err) {
     console.error("loadData error:", err);
-    document.getElementById("pendingGrid").innerHTML  = `<div class="empty-state">⚠️ Failed to load quizzes. Check connection.</div>`;
+    document.getElementById("pendingGrid").innerHTML  = `<div class="empty-state"> Failed to load quizzes. Check connection.</div>`;
     document.getElementById("completedList").innerHTML = "";
   }
 }
@@ -123,7 +123,7 @@ function renderPending(items) {
   const grid = document.getElementById("pendingGrid");
 
   if (items.length === 0) {
-    grid.innerHTML = `<div class="empty-state">🎉 No pending quizzes! All caught up.</div>`;
+    grid.innerHTML = `<div class="empty-state">No pending quizzes! All caught up.</div>`;
     return;
   }
 
@@ -154,7 +154,7 @@ function renderCompleted(items) {
   const list = document.getElementById("completedList");
 
   if (items.length === 0) {
-    list.innerHTML = `<div class="empty-state">📝 No completed quizzes yet. Start one above!</div>`;
+    list.innerHTML = `<div class="empty-state"> No completed quizzes yet. Start one above!</div>`;
     return;
   }
 
@@ -178,7 +178,7 @@ function renderCompleted(items) {
         <div class="completed-title">${item.quiz.title}</div>
         <div class="completed-topic">${item.topic_title}</div>
         <div class="completed-meta">
-          <span>📅 Completed: ${date}</span>
+          <span>Completed: ${date}</span>
         </div>
         <div class="score-bar-wrap">
           <div class="score-bar" style="width:${pct}%"></div>
@@ -198,7 +198,7 @@ function renderCompleted(items) {
 function showEmpty() {
   document.getElementById("pendingCount").textContent   = 0;
   document.getElementById("completedCount").textContent = 0;
-  document.getElementById("pendingGrid").innerHTML      = `<div class="empty-state">📚 Enroll in courses first to see quizzes here.</div>`;
+  document.getElementById("pendingGrid").innerHTML      = `<div class="empty-state">Enroll in courses first to see quizzes here.</div>`;
   document.getElementById("completedList").innerHTML    = "";
 }
 

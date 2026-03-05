@@ -56,7 +56,7 @@ async function loadData() {
   } catch (err) {
     console.error("loadData error:", err);
     document.getElementById("pendingList").innerHTML =
-      `<div class="empty-state">⚠️ Failed to load assignments.</div>`;
+      `<div class="empty-state"> Failed to load assignments.</div>`;
     document.getElementById("completedList").innerHTML = "";
   }
 }
@@ -97,7 +97,7 @@ function renderAll(courseFilter) {
 function renderPending(items) {
   const list = document.getElementById("pendingList");
   if (items.length === 0) {
-    list.innerHTML = `<div class="empty-state">🎉 No pending assignments!</div>`;
+    list.innerHTML = `<div class="empty-state"> No pending assignments!</div>`;
     return;
   }
   list.innerHTML = "";
@@ -112,7 +112,7 @@ function renderPending(items) {
         <div class="assign-title">${item.assignment.title}</div>
         <div class="assign-topic">${item.topic_title}</div>
         <div class="assign-meta">
-          <span>📝 Total Marks: ${item.assignment.total_marks}</span>
+          <span> Total Marks: ${item.assignment.total_marks}</span>
         </div>
       </div>
       <div class="assign-right">
@@ -129,7 +129,7 @@ function renderPending(items) {
 function renderCompleted(items) {
   const list = document.getElementById("completedList");
   if (items.length === 0) {
-    list.innerHTML = `<div class="empty-state">📝 No submitted assignments yet.</div>`;
+    list.innerHTML = `<div class="empty-state">No submitted assignments yet.</div>`;
     return;
   }
   list.innerHTML = "";
@@ -156,14 +156,14 @@ function renderCompleted(items) {
         <div class="assign-title">${item.assignment.title}</div>
         <div class="assign-topic">${item.topic_title}</div>
         <div class="assign-meta">
-          <span>📅 Submitted: ${date}</span>
-          <span>📝 Total: ${total} marks</span>
+          <span> Submitted: ${date}</span>
+          <span> Total: ${total} marks</span>
         </div>
         ${isGraded ? `
           <div class="score-bar-wrap">
             <div class="score-bar ${pctClass}" style="width:${pct}%"></div>
           </div>
-          ${s.feedback ? `<div class="assign-feedback">💬 ${s.feedback}</div>` : ""}
+          ${s.feedback ? `<div class="assign-feedback"> ${s.feedback}</div>` : ""}
         ` : `<div style="margin-top:8px;font-size:12.5px;color:var(--muted);">⏳ Grading in progress…</div>`}
       </div>
       <div class="assign-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">

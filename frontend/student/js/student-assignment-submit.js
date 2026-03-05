@@ -123,7 +123,7 @@ async function submitAssignment() {
     showGradingOverlay(false);
     console.error("Submit error:", err);
     btn.disabled    = false;
-    btn.textContent = "🚀 Submit & Grade";
+    btn.textContent = "Submit & Grade";
     alert(err.message || "Submission failed. Please try again.");
   }
 }
