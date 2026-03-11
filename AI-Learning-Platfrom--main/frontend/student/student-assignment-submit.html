@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Submit Assignment</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/student-assignment-submit.css">
+</head>
+<body>
+  <div id="sidebar" class="sidebar"></div>
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+    <div class="page-content">
+
+      <!-- Loading -->
+      <div id="loadingState" class="center-state">
+        <div class="spinner"></div>
+        <p>Loading assignment…</p>
+      </div>
+
+      <!-- Already Submitted -->
+      <div id="alreadyState" class="center-state" style="display:none;">
+        <div class="state-icon submitted">↓</div>
+        <h2>Already Submitted</h2>
+        <p>You have already submitted this assignment.</p>
+        <button class="btn-action" onclick="window.location.href='student-assignments.html'">
+          Back to Assignments
+        </button>
+      </div>
+
+      <!-- Submit Screen -->
+      <div id="submitScreen" style="display:none;">
+        <a href="student-assignments.html" class="back-link">← Back to Assignments</a>
+
+        <div class="assign-hero">
+          <div class="assign-hero-info">
+            <div class="hero-badge" id="heroCourse"></div>
+            <h1 id="assignTitle">—</h1>
+            <p id="assignTopic" class="hero-sub"></p>
+          </div>
+          <div class="hero-marks" id="heroMarks"></div>
+        </div>
+
+        <!-- Description -->
+        <div class="panel" id="descPanel" style="display:none;">
+          <div class="panel-label"> Assignment Description</div>
+          <div class="panel-text" id="assignDesc"></div>
+        </div>
+
+        <!-- Answer Box -->
+        <div class="panel">
+          <div class="panel-label">Your Answer</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+            Write your code or answer below. Be as detailed as possible.
+          </p>
+          <textarea id="answerBox" class="answer-box"
+            placeholder="Write your answer or paste your code here…"></textarea>
+          <div class="char-count" id="charCount">0 characters</div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="submit-row">
+          <button class="btn-submit-final" id="btnSubmit" onclick="submitAssignment()">
+             Submit & Grade
+          </button>
+          <p class="submit-note">Your answer will be graded instantly by AI</p>
+        </div>
+      </div>
+
+      <!-- Result Screen -->
+      <div id="resultScreen" style="display:none;">
+        <div class="result-card">
+          <!-- <div class="result-emoji" id="resultEmoji">🎉</div> -->
+          <h2 id="resultHeading">Assignment Graded!</h2>
+
+          <div class="result-score-row">
+            <div class="result-score-big" id="resultScore">—</div>
+            <div class="result-score-total" id="resultTotal">/ 10</div>
+          </div>
+          <div class="result-pct" id="resultPct">0%</div>
+
+          <!-- Score bar -->
+          <div class="result-bar-wrap">
+            <div class="result-bar" id="resultBar"></div>
+          </div>
+
+          <!-- AI Feedback -->
+          <div class="feedback-box">
+            <div class="feedback-label">AI Feedback</div>
+            <div class="feedback-text" id="feedbackText">—</div>
+          </div>
+
+          <button class="btn-action" onclick="window.location.href='student-assignments.html'">
+            Back to Assignments
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <script src="js/student-layout.js"></script>
+  <script src="js/student-assignment-submit.js"></script>
+</body>
+</html>

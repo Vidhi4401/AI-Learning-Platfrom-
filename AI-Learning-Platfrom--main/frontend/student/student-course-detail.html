@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Course Detail</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/student-course-detail.css">
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <div class="page-content">
+
+      <a href="student-courses.html" class="back-link">← Back to Courses</a>
+
+      <!-- Hero -->
+      <div class="course-hero" id="courseHero">
+        <div class="hero-info">
+          <div class="hero-badges" id="heroBadges"></div>
+          <h1 id="heroTitle">Loading…</h1>
+          <p class="hero-desc" id="heroDesc"></p>
+        </div>
+        <img id="heroImg" class="hero-img" src="" alt="" style="display:none;">
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="detail-stats">
+        <div class="detail-stat-card">
+          <div>
+            <div class="ds-label">Topics</div>
+            <div class="ds-value" id="statTopics">--</div>
+          </div>
+        </div>
+        <div class="detail-stat-card">
+          
+          <div>
+            <div class="ds-label">Quizzes</div>
+            <div class="ds-value" id="statQuizzes">--</div>
+          </div>
+        </div>
+        <div class="detail-stat-card">
+          
+          <div>
+            <div class="ds-label">Assignments</div>
+            <div class="ds-value" id="statAssignments">--</div>
+          </div>
+        </div>
+        <div class="detail-stat-card">
+         
+          <div>
+            <div class="ds-label">Videos</div>
+            <div class="ds-value" id="statVideos">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-bar">
+        <button class="tab-btn active" data-tab="topics"> Topics</button>
+        <button class="tab-btn" data-tab="quizzes">Quizzes</button>
+        <button class="tab-btn" data-tab="assignments"> Assignments</button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+
+        <!-- TOPICS TAB -->
+        <div class="tab-pane active" id="tab-topics">
+          <div class="panel" id="topicsPanel">
+            <div class="loading-row">Loading topics…</div>
+          </div>
+        </div>
+
+        <!-- QUIZZES TAB -->
+        <div class="tab-pane" id="tab-quizzes">
+          <div class="panel" id="quizzesPanel">
+            <div class="loading-row">Loading quizzes…</div>
+          </div>
+        </div>
+
+        <!-- ASSIGNMENTS TAB -->
+        <div class="tab-pane" id="tab-assignments">
+          <div class="panel" id="assignmentsPanel">
+            <div class="loading-row">Loading assignments…</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Video Modal -->
+  <div class="modal-overlay" id="videoModal" onclick="closeVideoModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modalTitle">Video</h3>
+        <button class="modal-close" onclick="closeVideoModal()">✕</button>
+      </div>
+      <div class="video-wrap">
+        <iframe id="videoFrame" src="" allowfullscreen frameborder="0"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/student-layout.js"></script>
+  <script src="js/student-course-detail.js"></script>
+</body>
+</html>

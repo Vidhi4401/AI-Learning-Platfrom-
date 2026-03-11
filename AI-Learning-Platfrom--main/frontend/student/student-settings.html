@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/student-settings.css">
+</head>
+<body>
+  <div id="sidebar" class="sidebar"></div>
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+    <div class="page-content">
+
+      <div class="page-header">
+        <h1>Settings</h1>
+        <p>Manage your account preferences</p>
+      </div>
+
+      <div class="settings-grid">
+
+        <!-- ── Profile Information ── -->
+        <div class="settings-card">
+          <div class="card-header">
+            <span class="card-icon">👤</span>
+            <h3>Profile Information</h3>
+          </div>
+
+          <div class="profile-row">
+            <div class="profile-avatar" id="profileAvatar">S</div>
+            <div class="profile-meta">
+              <div class="profile-name"  id="profileName">—</div>
+              <div class="profile-email" id="profileEmail">—</div>
+              <div class="profile-role">Student</div>
+            </div>
+          </div>
+
+          <button class="btn btn-outline" id="editProfileBtn">✏️ Edit Profile</button>
+        </div>
+
+        <!-- ── Change Password ── -->
+        <div class="settings-card">
+          <div class="card-header">
+            <span class="card-icon">🔐</span>
+            <h3>Change Password</h3>
+          </div>
+
+          <div class="form-stack" id="passwordForm">
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" id="currentPwd" placeholder="Enter current password"/>
+            </div>
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" id="newPwd" placeholder="Enter new password"/>
+            </div>
+            <div class="form-group">
+              <label>Confirm New Password</label>
+              <input type="password" id="confirmPwd" placeholder="Confirm new password"/>
+            </div>
+            <div class="pwd-msg" id="pwdMsg"></div>
+            <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+          </div>
+        </div>
+
+        <!-- ── Theme ── -->
+        <div class="settings-card">
+          <div class="card-header">
+            <span class="card-icon">✨</span>
+            <h3>Theme Mode</h3>
+          </div>
+          <div class="theme-row">
+            <button class="theme-btn active" id="themeLight" onclick="setTheme('light')">
+              <span>☀️</span> Light
+            </button>
+            <button class="theme-btn" id="themeDark" onclick="setTheme('dark')">
+              <span>🌙</span> Dark
+            </button>
+          </div>
+          <p class="card-note">Dark mode coming soon — UI is being prepared.</p>
+        </div>
+
+        <!-- ── Notifications ── -->
+        <div class="settings-card">
+          <div class="card-header">
+            <span class="card-icon">🔔</span>
+            <h3>Notifications</h3>
+          </div>
+          <div class="toggle-list">
+            <div class="toggle-item">
+              <div>
+                <div class="toggle-title">Email Notifications</div>
+                <div class="toggle-sub">Receive course updates via email</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notifEmail" checked onchange="saveNotifPref()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-item">
+              <div>
+                <div class="toggle-title">Assignment Reminders</div>
+                <div class="toggle-sub">Get notified about upcoming deadlines</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notifAssign" checked onchange="saveNotifPref()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-item">
+              <div>
+                <div class="toggle-title">Quiz Notifications</div>
+                <div class="toggle-sub">Be notified when new quizzes are available</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notifQuiz" checked onchange="saveNotifPref()">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <p class="card-note">Preferences saved locally — email delivery coming soon.</p>
+        </div>
+
+        <!-- ── Account Actions ── -->
+        <div class="settings-card danger-card">
+          <div class="card-header">
+            <span class="card-icon">⚙️</span>
+            <h3>Account</h3>
+          </div>
+          <div class="account-btns">
+            <button class="btn btn-outline" onclick="downloadMyData()">⬇️ Download My Data</button>
+            <button class="btn btn-danger" onclick="openDeleteModal()">🗑️ Delete Account</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Edit Profile Modal ── -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Edit Profile</h3>
+        <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+      </div>
+      <div class="form-stack">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="editName" placeholder="Your full name"/>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="editEmail" placeholder="your@email.com"/>
+        </div>
+        <div class="edit-msg" id="editMsg"></div>
+        <div class="modal-foot">
+          <button class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Delete Confirm Modal ── -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-box modal-sm">
+      <div class="modal-head">
+        <h3>Delete Account</h3>
+        <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+      </div>
+      <div class="delete-body">
+        <div class="delete-icon">⚠️</div>
+        <p>Are you sure you want to delete your account?</p>
+        <p><strong>All your data will be permanently deleted.</strong></p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('deleteModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/student-layout.js"></script>
+  <script src="js/student-settings.js"></script>
+</body>
+</html>

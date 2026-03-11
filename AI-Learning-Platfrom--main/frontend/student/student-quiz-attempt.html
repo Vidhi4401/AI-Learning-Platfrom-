@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/student-quiz-attempt.css">
+</head>
+<body>
+  <div id="sidebar" class="sidebar"></div>
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+    <div class="page-content">
+
+      <!-- Loading -->
+      <div id="loadingState" class="center-state">
+        <div class="spinner"></div>
+        <p>Loading quiz…</p>
+      </div>
+
+      <!-- Already Attempted -->
+      <div id="alreadyState" class="center-state" style="display:none;">
+        <div class="already-icon">✓</div>
+        <h2>Already Completed</h2>
+        <p>You have already attempted this quiz.</p>
+        <button class="btn-action" onclick="window.location.href='student-quizzes.html'">Back to Quizzes</button>
+      </div>
+
+      <!-- Quiz Screen -->
+      <div id="quizScreen" style="display:none;">
+
+        <!-- Header -->
+        <div class="qa-header">
+          <div>
+            <a href="student-quizzes.html" class="back-link">← Back to Quizzes</a>
+            <h1 id="quizTitle">—</h1>
+            <p class="quiz-sub" id="quizSub"></p>
+          </div>
+          <div class="qa-badge" id="progressBadge">Q 1 / 1</div>
+        </div>
+
+        <!-- Top Progress Bar -->
+        <div class="top-bar"><div class="top-bar-fill" id="topBarFill"></div></div>
+
+        <!-- Question Card -->
+        <div class="q-card" id="qCard">
+          <div class="q-label"  id="qLabel">Question 1</div>
+          <div class="q-text"   id="qText"></div>
+          <div class="q-options" id="qOptions"></div>
+        </div>
+
+        <!-- Nav Row -->
+        <div class="nav-row">
+          <button class="btn-nav"          id="btnPrev" onclick="prevQ()">← Prev</button>
+          <div class="dot-row"             id="dotRow"></div>
+          <button class="btn-nav btn-blue" id="btnNext" onclick="nextQ()">Next →</button>
+        </div>
+
+        <!-- Submit Box — shows on last question -->
+        <div class="submit-box" id="submitBox" style="display:none;">
+          <p id="submitMsg"></p>
+          <button class="btn-submit" id="btnSubmit" onclick="submitQuiz()">✓ Submit Quiz</button>
+        </div>
+
+      </div>
+
+      <!-- Result Screen -->
+      <div id="resultScreen" style="display:none;">
+        <div class="result-wrap">
+          <!-- <div class="result-emoji" id="resultEmoji"></div> -->
+          <h2 id="resultHeading">Quiz Complete!</h2>
+          <div class="result-big" id="resultBig"></div>
+          <div class="result-pct" id="resultPctEl"></div>
+          <div class="result-row" id="resultRow"></div>
+          <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;">
+            <button class="btn-nav btn-blue" onclick="window.location.href='student-quizzes.html'">Back to Quizzes</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <script src="js/student-layout.js"></script>
+  <script src="js/student-quiz-attempt.js"></script>
+</body>
+</html>

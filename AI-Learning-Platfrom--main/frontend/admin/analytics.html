@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics</title>
+
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/analytics.css">
+</head>
+
+<body>
+
+  <!-- Sidebar injected by JS -->
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+
+    <!-- Navbar injected by JS -->
+    <div id="navbar" class="navbar"></div>
+
+    <div class="page-content">
+
+      <h1>Analytics</h1>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon students-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Total Students</p>
+            <p class="stat-value" id="totalStudentsValue">2,847</p>
+            <p class="stat-change positive" id="totalStudentsChange">↑ 12% this month</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon courses-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Total Courses</p>
+            <p class="stat-value" id="totalCoursesValue">42</p>
+            <p class="stat-change positive" id="totalCoursesChange">↑ 3 new courses</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-container">
+        <div class="chart-panel">
+          <h3>Most Popular Courses</h3>
+          <div id="mostPopularChart" style="height: 300px;"></div>
+        </div>
+
+        <div class="chart-panel">
+          <h3>Completion Rate by Category</h3>
+          <div id="completionRateChart" style="height: 300px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/analytics.js"></script>
+
+</body>
+
+</html>
