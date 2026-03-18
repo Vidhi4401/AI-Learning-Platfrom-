@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Teachers — Admin Portal</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h1 class="navbar-page-title" style="font-size:24px;">Faculty Management</h1>
+        <button class="btn btn-primary" onclick="openInviteModal()">+ Invite Teacher</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="table-card fade-up">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 16px;">
+            <input type="text" id="teacherSearch" class="search" placeholder="Search by name or email..." style="width:300px; margin:0; background-color: #f9fafb;">
+            <select id="statusFilter" style="width:150px; padding: 8px;">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Teacher</th>
+              <th>Email</th>
+              <th>Courses</th>
+              <th>Students</th>
+              <th>Avg Score</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="teachersTableBody">
+            <!-- Dynamic -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- INVITE MODAL -->
+  <div id="inviteModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('inviteModal')">&times;</span>
+        <div class="modal-header"><h3>Invite New Teacher</h3></div>
+        <label>Full Name</label>
+        <input type="text" id="inviteName" placeholder="e.g. Dr. Emily Smith">
+        <label>Email Address</label>
+        <input type="email" id="inviteEmail" placeholder="teacher@email.com">
+        <label>Temporary Password</label>
+        <input type="password" id="invitePass" placeholder="••••••••">
+        <div style="margin-top:24px; display:flex; gap:12px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="submitInvite()">Create Account</button>
+            <button class="btn btn-ghost" onclick="closeModal('inviteModal')">Cancel</button>
+        </div>
+    </div>
+  </div>
+
+  <!-- RESET PASS MODAL -->
+  <div id="resetModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('resetModal')">&times;</span>
+        <div class="modal-header"><h3>Reset Password</h3><p id="resetTeacherName" style="font-size:13px; color:var(--muted);"></p></div>
+        <label>New Password</label>
+        <input type="password" id="newPass" placeholder="••••••••">
+        <label>Confirm Password</label>
+        <input type="password" id="confirmPass" placeholder="••••••••">
+        <div style="margin-top:24px; display:flex; gap:12px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="submitReset()">Update Password</button>
+            <button class="btn btn-ghost" onclick="closeModal('resetModal')">Cancel</button>
+        </div>
+    </div>
+  </div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/teachers.js"></script>
+</body>
+</html>

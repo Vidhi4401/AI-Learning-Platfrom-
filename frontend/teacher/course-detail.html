@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Course Detail</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/course-detail.css">
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <div class="page-content">
+
+      <!-- Back -->
+      <a href="courses.html" class="back-link">← Back to Courses</a>
+
+      <!-- Course Header -->
+      <div class="course-hero" id="courseHero">
+        <div class="hero-info">
+          <div class="hero-badges" id="heroBadges"></div>
+          <h1 id="courseTitle">Loading...</h1>
+          <p id="courseDesc" class="hero-desc"></p>
+        </div>
+        <img id="courseImg" src="" alt="" class="hero-img" />
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="detail-stats" id="detailStats">
+        <div class="detail-stat-card">
+          <!-- <span class="ds-icon">📋</span> -->
+          <div>
+            <div class="ds-label">Total Topics</div>
+            <div class="ds-value" id="statTopics">--</div>
+          </div>
+        </div>
+        <div class="detail-stat-card">
+          <!-- <span class="ds-icon">🧠</span> -->
+          <div>
+            <div class="ds-label">Total Quizzes</div>
+            <div class="ds-value" id="statQuizzes">--</div>
+          </div>
+        </div>
+        <div class="detail-stat-card">
+          <!-- <span class="ds-icon">📝</span> -->
+          <div>
+            <div class="ds-label">Total Assignments</div>
+            <div class="ds-value" id="statAssignments">--</div>
+          </div>
+        </div>
+        <div class="detail-stat-card">
+          <!-- <span class="ds-icon">✅</span> -->
+          <div>
+            <div class="ds-label">Status</div>
+            <div class="ds-value" id="statStatus">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-bar">
+        <button class="tab-btn active" data-tab="overview">Overview</button>
+        <button class="tab-btn" data-tab="topics">Topics</button>
+        <button class="tab-btn" data-tab="quizzes">Quizzes</button>
+        <button class="tab-btn" data-tab="assignments">Assignments</button>
+        <button class="tab-btn" data-tab="students">Student Performance</button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+
+        <!-- OVERVIEW -->
+        <div class="tab-pane active" id="tab-overview">
+          <div class="panel">
+            <h3>Course Overview</h3>
+            <div class="overview-section">
+              <h4>Description</h4>
+              <p id="overviewDesc">--</p>
+            </div>
+            <div class="overview-section">
+              <h4>Difficulty</h4>
+              <p id="overviewDifficulty">--</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOPICS -->
+        <div class="tab-pane" id="tab-topics">
+          <div class="panel">
+            <div class="panel-top">
+              <h3>Course Topics</h3>
+              <button class="btn-primary" onclick="goToAddTopic()">+ Add Topic</button>
+            </div>
+            <div id="topicsList"></div>
+          </div>
+        </div>
+
+        <!-- QUIZZES -->
+        <div class="tab-pane" id="tab-quizzes">
+          <div class="panel">
+            <div class="panel-top">
+              <h3>Quizzes</h3>
+              <button class="btn-primary" onclick="goToAddQuiz()">+ Add Quiz</button>
+            </div>
+            <div id="quizzesList"></div>
+          </div>
+        </div>
+
+        <!-- ASSIGNMENTS -->
+        <div class="tab-pane" id="tab-assignments">
+          <div class="panel">
+            <div class="panel-top">
+              <h3>Assignments</h3>
+              <button class="btn-primary" onclick="goToAddAssignment()">+ Add Assignment</button>
+            </div>
+            <div id="assignmentsList"></div>
+          </div>
+        </div>
+
+        <!-- STUDENT PERFORMANCE -->
+        <div class="tab-pane" id="tab-students">
+          <div class="panel coming-soon-panel">
+            <div class="coming-soon">
+              <span class="coming-soon-icon">📈</span>
+              <h3>Student Performance</h3>
+              <p>Detailed student analytics and performance tracking is coming soon. You'll be able to see individual student progress, quiz scores, and assignment submissions.</p>
+              <span class="coming-soon-badge">Coming Soon</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/course-detail.js"></script>
+</body>
+</html>

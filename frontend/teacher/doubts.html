@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Doubts — LearnHub</title>
+
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    /* Doubts-specific styling */
+    .doubt-card { 
+        background: white; border-radius: 12px; padding: 1.5rem; 
+        margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border-left: 5px solid #3b82f6;
+    }
+    .doubt-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .student-name { font-weight: bold; color: #1e40af; }
+    .doubt-date { font-size: 0.85rem; color: #64748b; }
+    .doubt-query { font-size: 1.1rem; margin-bottom: 1rem; color: #1e293b; }
+    
+    .reply-box { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; margin-bottom: 10px; }
+    .btn-reply { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-reply:hover { background: #2563eb; }
+    
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-answered { background: #dcfce7; color: #166534; }
+
+    .filter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+  </style>
+</head>
+
+<body>
+
+  <!-- Sidebar injected by JS -->
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+
+    <!-- Navbar injected by JS -->
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+
+      <section class="page-header">
+        <h1>Student Doubts</h1>
+        <p>Review and respond to questions from your students.</p>
+      </section>
+
+      <section class="filter-header">
+        <div style="display:flex; gap:12px;">
+          <button class="btn-reply" onclick="loadDoubts('pending')" style="background:#3b82f6;">Pending Doubts</button>
+          <button class="btn-reply" onclick="loadDoubts('all')" style="background:#64748b;">All History</button>
+        </div>
+      </section>
+
+      <div id="doubts-list">
+        <!-- Dynamic Doubts Load Here -->
+        <div style="text-align:center; padding:3rem; color:#64748b;">Loading doubts...</div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/doubts.js"></script>
+
+</body>
+</html>

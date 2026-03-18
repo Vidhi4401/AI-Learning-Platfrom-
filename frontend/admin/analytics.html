@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics — Admin Portal</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <h1 class="navbar-page-title" style="font-size:24px; margin-bottom:24px;">Platform-wide Analytics</h1>
+
+      <!-- Top Stats -->
+      <div class="stats-grid fade-up" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="stat-card">
+          <div class="stat-label">Total Students</div>
+          <div class="stat-value" id="statStudents">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Courses</div>
+          <div class="stat-value" id="statCourses">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Platform Avg Score</div>
+          <div class="stat-value" id="statAvgScore">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Completion Rate</div>
+          <div class="stat-value" id="statCompletion">--</div>
+        </div>
+      </div>
+
+      <!-- Growth Chart -->
+      <div class="table-card fade-up" style="padding:24px; margin-bottom:24px; animation-delay:0.1s;">
+        <h3 class="panel-title">Student Growth (Last 6 Months)</h3>
+        <div style="height:300px;"><canvas id="growthChart"></canvas></div>
+      </div>
+
+      <div class="charts-row fade-up" style="animation-delay:0.2s;">
+        <div class="chart-card">
+          <h3 class="chart-title">Course Performance Comparison</h3>
+          <div class="chart-container"><canvas id="perfChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Engagement Overview</h3>
+          <div style="margin-top:20px;">
+            <label style="margin:0;">Video Completion</label>
+            <div class="pg-wrap" style="margin:8px 0 20px;"><div class="pg-bg"><div class="pg-fill" id="vBar" style="width:0%"></div></div><span class="pg-lbl" id="vTxt">0%</span></div>
+            
+            <label style="margin:0;">Quiz Attempts</label>
+            <div class="pg-wrap" style="margin:8px 0 20px;"><div class="pg-bg"><div class="pg-fill" id="qBar" style="width:0%; background:#10b981;"></div></div><span class="pg-lbl" id="qTxt">0%</span></div>
+            
+            <label style="margin:0;">Assignment Submissions</label>
+            <div class="pg-wrap" style="margin:8px 0 20px;"><div class="pg-bg"><div class="pg-fill" id="aBar" style="width:0%; background:#8b5cf6;"></div></div><span class="pg-lbl" id="aTxt">0%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weak Topics Table -->
+      <div class="table-card fade-up" style="animation-delay:0.3s;">
+        <div style="padding:20px 24px; border-bottom:1px solid var(--border);">
+            <h3 class="panel-title" style="margin:0;">Weak Areas (Avg Score < 60%)</h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Topic Name</th>
+                    <th>Course</th>
+                    <th>Teacher</th>
+                    <th>Avg Score</th>
+                    <th>Affected Students</th>
+                </tr>
+            </thead>
+            <tbody id="weakTopicsBody">
+                <!-- Dynamic -->
+            </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/analytics.js"></script>
+</body>
+</html>

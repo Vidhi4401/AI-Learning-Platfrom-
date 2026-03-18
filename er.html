@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>LearnHub ER Diagram</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    font-family: 'Segoe UI', sans-serif;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 32px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 40px;
+  }
+
+  /* ── CANVAS ── */
+  .canvas {
+    position: relative;
+    width: 100%;
+    min-height: 900px;
+  }
+  svg.lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    position: absolute;
+    background: #ffffff;
+    border: 1px solid #2d3149;
+    border-radius: 12px;
+    min-width: 200px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    z-index: 1;
+    overflow: hidden;
+  }
+  .table-head {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .table-icon { font-size: 15px; }
+  .table-rows { padding: 6px 0 8px; }
+  .table-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: #94a3b8;
+    border-left: 3px solid transparent;
+  }
+  .table-row.pk {
+    color: #fbbf24;
+    border-left-color: #fbbf24;
+    font-weight: 600;
+  }
+  .table-row.fk {
+    color: #60a5fa;
+    border-left-color: #3b82f6;
+  }
+  .col-name { flex: 1; }
+  .col-type {
+    font-size: 10px;
+    color: #475569;
+    font-family: monospace;
+  }
+  .badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+  .badge-pk { background: #78350f; color: #fbbf24; }
+  .badge-fk { background: #1e3a5f; color: #60a5fa; }
+
+  /* Colors per table group */
+  .color-auth    { background: linear-gradient(135deg, #1d4ed8, #2563eb); }
+  .color-org     { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+  .color-course  { background: linear-gradient(135deg, #047857, #059669); }
+  .color-content { background: linear-gradient(135deg, #b45309, #d97706); }
+  .color-student { background: linear-gradient(135deg, #be123c, #e11d48); }
+  .color-perf    { background: linear-gradient(135deg, #0e7490, #0891b2); }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .legend-line {
+    width: 32px;
+    height: 2px;
+  }
+  .legend-line.one  { background: #6366f1; }
+  .legend-line.many { background: #10b981; border-top: 2px dashed #10b981; background: none; }
+  .leg-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+
+<h1>LearnHub — Entity Relationship Diagram</h1>
+<p class="subtitle">Complete database schema with relationships</p>
+
+<div class="canvas" id="canvas">
+  <svg class="lines" id="svgLines"></svg>
+
+  <!-- ORGANIZATIONS -->
+  <div class="table-card" id="tbl-org" style="left:20px;top:20px;">
+    <div class="table-head color-org">
+      <span class="table-icon"></span> organizations
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row"><span class="col-name">name</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">platform_name</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">logo</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">status</span><span class="col-type">boolean</span></div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="table-card" id="tbl-users" style="left:280px;top:20px;">
+    <div class="table-head color-auth">
+      <span class="table-icon"></span> users
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">organization_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">name</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">email</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">password_hash</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">role</span><span class="col-type">varchar</span></div>
+    </div>
+  </div>
+
+  <!-- COURSES -->
+  <div class="table-card" id="tbl-courses" style="left:560px;top:20px;">
+    <div class="table-head color-course">
+      <span class="table-icon"></span> courses
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">organization_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">title</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">description</span><span class="col-type">text</span></div>
+      <div class="table-row"><span class="col-name">difficulty</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">logo</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">status</span><span class="col-type">boolean</span></div>
+    </div>
+  </div>
+
+  <!-- ENROLLMENTS -->
+  <div class="table-card" id="tbl-enroll" style="left:840px;top:20px;">
+    <div class="table-head color-student">
+      <span class="table-icon"></span> enrollments
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">student_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row fk"><span class="col-name">course_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+    </div>
+  </div>
+
+  <!-- TOPICS -->
+  <div class="table-card" id="tbl-topics" style="left:560px;top:260px;">
+    <div class="table-head color-course">
+      <span class="table-icon"></span> topics
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">course_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">title</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">order_number</span><span class="col-type">integer</span></div>
+    </div>
+  </div>
+
+  <!-- VIDEOS -->
+  <div class="table-card" id="tbl-videos" style="left:280px;top:320px;">
+    <div class="table-head color-content">
+      <span class="table-icon"></span> videos
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">topic_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">video_url</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">duration</span><span class="col-type">integer</span></div>
+    </div>
+  </div>
+
+  <!-- VIDEO PROGRESS -->
+  <div class="table-card" id="tbl-vprog" style="left:20px;top:320px;">
+    <div class="table-head color-perf">
+      <span class="table-icon"></span> video_progress
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">student_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row fk"><span class="col-name">video_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">watch_time</span><span class="col-type">integer</span></div>
+      <div class="table-row"><span class="col-name">watch_percentage</span><span class="col-type">integer</span></div>
+      <div class="table-row"><span class="col-name">skip_count</span><span class="col-type">integer</span></div>
+      <div class="table-row"><span class="col-name">playback_speed</span><span class="col-type">float</span></div>
+    </div>
+  </div>
+
+  <!-- QUIZZES -->
+  <div class="table-card" id="tbl-quizzes" style="left:840px;top:260px;">
+    <div class="table-head color-content">
+      <span class="table-icon"></span> quizzes
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">topic_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">title</span><span class="col-type">varchar</span></div>
+    </div>
+  </div>
+
+  <!-- QUIZ QUESTIONS -->
+  <div class="table-card" id="tbl-questions" style="left:1080px;top:180px;">
+    <div class="table-head color-content">
+      <span class="table-icon"></span> quiz_questions
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">quiz_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">question_text</span><span class="col-type">text</span></div>
+      <div class="table-row"><span class="col-name">option_a</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">option_b</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">option_c</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">option_d</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">correct_option</span><span class="col-type">varchar</span></div>
+    </div>
+  </div>
+
+  <!-- QUIZ ATTEMPTS -->
+  <div class="table-card" id="tbl-qattempt" style="left:1080px;top:420px;">
+    <div class="table-head color-student">
+      <span class="table-icon"></span> quiz_attempts
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">student_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row fk"><span class="col-name">quiz_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">score</span><span class="col-type">integer</span></div>
+      <div class="table-row"><span class="col-name">attempted_at</span><span class="col-type">timestamp</span></div>
+    </div>
+  </div>
+
+  <!-- ASSIGNMENTS -->
+  <div class="table-card" id="tbl-assign" style="left:840px;top:500px;">
+    <div class="table-head color-content">
+      <span class="table-icon"></span> assignments
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">topic_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">title</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">description</span><span class="col-type">text</span></div>
+      <div class="table-row"><span class="col-name">total_marks</span><span class="col-type">integer</span></div>
+      <div class="table-row"><span class="col-name">model_answer</span><span class="col-type">text</span></div>
+    </div>
+  </div>
+
+  <!-- ASSIGNMENT SUBMISSIONS -->
+  <div class="table-card" id="tbl-asub" style="left:560px;top:560px;">
+    <div class="table-head color-student">
+      <span class="table-icon"></span> assignment_submissions
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">student_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row fk"><span class="col-name">assignment_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">obtained_marks</span><span class="col-type">integer</span></div>
+      <div class="table-row"><span class="col-name">submitted_at</span><span class="col-type">timestamp</span></div>
+    </div>
+  </div>
+
+  <!-- STUDENT PERFORMANCE -->
+  <div class="table-card" id="tbl-perf" style="left:200px;top:580px;">
+    <div class="table-head color-perf">
+      <span class="table-icon"></span> student_performance
+    </div>
+    <div class="table-rows">
+      <div class="table-row pk"><span class="col-name">id</span><span class="col-type">integer</span><span class="badge badge-pk">PK</span></div>
+      <div class="table-row fk"><span class="col-name">student_id</span><span class="col-type">integer</span><span class="badge badge-fk">FK</span></div>
+      <div class="table-row"><span class="col-name">avg_quiz_score</span><span class="col-type">float</span></div>
+      <div class="table-row"><span class="col-name">avg_assignment_score</span><span class="col-type">float</span></div>
+      <div class="table-row"><span class="col-name">completion_rate</span><span class="col-type">float</span></div>
+      <div class="table-row"><span class="col-name">weak_topic_count</span><span class="col-type">integer</span></div>
+      <div class="table-row"><span class="col-name">strong_topic_count</span><span class="col-type">integer</span></div>
+      <div class="table-row"><span class="col-name">learner_level</span><span class="col-type">varchar</span></div>
+      <div class="table-row"><span class="col-name">last_updated</span><span class="col-type">timestamp</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item">
+    <div class="leg-dot" style="background:#fbbf24;"></div> Primary Key (PK)
+  </div>
+  <div class="legend-item">
+    <div class="leg-dot" style="background:#60a5fa;"></div> Foreign Key (FK)
+  </div>
+  <div class="legend-item">
+    <svg width="40" height="12"><line x1="0" y1="6" x2="40" y2="6" stroke="#6366f1" stroke-width="2"/></svg>
+    One-to-Many
+  </div>
+  <div class="legend-item">
+    <svg width="40" height="12"><line x1="0" y1="6" x2="40" y2="6" stroke="#10b981" stroke-width="2" stroke-dasharray="4,3"/></svg>
+    Many-to-Many (via junction)
+  </div>
+</div>
+
+<script>
+// Draw relationship lines between tables
+const relations = [
+  // [fromId, toId, color, label]
+  ["tbl-org",       "tbl-users",     "#8b5cf6", "1:N"],
+  ["tbl-org",       "tbl-courses",   "#8b5cf6", "1:N"],
+  ["tbl-users",     "tbl-enroll",    "#6366f1", "1:N"],
+  ["tbl-courses",   "tbl-enroll",    "#6366f1", "1:N"],
+  ["tbl-courses",   "tbl-topics",    "#059669", "1:N"],
+  ["tbl-topics",    "tbl-videos",    "#d97706", "1:N"],
+  ["tbl-topics",    "tbl-quizzes",   "#d97706", "1:N"],
+  ["tbl-topics",    "tbl-assign",    "#d97706", "1:N"],
+  ["tbl-quizzes",   "tbl-questions", "#d97706", "1:N"],
+  ["tbl-quizzes",   "tbl-qattempt",  "#e11d48", "1:N"],
+  ["tbl-users",     "tbl-qattempt",  "#e11d48", "1:N"],
+  ["tbl-assign",    "tbl-asub",      "#e11d48", "1:N"],
+  ["tbl-users",     "tbl-asub",      "#e11d48", "1:N"],
+  ["tbl-videos",    "tbl-vprog",     "#0891b2", "1:N"],
+  ["tbl-users",     "tbl-vprog",     "#0891b2", "1:N"],
+  ["tbl-users",     "tbl-perf",      "#0891b2", "1:1"],
+];
+
+function getCenter(el) {
+  const r = el.getBoundingClientRect();
+  const cr = document.getElementById("canvas").getBoundingClientRect();
+  return {
+    x: r.left - cr.left + r.width / 2,
+    y: r.top  - cr.top  + r.height / 2,
+    left:   r.left  - cr.left,
+    right:  r.right - cr.left,
+    top:    r.top   - cr.top,
+    bottom: r.bottom- cr.top,
+    w: r.width,
+    h: r.height
+  };
+}
+
+function drawLines() {
+  const svg = document.getElementById("svgLines");
+  const canvas = document.getElementById("canvas");
+  svg.setAttribute("viewBox", `0 0 ${canvas.offsetWidth} ${canvas.offsetHeight}`);
+  svg.innerHTML = "";
+
+  relations.forEach(([fromId, toId, color, label]) => {
+    const from = document.getElementById(fromId);
+    const to   = document.getElementById(toId);
+    if (!from || !to) return;
+
+    const f = getCenter(from);
+    const t = getCenter(to);
+
+    // Pick best edge points
+    let x1, y1, x2, y2;
+    if (Math.abs(f.x - t.x) > Math.abs(f.y - t.y)) {
+      // horizontal dominant
+      if (f.x < t.x) { x1 = f.right;  y1 = f.y; x2 = t.left;  y2 = t.y; }
+      else            { x1 = f.left;   y1 = f.y; x2 = t.right; y2 = t.y; }
+    } else {
+      // vertical dominant
+      if (f.y < t.y) { x1 = f.x; y1 = f.bottom; x2 = t.x; y2 = t.top; }
+      else           { x1 = f.x; y1 = f.top;    x2 = t.x; y2 = t.bottom; }
+    }
+
+    // Curved path
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+    const path = `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+
+    // Draw line
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", path);
+    p.setAttribute("stroke", color);
+    p.setAttribute("stroke-width", "1.5");
+    p.setAttribute("fill", "none");
+    p.setAttribute("opacity", "0.6");
+    p.setAttribute("stroke-dasharray", label === "1:1" ? "5,3" : "none");
+    svg.appendChild(p);
+
+    // Arrow at end
+    const angle = Math.atan2(y2 - my, x2 - mx);
+    const al = 8, aw = 5;
+    const ax1 = x2 - al * Math.cos(angle) + aw * Math.sin(angle);
+    const ay1 = y2 - al * Math.sin(angle) - aw * Math.cos(angle);
+    const ax2 = x2 - al * Math.cos(angle) - aw * Math.sin(angle);
+    const ay2 = y2 - al * Math.sin(angle) + aw * Math.cos(angle);
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    arrow.setAttribute("points", `${x2},${y2} ${ax1},${ay1} ${ax2},${ay2}`);
+    arrow.setAttribute("fill", color);
+    arrow.setAttribute("opacity", "0.8");
+    svg.appendChild(arrow);
+
+    // Label at midpoint
+    const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    txt.setAttribute("x", mx);
+    txt.setAttribute("y", my - 5);
+    txt.setAttribute("text-anchor", "middle");
+    txt.setAttribute("font-size", "10");
+    txt.setAttribute("fill", color);
+    txt.setAttribute("opacity", "0.9");
+    txt.setAttribute("font-family", "monospace");
+    txt.textContent = label;
+    svg.appendChild(txt);
+  });
+}
+
+// Draw after layout
+window.addEventListener("load", () => {
+  setTimeout(drawLines, 100);
+  window.addEventListener("resize", drawLines);
+});
+</script>
+</body>
+</html>

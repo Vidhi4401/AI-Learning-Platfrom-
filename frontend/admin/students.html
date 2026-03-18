@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Directory — Admin Portal</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h1 class="navbar-page-title" style="font-size:24px;">Global Student Directory</h1>
+      </div>
+
+      <!-- Filters -->
+      <div class="table-card fade-up">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 16px; flex-wrap: wrap;">
+            <input type="text" id="studentSearch" class="search" placeholder="Search by name or email..." style="width:300px; margin:0; background-color: #f9fafb;">
+            
+            <select id="courseFilter" style="width:200px; padding: 8px;">
+                <option value="all">All Courses</option>
+            </select>
+
+            <select id="levelFilter" style="width:150px; padding: 8px;">
+                <option value="all">All Levels</option>
+                <option value="Strong">Strong</option>
+                <option value="Average">Average</option>
+                <option value="Weak">Weak</option>
+            </select>
+        </div>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Email</th>
+              <th>Main Course</th>
+              <th>Courses</th>
+              <th>Overall Score</th>
+              <th>Learner Level</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody">
+            <!-- Dynamic -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/students.js"></script>
+</body>
+</html>
