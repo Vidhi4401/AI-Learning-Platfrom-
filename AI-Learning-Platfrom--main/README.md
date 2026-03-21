@@ -21,7 +21,7 @@ GROQ_API_KEY = Your groq api   # create groq api and paste here
 
 cd backend
 
-uvicorn main:app --reload
+python -m uvicorn main:app --reload
 
 open http://127.0.0.1:8000/docs you will see apis 
 
