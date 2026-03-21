@@ -1,0 +1,174 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #fefefe;
+}
+
+/* ================= GLOBAL Teacher LAYOUT ================= */
+
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  z-index: 1000;
+  padding: 25px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  color: #2563eb;
+  margin: 0 0 5px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.sidebar p {
+  color: #9ca3af;
+  font-size: 13px;
+  margin: 0 0 30px 0;
+}
+
+.sidebar a {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #4b5563;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background: #eef4ff;
+  color: #2563eb;
+}
+
+.logout {
+  margin-top: 30px;
+  cursor: pointer;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #4b5563;
+  text-decoration: none;
+  display: block;
+}
+
+/* PUSH WHOLE PAGE AFTER SIDEBAR */
+.main-content {
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+/* NAVBAR FIX */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 260px;
+  right: 0;
+  width: calc(100% - 260px);
+  height: 70px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  box-sizing: border-box;
+}
+
+.search {
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  width: 300px;
+  font-size: 14px;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* PAGE CONTENT BELOW NAVBAR */
+.page-content {
+  padding: 30px 40px;
+  margin-top: 70px;
+  background: #f6f8fb;
+  min-height: calc(100vh - 70px);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+    padding: 20px;
+  }
+
+  .main-content {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+  }
+
+  .navbar {
+    left: 220px;
+    width: calc(100% - 220px);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+    padding: 15px;
+  }
+
+  .sidebar h2 {
+    font-size: 1rem;
+  }
+
+  .sidebar p,
+  .sidebar a span {
+    display: none;
+  }
+
+  .main-content {
+    margin-left: 70px;
+    width: calc(100% - 70px);
+  }
+
+  .navbar {
+    left: 70px;
+    width: calc(100% - 70px);
+    padding: 0 20px;
+  }
+
+  .search {
+    width: 200px;
+  }
+
+  .page-content {
+    padding: 18px 20px;
+  }
+}

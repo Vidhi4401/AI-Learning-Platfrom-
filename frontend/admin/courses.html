@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Courses — Admin Portal</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/courses.css">
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h1 class="navbar-page-title" style="font-size:24px;">Global Course Oversight</h1>
+      </div>
+
+      <!-- Filters -->
+      <div style="display:flex; gap:16px; margin-bottom:24px;">
+        <input type="text" id="courseSearch" class="search" placeholder="Search by title or teacher..." style="width:300px; margin:0; background-color: #fff;">
+        <select id="teacherFilter" style="width:200px; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+            <option value="all">All Teachers</option>
+        </select>
+      </div>
+
+      <div id="coursesGrid" class="courses-grid">
+        <!-- Dynamic Cards -->
+        <div style="grid-column: 1/-1; text-align:center; padding:5rem; color:var(--muted);">Loading course catalog...</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/courses.js"></script>
+</body>
+</html>

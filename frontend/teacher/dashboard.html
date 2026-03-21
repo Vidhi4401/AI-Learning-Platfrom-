@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard — LearnHub</title>
+
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+
+  <!-- Sidebar injected by JS -->
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+
+    <!-- Navbar injected by JS -->
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+
+      <!-- Header -->
+      <section class="page-header">
+        <h1>Teacher Dashboard</h1>
+        <p>Monitor platform performance and manage academic content.</p>
+      </section>
+
+      <!-- Course Filter -->
+      <section class="course-filter-bar">
+        <div class="filter-left">
+          <!-- <span class="filter-icon">🎯</span> -->
+          <span class="filter-label">Viewing:</span>
+          <select id="courseFilterSelect" onchange="onCourseFilterChange()">
+            <option value="all">All Courses (Platform Overview)</option>
+          </select>
+        </div>
+        <div id="filterBadge" class="filter-badge" style="display:none;">
+          Course Stats
+        </div>
+      </section>
+      <section class="stats-grid">
+
+        <div class="stat-card">
+          <!-- <span class="stat-card-icon">👨‍🎓</span> -->
+          <p id="label-students">Total Students</p>
+          <h2 id="studentsCount">--</h2>
+        </div>
+
+        <div class="stat-card">
+          <!-- <span class="stat-card-icon">📚</span> -->
+          <p id="label-courses">Total Courses</p>
+          <h2 id="coursesCount">--</h2>
+        </div>
+
+        <div class="stat-card">
+          <!-- <span class="stat-card-icon">🧠</span> -->
+          <p id="label-quizzes">Total Quizzes</p>
+          <h2 id="quizzesCount">--</h2>
+        </div>
+
+        <div class="stat-card">
+          <!-- <span class="stat-card-icon">📝</span> -->
+          <p id="label-assignments">Total Assignments</p>
+          <h2 id="assignmentsCount">--</h2>
+        </div>
+
+        <div class="stat-card">
+          <!-- <span class="stat-card-icon">🏆</span> -->
+          <p id="label-certificates">Certificates Issued</p>
+          <h2 id="certificatesCount">--</h2>
+        </div>
+
+      </section>
+
+      <!-- Chart + Insights -->
+      <div class="dashboard-grid-3">
+
+        <!-- Chart -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Course-wise Student Distribution</h3>
+            <span class="panel-badge">Real-time</span>
+          </div>
+          <div class="chart-box" style="height: 300px; padding: 10px;">
+            <canvas id="courseDistChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Insights / Levels -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>✨ Learner Levels</h3>
+          </div>
+          <div style="height: 250px; padding: 10px;">
+            <canvas id="levelDistChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Engagement -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Engagement Overview</h3>
+          <span class="panel-badge">Live</span>
+        </div>
+
+        <div class="engagement-grid">
+
+          <div class="engagement-card">
+            <!-- <div class="engagement-icon purple">🎯</div> -->
+            <div class="engagement-info">
+              <div class="engagement-label">Video Completion Rate</div>
+              <div class="engagement-bar-wrap">
+                <div class="engagement-bar purple" style="width: 74%"></div>
+              </div>
+            </div>
+            <div class="engagement-pct">74%</div>
+          </div>
+
+          <div class="engagement-card">
+            <!-- <div class="engagement-icon blue">📝</div> -->
+            <div class="engagement-info">
+              <div class="engagement-label">Quiz Attempt Rate</div>
+              <div class="engagement-bar-wrap">
+                <div class="engagement-bar blue" style="width: 61%"></div>
+              </div>
+            </div>
+            <div class="engagement-pct">61%</div>
+          </div>
+
+          <div class="engagement-card">
+            <!-- <div class="engagement-icon green">📄</div> -->
+            <div class="engagement-info">
+              <div class="engagement-label">Assignment Submission Rate</div>
+              <div class="engagement-bar-wrap">
+                <div class="engagement-bar green" style="width: 48%"></div>
+              </div>
+            </div>
+            <div class="engagement-pct">48%</div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="js/layout.js"></script>
+  <script src="js/dashboard.js"></script>
+
+</body>
+</html>

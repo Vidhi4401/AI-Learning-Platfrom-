@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificates — Admin Portal</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <h1 class="navbar-page-title" style="font-size:24px; margin-bottom:24px;">Credential Management</h1>
+
+      <div class="detail-grid">
+        
+        <!-- Left: Eligible -->
+        <div class="table-card fade-up">
+            <div style="padding:20px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                <h3 class="panel-title" style="margin:0;">Eligible for Certification</h3>
+                <span class="badge badge-active">Criteria: 80% Comp + 70% Score</span>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Avg Score</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="eligibleTableBody">
+                    <!-- Dynamic -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Right: Issued -->
+        <div class="table-card fade-up" style="animation-delay:0.1s;">
+            <div style="padding:20px 24px; border-bottom:1px solid var(--border);">
+                <h3 class="panel-title" style="margin:0;">Issued Certificates History</h3>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Recipient</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="issuedTableBody">
+                    <!-- Dynamic -->
+                </tbody>
+            </table>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/certificates.js"></script>
+</body>
+</html>

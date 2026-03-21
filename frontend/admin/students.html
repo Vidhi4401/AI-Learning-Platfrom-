@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Directory — Admin Portal</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .risk-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .risk-high { background: #fee2e2; color: #dc2626; }
+    .risk-medium { background: #fef3c7; color: #d97706; }
+    .risk-low { background: #dcfce7; color: #16a34a; }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px;">
+        <div>
+          <h1 class="navbar-page-title" style="font-size:24px; margin-bottom:4px;">Global Student Directory</h1>
+          <p style="font-size:14px; color:var(--muted);">Managing all students across the entire organization.</p>
+        </div>
+        <button class="btn btn-primary" onclick="exportToExcel()">📥 Export Platform Report</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="table-card fade-up">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 16px; flex-wrap: wrap;">
+            <input type="text" id="studentSearch" class="search" placeholder="Search by name or email..." style="width:280px; margin:0; background-color: #f9fafb;">
+            
+            <select id="courseFilter" style="padding:8px 12px; border-radius:8px; border:1.5px solid #e5e7eb; font-family:inherit; font-size:13px;">
+                <option value="all">All Courses</option>
+            </select>
+
+            <select id="levelFilter" style="padding:8px 12px; border-radius:8px; border:1.5px solid #e5e7eb; font-family:inherit; font-size:13px;">
+                <option value="all">All Levels</option>
+                <option value="Strong">Strong</option>
+                <option value="Average">Average</option>
+                <option value="Weak">Weak</option>
+            </select>
+
+            <select id="riskFilter" style="padding:8px 12px; border-radius:8px; border:1.5px solid #e5e7eb; font-family:inherit; font-size:13px;">
+                <option value="all">All Risk Levels</option>
+                <option value="High">High Risk</option>
+                <option value="Medium">Medium Risk</option>
+                <option value="Low">Low Risk</option>
+            </select>
+        </div>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Main Course</th>
+              <th>Overall Score</th>
+              <th>AI Level</th>
+              <th>Dropout Risk</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody">
+            <!-- Dynamic -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/students.js"></script>
+</body>
+</html>
