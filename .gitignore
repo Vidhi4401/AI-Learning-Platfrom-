@@ -8,7 +8,7 @@ backend/.env
 # Python cache
 __pycache__/
 *.pyc
-
+ml/
 # Virtual environment
 venv/
 .env

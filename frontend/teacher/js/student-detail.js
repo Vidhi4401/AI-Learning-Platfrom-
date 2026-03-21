@@ -7,6 +7,7 @@ let allCourses     = [];
 let allAttempts    = [];
 let allSubmissions = [];
 let allVideoProg   = [];
+let studentRisk    = "Low"; 
 let courseChart    = null;
 let skillChart     = null;
 let videoDonut     = null;
@@ -24,12 +25,13 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadAllData() {
     const token = localStorage.getItem("token");
     try {
-        // 1. Get Student Basic Info (to get name)
+        // 1. Get Student Basic Info
         const infoRes = await fetch(`${API}/teacher/students/${studentId}/detail`, {
             headers: { Authorization: "Bearer " + token }
         });
         const info = await infoRes.json();
         document.getElementById("studentNameHeader").textContent = `${info.name}'s Performance`;
+        studentRisk = info.dropout_risk || "Low"; 
 
         // 2. Course details (Teacher view already handles org-level access)
         const coursesRes = await fetch(`${API}/teacher/courses`, {
@@ -117,6 +119,13 @@ function renderAll(courseFilter) {
     document.getElementById("statOverall").textContent = fmt(overallPct);
     document.getElementById("statQuiz").textContent = fmt(quizAvg);
     document.getElementById("statAssign").textContent = fmt(assignAvg);
+
+    // Display Risk
+    const riskEl = document.getElementById("statRisk");
+    if (riskEl) {
+        riskEl.textContent = studentRisk;
+        riskEl.className = `stat-value risk-text-${studentRisk.toLowerCase()}`;
+    }
 
     // AI Level Prediction (Pure Logic based on what we calculated)
     let predictedLevel = "Weak";

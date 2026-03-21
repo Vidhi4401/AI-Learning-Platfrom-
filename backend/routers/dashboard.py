@@ -108,9 +108,34 @@ def get_dashboard(
 from sqlalchemy import func
 from routers.student import predict_learner_level
 
+import pickle
+import pandas as pd
+
+# Load ML artifacts once (Paths relative to backend folder)
+try:
+    with open("ml/final_risk_model.pkl", "rb") as f:
+        risk_model = pickle.load(f)
+    with open("ml/final_scaler.pkl", "rb") as f:
+        risk_scaler = pickle.load(f)
+    with open("ml/model_features.pkl", "rb") as f:
+        model_feature_names = pickle.load(f)
+except Exception as e:
+    print(f"[ML Load Error] {e}. Trying absolute path...")
+    try:
+        # Fallback for different CWDs
+        with open("backend/ml/final_risk_model.pkl", "rb") as f:
+            risk_model = pickle.load(f)
+        with open("backend/ml/final_scaler.pkl", "rb") as f:
+            risk_scaler = pickle.load(f)
+        with open("backend/ml/model_features.pkl", "rb") as f:
+            model_feature_names = pickle.load(f)
+    except:
+        print("[ML Load Error] All paths failed. Risk model disabled.")
+        risk_model = None
+
 def get_student_metrics(db: Session, student_id: int, course_id: int = None):
     """
-    Calculates all 11 ML features from raw DB tables.
+    Calculates all 11 ML features from raw DB tables and predicts Level & Risk.
     """
     # 1. Filter Topics
     if course_id:
@@ -121,8 +146,7 @@ def get_student_metrics(db: Session, student_id: int, course_id: int = None):
         topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id.in_(enrolled_course_ids)).all()] if enrolled_course_ids else []
     
     if not topic_ids:
-        # No activity possible if no topics/enrollments
-        return {k: 0.0 for k in ["overall_score", "quiz_average", "assignment_average", "completion_rate", "avg_watch_time", "quiz_attempt_rate", "assignment_submission_rate", "videos_completed", "quizzes_attempted", "assignments_submitted", "total_course_items"]}, "Weak"
+        return {k: 0.0 for k in ["overall_score", "quiz_average", "assignment_average", "completion_rate", "avg_watch_time", "quiz_attempt_rate", "assignment_submission_rate", "videos_completed", "quizzes_attempted", "assignments_submitted", "total_course_items"]}, "Weak", "High"
 
     # 2. Denominators
     total_vids = db.query(models.Video).filter(models.Video.topic_id.in_(topic_ids)).count()
@@ -186,7 +210,21 @@ def get_student_metrics(db: Session, student_id: int, course_id: int = None):
     }
     
     level = predict_learner_level(features)
-    return features, level
+    
+    # 5. Predict Risk
+    risk = "Low"
+    if risk_model:
+        try:
+            feat_df = pd.DataFrame([features])[model_feature_names]
+            scaled = risk_scaler.transform(feat_df)
+            risk_pred = risk_model.predict(scaled)[0]
+            risk = risk_pred # Assumes model returns 'Low', 'Medium', 'High'
+        except: risk = "Medium" if overall < 50 else "Low"
+
+    return features, level, risk
+
+from fastapi.responses import StreamingResponse
+import io
 
 @router.get("/students")
 def get_all_students(
@@ -219,7 +257,7 @@ def get_all_students(
     for s in students:
         course_count = db.query(models.Enrollment).filter(models.Enrollment.student_id == s.id).count()
         # Direct calculation for teacher list
-        features, level = get_student_metrics(db, s.id)
+        features, level, risk = get_student_metrics(db, s.id)
         
         results.append({
             "id": s.id,
@@ -227,9 +265,37 @@ def get_all_students(
             "email": s.email,
             "course_count": course_count,
             "overall_score": round(features["overall_score"], 1),
-            "learner_level": level
+            "learner_level": level,
+            "dropout_risk": risk
         })
     return results
+
+@router.get("/students/export")
+def export_students_excel(
+    token: str = None, # Allow query token for browser downloads
+    db: Session = Depends(get_db),
+    teacher: models.User = Depends(get_current_teacher)
+):
+    """Generates Excel report for teacher's students."""
+    students_data = get_all_students(db, teacher)
+    if not students_data:
+        raise HTTPException(status_code=400, detail="No student data to export")
+        
+    df = pd.DataFrame(students_data)
+    # Reorder and rename columns for readability
+    df_report = df[["name", "email", "course_count", "overall_score", "learner_level", "dropout_risk"]]
+    df_report.columns = ["Student Name", "Email", "Enrolled Courses", "Overall Score %", "Learner Level", "Dropout Risk"]
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df_report.to_excel(writer, index=False, sheet_name='Students Performance')
+    
+    output.seek(0)
+    
+    headers = {
+        'Content-Disposition': f'attachment; filename="students_report_{datetime.now().strftime("%Y%m%d")}.xlsx"'
+    }
+    return StreamingResponse(output, headers=headers, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @router.get("/students/{student_id}/detail")
 def get_student_detail(
@@ -246,7 +312,7 @@ def get_student_detail(
         raise HTTPException(status_code=404, detail="Student not found")
         
     # 1. Global Metrics
-    global_features, global_level = get_student_metrics(db, student_id)
+    global_features, global_level, global_risk = get_student_metrics(db, student_id)
 
     # 2. Enrolled Courses with Course-Specific AI Levels
     enrollments = db.query(models.Enrollment).filter(models.Enrollment.student_id == student_id).all()
@@ -255,7 +321,7 @@ def get_student_detail(
         course = db.query(models.Course).filter(models.Course.id == enr.course_id).first()
         if not course: continue
         
-        c_features, c_level = get_student_metrics(db, student_id, course.id)
+        c_features, c_level, c_risk = get_student_metrics(db, student_id, course.id)
         
         # Format video string for UI (watched/total)
         topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course.id).all()]
@@ -267,7 +333,8 @@ def get_student_detail(
             "assign_avg": f"{round(c_features['assignment_average'])}%",
             "videos": f"{c_features['videos_completed']}/{v_count}",
             "progress": f"{round(c_features['overall_score'])}%",
-            "level": c_level
+            "level": c_level,
+            "risk": c_risk
         })
 
     # 3. Recent Quiz Attempts
@@ -310,6 +377,7 @@ def get_student_detail(
         "overall_quiz": f"{round(global_features['quiz_average'])}%",
         "overall_assign": f"{round(global_features['assignment_average'])}%",
         "level": global_level,
+        "dropout_risk": global_risk,
         "enrolled_courses": courses_data,
         "quiz_history": quiz_history,
         "assign_history": assign_history

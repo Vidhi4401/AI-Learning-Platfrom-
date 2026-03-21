@@ -167,6 +167,7 @@ class StudentPerformanceSummary(Base):
 
     learner_level = Column(String(20), nullable=True)        # Filtered view (student)
     global_learner_level = Column(String(20), nullable=True) # Always overall (teacher)
+    dropout_risk = Column(String(20), nullable=True, default="Low") 
     last_updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 class ChatDoubt(Base):

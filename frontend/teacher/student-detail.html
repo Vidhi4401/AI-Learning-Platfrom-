@@ -113,11 +113,15 @@
     <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">AI Level</div>
+        <div class="stat-label">AI Learner Level</div>
         <div class="stat-value" id="aiLearnerLevel">--</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Overall Accuracy</div>
+        <div class="stat-label">Dropout Risk</div>
+        <div class="stat-value" id="statRisk">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Overall Score</div>
         <div class="stat-value" id="statOverall">0%</div>
       </div>
       <div class="stat-card">
@@ -129,6 +133,14 @@
         <div class="stat-value" id="statAssign">0%</div>
       </div>
     </div>
+
+    <style>
+        .stats-grid { grid-template-columns: repeat(5, 1fr) !important; }
+        @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+        .risk-text-high { color: #dc2626; }
+        .risk-text-medium { color: #d97706; }
+        .risk-text-low { color: #16a34a; }
+    </style>
 
     <!-- Charts -->
     <div class="charts-row">

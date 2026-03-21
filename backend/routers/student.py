@@ -12,45 +12,64 @@ import models, schemas, joblib, pandas as pd
 from dependencies import get_current_user
 from config import GROQ_API_KEY
 
-# ────────────────────────────────────────────
-#  ML MODEL LOADING
-# ────────────────────────────────────────────
+# =========================
+# LOAD MODELS ONLY ONCE (TOP OF FILE)
+# =========================
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+LEVEL_MODEL_PATH = os.path.join(base_dir, "ml", "final_level_model.pkl")
+RISK_MODEL_PATH = os.path.join(base_dir, "ml", "final_risk_model.pkl")
+SCALER_PATH = os.path.join(base_dir, "ml", "final_scaler.pkl")
+
+try:
+    level_model = joblib.load(LEVEL_MODEL_PATH)
+    risk_model = joblib.load(RISK_MODEL_PATH)
+    scaler = joblib.load(SCALER_PATH)
+    print("[ML] Models loaded successfully")
+except Exception as e:
+    print(f"[ML] Error loading models: {e}")
+    level_model, risk_model, scaler = None, None, None
+
+
+# =========================
+# UPDATED FUNCTION
+# =========================
 def predict_learner_level(features):
     try:
         print(f"[ML Input] Data: {features}")
-        # Construct path: go up one level from 'backend' then into 'ml'
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        model_path = os.path.join(base_dir, "ml", "final_level_model.pkl")
-        scaler_path = os.path.join(base_dir, "ml", "final_scaler.pkl")
-        
-        if not os.path.exists(model_path):
-            print(f"[ML] Model file not found at: {model_path}")
+
+        if level_model is None or scaler is None:
             return "Average"
 
-        model = joblib.load(model_path)
-        scaler = joblib.load(scaler_path)
-        
-        # ML model only knows these 11 features
         recognized_features = [
             "overall_score", "quiz_average", "assignment_average", 
             "completion_rate", "avg_watch_time", "quiz_attempt_rate", 
             "assignment_submission_rate", "videos_completed", 
             "quizzes_attempted", "assignments_submitted", "total_course_items"
         ]
-        
-        # Clean the input dictionary
+
+        # Clean input
         features_clean = {f: features.get(f, 0) for f in recognized_features}
-        
-        # Prepare input
+
         df = pd.DataFrame([features_clean])
         scaled = scaler.transform(df)
-        prediction = model.predict(scaled)
-        print(f"[ML Output] Predicted Level: {prediction[0]}")
-        return prediction[0]
+
+        # Predict level
+        level = level_model.predict(scaled)[0]
+
+        # (Optional) Risk prediction (no frontend break)
+        risk_prob = None
+        if risk_model:
+            risk_prob = float(risk_model.predict_proba(scaled)[0][1])
+
+        print(f"[ML Output] Level: {level}, Risk: {risk_prob}")
+
+        return level   # ⚠️ keep SAME return (no frontend change)
+
     except Exception as e:
         print(f"[ML Prediction Error] {e}")
         return "Average"
-
+    
 router = APIRouter(prefix="/api/v1/student", tags=["Student"])
 
 def get_db():
@@ -59,6 +78,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 def get_current_student(current_user: models.User = Depends(get_current_user)):
     if current_user.role != "student":

@@ -58,7 +58,7 @@ async def process_course_pdf(
     For EACH topic identified:
     1. Provide a 'topic_name'.
     2. Create ONE 'assignment' with a 'title' and 'description' (assignment should be a practical task based on the topic).
-    3. Create ONE 'quiz' with a 'title' and exactly THREE 'questions'.
+    3. Create ONE 'quiz' with a 'title' and all 'questions from pdf'.
     4. Each 'question' must have: 'text', 'a', 'b', 'c', 'd', and the 'correct_answer' (must be one of "A", "B", "C", or "D").
 
     Text to analyze (truncated):

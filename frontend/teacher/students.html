@@ -1,199 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Students — LearnHub</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Students — LearnHub</title>
 <link rel="stylesheet" href="css/main.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
-
-.page-content {
-  padding: 36px 44px;
-  font-family: 'Nunito', sans-serif;
-  background: var(--page-bg);
-  min-height: 100vh;
-}
-
-.page-header h1 {
-  font-size: 28px;
-  font-weight: 800;
-  color: #111827;
-  margin-bottom: 10px;
-}
-
-.page-header p {
-  color: #6b7280;
-  font-size: 15px;
-  margin-bottom: 30px;
-}
-
-.students-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-}
-
-.students-table th {
-  background: #f9fafb;
-  text-align: left;
-  padding: 16px 24px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #4b5563;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.students-table td {
-  padding: 18px 24px;
-  border-bottom: 1px solid #f3f4f6;
-  font-size: 15px;
-  color: #111827;
-}
-
-/* ── HEADER ── */
-.page-header {
-  margin-bottom: 28px;
-}
-.page-header h1 {
-  font-family: 'Syne', sans-serif;
-  font-size: 28px;
-  font-weight: 800;
-  color: #111;
-  letter-spacing: -0.5px;
-  margin-bottom: 3px;
-}
-.page-sub { font-size: 13px; color: #9ca3af; }
-
-/* ── TABLE CARD ── */
+/* Local Overrides for Student List */
 .table-card {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid #e8e6e0;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  overflow: hidden;
+  background: #fff; border-radius: 16px; border: 1px solid #e9eaf0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04); overflow: hidden;
 }
-
 .table-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 26px 16px;
-  border-bottom: 1px solid #f0eeea;
-  flex-wrap: wrap;
-  gap: 12px;
+  padding: 20px 24px; border-bottom: 1px solid #f3f4f6;
+  display: flex; justify-content: space-between; align-items: center;
 }
-.table-top-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: #111;
-}
-.table-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.table-controls { display: flex; gap: 12px; align-items: center; }
 
-/* Search */
-.s-wrap { position: relative; }
-.s-ico {
-  position: absolute; left: 10px; top: 50%;
-  transform: translateY(-50%); font-size: 12px; pointer-events: none;
-}
-.s-input {
-  padding: 8px 12px 8px 30px;
-  border: 1.5px solid #e5e7eb; border-radius: 9px;
-  font-family: 'DM Sans', sans-serif; font-size: 13px;
-  color: #111; background: #fff; width: 210px; outline: none;
-  transition: border-color 0.2s;
-}
-.s-input:focus { border-color: #2563eb; }
+/* Risk Badges */
+.risk-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.risk-high { background: #fee2e2; color: #dc2626; }
+.risk-medium { background: #fef3c7; color: #d97706; }
+.risk-low { background: #dcfce7; color: #16a34a; }
 
-.f-sel {
-  padding: 8px 12px; border: 1.5px solid #e5e7eb; border-radius: 9px;
-  font-family: 'DM Sans', sans-serif; font-size: 13px;
-  color: #555; background: #fff; outline: none; cursor: pointer;
-}
-
-/* ── TABLE ── */
-.students-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-
-.students-table thead tr { background: #fafaf8; }
+.students-table { width: 100%; border-collapse: collapse; }
 .students-table th {
-  padding: 12px 20px; text-align: left;
-  font-size: 13px; font-weight: 500; color: #6b7280;
-  border-bottom: 1px solid #f0eeea; white-space: nowrap;
+  background: #fafafb; padding: 14px 24px; text-align: left;
+  font-size: 11.5px; font-weight: 700; color: #9ca3af;
+  text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f3f4f6;
 }
-.students-table td {
-  padding: 15px 20px; border-bottom: 1px solid #f5f4f0;
-  vertical-align: middle; color: #374151;
-}
-.students-table tbody tr:last-child td { border-bottom: none; }
-.students-table tbody tr { transition: background 0.15s; }
-.students-table tbody tr:hover { background: #fafaf8; }
+.students-table td { padding: 16px 24px; border-bottom: 1px solid #f3f4f6; font-size: 14.5px; }
+.students-table tr:hover { background: #f9fafb; }
 
-/* Name cell */
-.name-cell { display: flex; align-items: center; gap: 12px; }
 .s-avatar {
-  width: 38px; height: 38px; border-radius: 10px;
-  color: #fff; display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
-  flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px;
 }
-.s-name { font-weight: 600; color: #111; font-size: 14px; }
-.s-email { color: #9ca3af; font-size: 13px; }
-
-/* Score colors */
-.score-g { color: #16a34a; font-weight: 700; font-size: 14px; }
-.score-o { color: #d97706; font-weight: 700; font-size: 14px; }
-.score-r { color: #dc2626; font-weight: 700; font-size: 14px; }
-
-/* Level badges */
-.lvl {
-  display: inline-block; padding: 4px 14px;
-  border-radius: 20px; font-size: 12px; font-weight: 600;
-}
-.lvl-strong  { background: #16a34a; color: #fff; }
-.lvl-average { background: #f59e0b; color: #fff; }
-.lvl-weak    { background: #ef4444; color: #fff; }
-
-/* Cert badges */
-.cert {
-  display: inline-block; padding: 4px 12px;
-  border-radius: 20px; font-size: 12px; font-weight: 500; border: 1.5px solid;
-}
-.cert-el  { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
-.cert-ip  { background: #f9fafb; color: #6b7280; border-color: #d1d5db; }
-.cert-no  { background: #fafafa; color: #9ca3af; border-color: #e5e7eb; }
-
-/* Action btn */
-.btn-view {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px; background: #fff;
-  border: 1.5px solid #e5e7eb; border-radius: 8px;
-  font-family: 'DM Sans', sans-serif; font-size: 13px;
-  color: #374151; cursor: pointer; font-weight: 500;
-  transition: all 0.15s;
-}
-.btn-view:hover { background: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
-
-/* fadeIn rows */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.students-table tbody tr { animation: fadeUp 0.25s ease both; }
-.students-table tbody tr:nth-child(1) { animation-delay: 0.04s; }
-.students-table tbody tr:nth-child(2) { animation-delay: 0.08s; }
-.students-table tbody tr:nth-child(3) { animation-delay: 0.12s; }
-.students-table tbody tr:nth-child(4) { animation-delay: 0.16s; }
-.students-table tbody tr:nth-child(5) { animation-delay: 0.20s; }
-.students-table tbody tr:nth-child(6) { animation-delay: 0.24s; }
-.students-table tbody tr:nth-child(7) { animation-delay: 0.28s; }
-.students-table tbody tr:nth-child(8) { animation-delay: 0.32s; }
 </style>
 </head>
 <body>
@@ -203,31 +47,32 @@
   <div id="navbar" class="navbar"></div>
 
   <div class="page-content">
-
-    <section class="page-header">
-      <h1>Students</h1>
-      <p class="page-sub">Manage and monitor all enrolled students</p>
-    </section>
+    
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px;">
+      <div>
+        <h1 class="navbar-page-title" style="font-size:24px; margin-bottom:4px;">My Student Directory</h1>
+        <p style="font-size:14px; color:var(--muted);">Monitoring performance for students in your courses.</p>
+      </div>
+      <button class="btn btn-primary" onclick="exportToExcel()">📥 Export Student Report</button>
+    </div>
 
     <div class="table-card">
       <div class="table-top">
-        <span class="table-top-title">All Students</span>
         <div class="table-controls">
-          <div class="s-wrap">
-            <span class="s-ico">🔍</span>
-            <input type="text" class="s-input" placeholder="Search name or email…">
-          </div>
-          <select class="f-sel">
-            <option>All Courses</option>
-            <option>Python Basics</option>
-            <option>Web Development</option>
-            <option>Data Structures</option>
+          <input type="text" id="studentSearch" class="search" placeholder="Search name or email..." style="width:280px; margin:0; background:#f9fafb;">
+          
+          <select id="levelFilter" style="padding:8px 12px; border-radius:8px; border:1.5px solid #e5e7eb; font-family:inherit; font-size:13px; outline:none;">
+            <option value="all">All Levels</option>
+            <option value="Strong">Strong</option>
+            <option value="Average">Average</option>
+            <option value="Weak">Weak</option>
           </select>
-          <select class="f-sel">
-            <option>All Levels</option>
-            <option>Strong</option>
-            <option>Average</option>
-            <option>Weak</option>
+
+          <select id="riskFilter" style="padding:8px 12px; border-radius:8px; border:1.5px solid #e5e7eb; font-family:inherit; font-size:13px; outline:none;">
+            <option value="all">All Risk Status</option>
+            <option value="High">High Risk</option>
+            <option value="Medium">Medium Risk</option>
+            <option value="Low">Low Risk</option>
           </select>
         </div>
       </div>
@@ -235,17 +80,16 @@
       <table class="students-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Enrolled Courses</th>
-            <th>Overall Score</th>
-            <th>Learner Level</th>
-            <th>Certificate Status</th>
-            <th>Actions</th>
+            <th>Student Info</th>
+            <th>Courses</th>
+            <th>Avg Score</th>
+            <th>AI Level</th>
+            <th>Dropout Risk</th>
+            <th>Action</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Dynamic students load here -->
+        <tbody id="studentsTableBody">
+          <!-- Dynamic -->
         </tbody>
       </table>
     </div>

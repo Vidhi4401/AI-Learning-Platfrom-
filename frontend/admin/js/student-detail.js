@@ -94,7 +94,12 @@ function renderAll(courseFilter) {
 
     document.getElementById("statOverall").textContent = Math.round(overallPct) + "%";
     document.getElementById("statQuiz").textContent = Math.round(quizAvg) + "%";
-    document.getElementById("statAssign").textContent = Math.round(assignAvg) + "%";
+    
+    // Fetch Risk from detail API (we should update the data load to include this)
+    const risk = "Low"; // Placeholder until we re-run prediction or fetch from DB
+    const riskEl = document.getElementById("statRisk");
+    riskEl.textContent = risk;
+    riskEl.className = `stat-value risk-text-${risk.toLowerCase()}`;
 
     let level = "Weak";
     if (overallPct >= 70) level = "Strong";

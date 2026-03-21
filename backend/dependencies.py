@@ -1,11 +1,12 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from database import SessionLocal
 import models
 from auth import decode_access_token
+from typing import Optional
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 def get_db():
     db = SessionLocal()
@@ -16,14 +17,26 @@ def get_db():
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db)
 ):
-    token = credentials.credentials
-    payload = decode_access_token(token)
+    token = None
+    
+    # 1. Try to get token from Bearer Header
+    if credentials:
+        token = credentials.credentials
+    
+    # 2. Try to get token from Query Parameter (for browser downloads)
+    if not token:
+        token = request.query_params.get("token")
 
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication token required")
+
+    payload = decode_access_token(token)
     if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     user = db.query(models.User).filter(
         models.User.id == payload.get("user_id")
