@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Materials — LearnHub</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .upload-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 32px;
+      max-width: 640px;
+      margin-bottom: 32px;
+    }
+    .upload-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0 0 24px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .form-group input[type="text"],
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .form-group input[type="text"]:focus,
+    .form-group select:focus {
+      border-color: var(--accent);
+    }
+    .file-drop {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .file-drop:hover { border-color: var(--accent); background: #f5f3ff; }
+    .file-drop input { display: none; }
+    .file-drop-icon { font-size: 32px; margin-bottom: 8px; }
+    .file-drop-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+    .file-drop-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .file-chosen { font-size: 13px; color: var(--accent); font-weight: 600; margin-top: 10px; }
+    .btn-upload {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn-upload:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* List */
+    .materials-list-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .mat-list-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .mat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      border-bottom: 1px solid #f3f4f6;
+      gap: 12px;
+    }
+    .mat-row:last-child { border-bottom: none; }
+    .mat-title-cell { font-weight: 600; color: var(--ink); font-size: 14px; }
+    .mat-course-cell { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .mat-actions { display: flex; gap: 8px; align-items: center; }
+    .mat-view-btn {
+      background: #eff6ff;
+      color: #2563eb;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .mat-del-btn {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .empty-row {
+      text-align: center;
+      padding: 3rem;
+      color: var(--muted);
+    }
+    .success-msg {
+      background: #dcfce7;
+      color: #166534;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .error-msg {
+      background: #fee2e2;
+      color: #dc2626;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px;">
+        <div>
+          <h1 class="navbar-page-title" style="font-size:24px; margin-bottom:4px;">Course Materials</h1>
+          <p style="font-size:14px; color:var(--muted);">Upload notes, PDFs, and study resources for your students.</p>
+        </div>
+      </div>
+
+      <!-- Upload Form -->
+      <div class="upload-card">
+        <h3>📤 Upload New Material</h3>
+        <div id="successMsg" class="success-msg"></div>
+        <div id="errorMsg"   class="error-msg"></div>
+
+        <div class="form-group">
+          <label>Select Course</label>
+          <select id="courseSelect">
+            <option value="">— Loading courses… —</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Material Title</label>
+          <input type="text" id="matTitle" placeholder="e.g. Chapter 3 Notes">
+        </div>
+
+        <div class="form-group">
+          <label>File (PDF, DOC, PPT, etc.)</label>
+          <div class="file-drop" onclick="document.getElementById('matFile').click()">
+            <input type="file" id="matFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.xlsx"
+                   onchange="onFileChosen(this)">
+            <div class="file-drop-icon">📄</div>
+            <div class="file-drop-label">Click to browse or drag &amp; drop</div>
+            <div class="file-drop-sub">Supported: PDF, DOC, PPT, TXT, XLSX</div>
+            <div class="file-chosen" id="fileChosen" style="display:none;"></div>
+          </div>
+        </div>
+
+        <button class="btn-upload" id="uploadBtn" onclick="uploadMaterial()">⬆ Upload Material</button>
+      </div>
+
+      <!-- Uploaded Materials List -->
+      <div class="materials-list-card">
+        <div class="mat-list-header">📚 All Uploaded Materials</div>
+        <div id="materialsList"><div class="empty-row">Loading…</div></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/layout.js"></script>
+  <script>
+    const API   = "http://127.0.0.1:8000/api/v1";
+    // token is declared by layout.js
+    const params   = new URLSearchParams(window.location.search);
+    const presetCourseId = params.get("course");
+
+    let myCourses = [];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadMyCourses();
+      await loadAllMaterials();
+    });
+
+    async function loadMyCourses() {
+      try {
+        const res  = await fetch(`${API}/teacher/courses`, { headers: { Authorization: "Bearer " + token } });
+        myCourses  = await res.json();
+        const sel  = document.getElementById("courseSelect");
+        sel.innerHTML = '<option value="">— Select a course —</option>';
+        myCourses.forEach(c => {
+          const opt      = document.createElement("option");
+          opt.value      = c.id;
+          opt.textContent = c.title;
+          if (presetCourseId && String(c.id) === String(presetCourseId)) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      } catch (e) { console.error("Courses load error", e); }
+    }
+
+    async function loadAllMaterials() {
+      const container = document.getElementById("materialsList");
+      try {
+        // Fetch materials for every course
+        const all = (await Promise.all(
+          myCourses.map(async c => {
+            try {
+              const r = await fetch(`${API}/materials/course/${c.id}`,
+                                   { headers: { Authorization: "Bearer " + token } });
+              const mats = await r.json();
+              return mats.map(m => ({ ...m, courseTitle: c.title }));
+            } catch { return []; }
+          })
+        )).flat();
+
+        if (!all.length) {
+          container.innerHTML = '<div class="empty-row">No materials uploaded yet.</div>';
+          return;
+        }
+
+        container.innerHTML = all.map(m => `
+          <div class="mat-row">
+            <div>
+              <div class="mat-title-cell">📄 ${m.title}</div>
+              <div class="mat-course-cell">${m.courseTitle}</div>
+            </div>
+            <div class="mat-actions">
+              <a href="${m.file_url}" target="_blank" class="mat-view-btn">👁 View</a>
+              <button class="mat-del-btn" onclick="deleteMaterial(${m.id})">🗑 Delete</button>
+            </div>
+          </div>
+        `).join("");
+      } catch (e) {
+        container.innerHTML = '<div class="empty-row">Failed to load materials.</div>';
+      }
+    }
+
+    function onFileChosen(input) {
+      const label = document.getElementById("fileChosen");
+      if (input.files && input.files[0]) {
+        label.textContent = "✔ " + input.files[0].name;
+        label.style.display = "block";
+      }
+    }
+
+    async function uploadMaterial() {
+      const courseId = document.getElementById("courseSelect").value;
+      const title    = document.getElementById("matTitle").value.trim();
+      const file     = document.getElementById("matFile").files[0];
+      const btn      = document.getElementById("uploadBtn");
+      const succ     = document.getElementById("successMsg");
+      const err      = document.getElementById("errorMsg");
+
+      succ.style.display = "none";
+      err.style.display  = "none";
+
+      if (!courseId)   { showError("Please select a course."); return; }
+      if (!title)      { showError("Please enter a title."); return; }
+      if (!file)       { showError("Please choose a file."); return; }
+
+      btn.disabled    = true;
+      btn.textContent = "Uploading…";
+
+      try {
+        const fd = new FormData();
+        fd.append("title",     title);
+        fd.append("course_id", courseId);
+        fd.append("file",      file);
+
+        const res = await fetch(`${API}/materials/upload`, {
+          method:  "POST",
+          headers: { Authorization: "Bearer " + token },
+          body:    fd
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.detail || "Upload failed."); return; }
+
+        succ.textContent   = "✅ Material uploaded successfully!";
+        succ.style.display = "block";
+
+        // Reset form
+        document.getElementById("matTitle").value = "";
+        document.getElementById("matFile").value  = "";
+        document.getElementById("fileChosen").style.display = "none";
+
+        await loadAllMaterials();
+      } catch (e) {
+        showError("Server error. Please try again.");
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = "⬆ Upload Material";
+      }
+    }
+
+    async function deleteMaterial(id) {
+      if (!confirm("Delete this material?")) return;
+      await fetch(`${API}/materials/${id}`, {
+        method:  "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      });
+      await loadAllMaterials();
+    }
+
+    function showError(msg) {
+      const el       = document.getElementById("errorMsg");
+      el.textContent = "⚠ " + msg;
+      el.style.display = "block";
+    }
+  </script>
+</body>
+</html>

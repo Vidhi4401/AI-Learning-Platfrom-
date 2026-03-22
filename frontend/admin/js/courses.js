@@ -53,7 +53,7 @@ function renderCourses() {
     grid.innerHTML = filtered.map(c => `
         <div class="course-card">
             <div class="course-img">
-                ${c.logo ? `<img src="http://127.0.0.1:8000/${c.logo}" alt="${c.title}">` : '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">No Thumbnail</div>'}
+                ${c.logo ? `<img src="${getFileUrl(c.logo)}" alt="${c.title}">` : '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">No Thumbnail</div>'}
                 <span class="course-status-badge ${c.status ? 'badge-active' : 'badge-inactive'}">${c.status ? 'Live' : 'Draft'}</span>
                 <span class="course-teacher-badge">👨‍🏫 ${c.teacher_name}</span>
             </div>

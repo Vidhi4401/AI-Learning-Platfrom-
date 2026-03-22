@@ -24,6 +24,7 @@
           <div class="hero-badges" id="heroBadges"></div>
           <h1 id="heroTitle">Loading…</h1>
           <p class="hero-desc" id="heroDesc"></p>
+          <!-- cert button injected here by renderHero() -->
         </div>
         <img id="heroImg" class="hero-img" src="" alt="" style="display:none;">
       </div>
@@ -31,62 +32,60 @@
       <!-- Stat Cards -->
       <div class="detail-stats">
         <div class="detail-stat-card">
-          <div>
-            <div class="ds-label">Topics</div>
-            <div class="ds-value" id="statTopics">--</div>
-          </div>
+          <div class="ds-label">Topics</div>
+          <div class="ds-value" id="statTopics">--</div>
         </div>
         <div class="detail-stat-card">
-          
-          <div>
-            <div class="ds-label">Quizzes</div>
-            <div class="ds-value" id="statQuizzes">--</div>
-          </div>
+          <div class="ds-label">Quizzes</div>
+          <div class="ds-value" id="statQuizzes">--</div>
         </div>
         <div class="detail-stat-card">
-          
-          <div>
-            <div class="ds-label">Assignments</div>
-            <div class="ds-value" id="statAssignments">--</div>
-          </div>
+          <div class="ds-label">Assignments</div>
+          <div class="ds-value" id="statAssignments">--</div>
         </div>
         <div class="detail-stat-card">
-         
-          <div>
-            <div class="ds-label">Videos</div>
-            <div class="ds-value" id="statVideos">--</div>
-          </div>
+          <div class="ds-label">Videos</div>
+          <div class="ds-value" id="statVideos">--</div>
+        </div>
+        <div class="detail-stat-card">
+          <div class="ds-label">Materials</div>
+          <div class="ds-value" id="statMaterials">--</div>
         </div>
       </div>
 
       <!-- Tabs -->
       <div class="tabs-bar">
-        <button class="tab-btn active" data-tab="topics"> Topics</button>
+        <button class="tab-btn active" data-tab="topics">Topics</button>
         <button class="tab-btn" data-tab="quizzes">Quizzes</button>
-        <button class="tab-btn" data-tab="assignments"> Assignments</button>
+        <button class="tab-btn" data-tab="assignments">Assignments</button>
+        <button class="tab-btn" data-tab="materials">Materials</button>
       </div>
 
       <!-- Tab Content -->
       <div class="tab-content">
 
-        <!-- TOPICS TAB -->
         <div class="tab-pane active" id="tab-topics">
           <div class="panel" id="topicsPanel">
             <div class="loading-row">Loading topics…</div>
           </div>
         </div>
 
-        <!-- QUIZZES TAB -->
         <div class="tab-pane" id="tab-quizzes">
           <div class="panel" id="quizzesPanel">
             <div class="loading-row">Loading quizzes…</div>
           </div>
         </div>
 
-        <!-- ASSIGNMENTS TAB -->
         <div class="tab-pane" id="tab-assignments">
           <div class="panel" id="assignmentsPanel">
             <div class="loading-row">Loading assignments…</div>
+          </div>
+        </div>
+
+        <!-- MATERIALS TAB -->
+        <div class="tab-pane" id="tab-materials">
+          <div class="panel" id="materialsPanel">
+            <div class="loading-row">Loading materials…</div>
           </div>
         </div>
 
@@ -102,9 +101,8 @@
         <h3 id="modalTitle">Video</h3>
         <button class="modal-close" onclick="closeVideoModal()">✕</button>
       </div>
-      <div class="video-wrap">
-        <iframe id="videoFrame" src="" allowfullscreen frameborder="0"></iframe>
-      </div>
+      <!-- FIX: id="videoWrap" — JS writes iframe/video tag here, never outerHTML -->
+      <div class="video-wrap" id="videoWrap"></div>
     </div>
   </div>
 

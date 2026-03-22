@@ -3,107 +3,446 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Settings</title>
-
+  <title>Settings — Faculty Portal</title>
   <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/settings.css">
-</head>
+  <style>
+    .page-content { padding: 32px 40px; }
 
+    .page-hero {
+      margin-bottom: 32px;
+    }
+    .page-hero h1 { font-size: 26px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+    .page-hero p  { font-size: 14px; color: var(--muted); }
+
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ── Left: Profile card ── */
+    .profile-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      position: sticky;
+      top: 90px;
+    }
+    .avatar-circle {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #fff;
+      font-size: 32px;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .profile-name  { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .role-badge {
+      display: inline-block;
+      background: #ede9fe; color: #6d28d9;
+      padding: 3px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .org-info {
+      background: var(--page-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: left;
+    }
+    .org-info-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .org-info-logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .org-logo-img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
+    .org-logo-placeholder { width: 36px; height: 36px; border-radius: 8px; background: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .org-name-text { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+    /* ── Right: Sections ── */
+    .settings-sections { display: flex; flex-direction: column; gap: 20px; }
+
+    .s-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .s-card-title {
+      font-size: 16px; font-weight: 700; color: var(--ink);
+      margin-bottom: 22px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group:last-of-type { margin-bottom: 0; }
+    .form-group label {
+      display: block; font-size: 12px; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.4px; margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid var(--border); border-radius: 9px;
+      font-size: 14px; font-family: inherit; color: var(--ink);
+      outline: none; transition: border-color .2s;
+      box-sizing: border-box;
+    }
+    .form-group input:focus { border-color: var(--accent); }
+
+    .pwd-strength {
+      height: 4px; border-radius: 2px; background: #f1f5f9; margin-top: 6px; overflow: hidden;
+    }
+    .pwd-strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0%; }
+
+    .s-footer {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 22px; padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-save {
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 9px;
+      padding: 10px 28px; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .btn-save:hover { opacity: .88; }
+    .btn-save:disabled { opacity: .6; cursor: not-allowed; }
+
+
+    /* ── Eye toggle for password fields ── */
+    .pwd-wrap { position: relative; }
+    .pwd-wrap input { padding-right: 42px; }
+    .pwd-eye {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: #94a3b8; font-size: 16px; padding: 0; line-height: 1;
+      display: flex; align-items: center;
+    }
+    .pwd-eye:hover { color: #475569; }
+
+    .toast {
+      position: fixed; bottom: 28px; right: 28px;
+      padding: 12px 22px; border-radius: 10px;
+      font-size: 14px; font-weight: 600; color: #fff;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      transform: translateY(80px); opacity: 0;
+      transition: transform .3s, opacity .3s;
+      z-index: 9999; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #16a34a; }
+    .toast.error   { background: #dc2626; }
+
+    .inline-msg {
+      font-size: 13px; font-weight: 600; padding: 8px 12px;
+      border-radius: 7px; display: none; margin-top: 12px;
+    }
+    .inline-msg.success { background: #dcfce7; color: #166534; }
+    .inline-msg.error   { background: #fee2e2; color: #dc2626; }
+
+    /* Session info row */
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row-label { color: var(--muted); font-weight: 500; }
+    .info-row-value { color: var(--ink); font-weight: 600; }
+    .status-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; background: #16a34a; margin-right: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .settings-layout { grid-template-columns: 1fr; }
+      .profile-card { position: static; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
 <body>
 
-  <!-- Sidebar injected by JS -->
   <div id="sidebar" class="sidebar"></div>
-
   <div class="main-content">
-
-    <!-- Navbar injected by JS -->
     <div id="navbar" class="navbar"></div>
 
     <div class="page-content">
-
-      <div class="settings-header">
-        <h1>Settings</h1>
-        <p>Manage your platform settings</p>
+      <div class="page-hero">
+        <h1>Account Settings</h1>
+        <p>Manage your profile and security preferences.</p>
       </div>
 
-      <!-- Platform Information Section -->
-<section class="settings-section">
-  <h2>Platform Information</h2>
+      <div class="settings-layout">
 
-  <!-- Organization name — READ ONLY, just display -->
-  <div class="form-group">
-    <label>Organization Name <span class="readonly-badge">Read Only</span></label>
-    <input type="text" class="form-input readonly" id="orgName"
-           placeholder="Your organization name" disabled>
-  </div>
+        <!-- Left: Profile snapshot -->
+        <div class="profile-card">
+          <div class="avatar-circle" id="avatarCircle">?</div>
+          <div class="profile-name"  id="pcName">Loading…</div>
+          <div class="profile-email" id="pcEmail"></div>
+          <div class="role-badge">Faculty</div>
 
-  <!-- Platform name — EDITABLE -->
-  <div class="form-group">
-    <label>Platform Name <span class="hint"></span></label>
-    <input type="text" class="form-input" id="platformName" placeholder="LearnHub">
-  </div>
-
-  <!-- Logo -->
-  <div class="form-group">
-    <label>Platform Logo</label>
-    <div class="upload-box" id="uploadBox">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        <polyline points="17 8 12 3 7 8"></polyline>
-        <line x1="12" y1="3" x2="12" y2="15"></line>
-      </svg>
-      <p>Upload platform logo</p>
-      <span>PNG, SVG up to 2MB</span>
-      <input type="file" id="logoUpload" accept="image/*" style="display:none;">
-    </div>
-  </div>
-</section>
-
-      <!-- Manage Categories Section -->
-      <section class="settings-section">
-        <h2>Manage Categories</h2>
-
-        <div class="categories-input">
-          <input type="text" class="form-input" id="categoryInput" placeholder="Add new category">
-          <button class="btn btn-primary" id="addCategoryBtn">+ Add</button>
-        </div>
-
-        <div class="categories-list" id="categoriesList">
-          <!-- Categories rendered by JS -->
-        </div>
-      </section>
-
-      <!-- Teacher Profile Section -->
-      <section class="settings-section">
-        <h2>Teacher Profile</h2>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" class="form-input" id="TeacherName" placeholder="Teacher User" value="Teacher User">
-          </div>
-
-          <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" class="form-input" id="TeacherEmail" placeholder="Teacher@learnhub.com" value="Teacher@learnhub.com">
+          <div class="org-info">
+            <div class="org-info-label">Organization</div>
+            <div class="org-info-logo">
+              <div id="orgLogoWrap">
+                <div class="org-logo-placeholder">🎓</div>
+              </div>
+              <div class="org-name-text" id="orgNameText">—</div>
+            </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Change Password</label>
-          <input type="password" class="form-input" id="TeacherPassword" placeholder="Enter new password">
+        <!-- Right: Editable sections -->
+        <div class="settings-sections">
+
+          <!-- Profile -->
+          <div class="s-card">
+            <div class="s-card-title">👤 Profile Information</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="fName" placeholder="Your full name">
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="fEmail" placeholder="your@email.com">
+              </div>
+            </div>
+            <div id="profileMsg" class="inline-msg"></div>
+            <div class="s-footer">
+              <button class="btn-save" id="saveProfileBtn" onclick="saveProfile()">Save Profile</button>
+            </div>
+          </div>
+
+          <!-- Change Password -->
+          <div class="s-card">
+            <div class="s-card-title">🔐 Change Password</div>
+            <div class="form-group">
+              <label>Current Password</label>
+              <div class="pwd-wrap">
+      <input type="password" id="currPwd" placeholder="Enter current password">
+      <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>New Password</label>
+                <div class="pwd-wrap">
+      <input type="password" id="newPwd" placeholder="Min. 6 characters"
+                       oninput="updateStrength(this.value)">
+      <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>
+                <div class="pwd-strength">
+                  <div class="pwd-strength-fill" id="strengthFill"></div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <div class="pwd-wrap">
+      <input type="password" id="confirmPwd" placeholder="Repeat new password">
+      <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>
+              </div>
+            </div>
+            <div id="pwdMsg" class="inline-msg"></div>
+            <div class="s-footer">
+              <button class="btn-save" id="savePwdBtn" onclick="changePassword()">Update Password</button>
+            </div>
+          </div>
+
+          <!-- Account Info -->
+          <div class="s-card">
+            <div class="s-card-title">ℹ️ Account Information</div>
+            <div class="info-row">
+              <span class="info-row-label">Account Status</span>
+              <span class="info-row-value"><span class="status-dot"></span>Active</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row-label">Role</span>
+              <span class="info-row-value">Faculty / Teacher</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row-label">Platform</span>
+              <span class="info-row-value" id="infoPlatform">—</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row-label">Forgot your password?</span>
+              <span class="info-row-value" style="color:var(--muted);font-size:13px;">Contact your administrator to reset it.</span>
+            </div>
+          </div>
+
         </div>
-
-        <button class="btn btn-primary btn-large" id="saveChangesBtn">Save Changes</button>
-      </section>
-
+      </div>
     </div>
   </div>
 
-<script src="js/layout.js"></script>
-<script src="js/settings.js"></script>
+  <div class="toast" id="toast"></div>
 
+  <script src="js/layout.js"></script>
+  <script>
+    const API = "http://127.0.0.1:8000/api/v1";
+
+    /* ── Toast ── */
+    function toast(msg, type = "success") {
+      const el = document.getElementById("toast");
+      el.textContent = (type === "success" ? "✓ " : "✕ ") + msg;
+      el.className   = `toast ${type} show`;
+      setTimeout(() => el.classList.remove("show"), 3500);
+    }
+
+    function inlineMsg(id, type, text) {
+      const el = document.getElementById(id);
+      el.className     = `inline-msg ${type}`;
+      el.textContent   = text;
+      el.style.display = "block";
+      setTimeout(() => { el.style.display = "none"; }, 4000);
+    }
+
+    /* ── Password strength indicator ── */
+    function updateStrength(val) {
+      const fill = document.getElementById("strengthFill");
+      let score = 0;
+      if (val.length >= 6)                          score++;
+      if (val.length >= 10)                         score++;
+      if (/[A-Z]/.test(val) && /[0-9]/.test(val))  score++;
+      if (/[^A-Za-z0-9]/.test(val))                score++;
+      const colours = ["#ef4444","#f97316","#eab308","#16a34a"];
+      fill.style.width      = (score * 25) + "%";
+      fill.style.background = colours[score - 1] || "#f1f5f9";
+    }
+
+    /* ── Load Profile ── */
+    async function loadProfile() {
+      try {
+        const res  = await fetch(`${API}/teacher/profile`, { headers: { Authorization: "Bearer " + token } });
+        const data = await res.json();
+        document.getElementById("fName").value  = data.name  || "";
+        document.getElementById("fEmail").value = data.email || "";
+        document.getElementById("pcName").textContent  = data.name  || "—";
+        document.getElementById("pcEmail").textContent = data.email || "—";
+        document.getElementById("avatarCircle").textContent = (data.name || "?").charAt(0).toUpperCase();
+      } catch(e) {
+        const u = JSON.parse(localStorage.getItem("user") || "{}");
+        document.getElementById("fName").value  = u.name  || "";
+        document.getElementById("fEmail").value = u.email || "";
+        document.getElementById("pcName").textContent  = u.name  || "—";
+        document.getElementById("pcEmail").textContent = u.email || "—";
+        document.getElementById("avatarCircle").textContent = (u.name || "?").charAt(0).toUpperCase();
+      }
+    }
+
+    /* ── Load Org Info ── */
+    async function loadOrgInfo() {
+      try {
+        const res = await fetch(`${API}/teacher/organization`, { headers: { Authorization: "Bearer " + token } });
+        if (!res.ok) return;
+        const org = await res.json();
+        const name = org.platform_name || org.name || "—";
+        document.getElementById("orgNameText").textContent  = name;
+        document.getElementById("infoPlatform").textContent = name;
+
+        if (org.logo) {
+          const logoUrl = org.logo.startsWith("http") ? org.logo : `http://127.0.0.1:8000/${org.logo}`;
+          document.getElementById("orgLogoWrap").innerHTML =
+            `<img src="${logoUrl}" class="org-logo-img" onerror="this.parentElement.innerHTML='<div class=org-logo-placeholder>🎓</div>'">`;
+        }
+      } catch(e) {}
+    }
+
+    /* ── Save Profile ── */
+    async function saveProfile() {
+      const name  = document.getElementById("fName").value.trim();
+      const email = document.getElementById("fEmail").value.trim();
+      if (!name || !email) { inlineMsg("profileMsg","error","Name and email are required."); return; }
+
+      const btn = document.getElementById("saveProfileBtn");
+      btn.disabled = true; btn.textContent = "Saving…";
+
+      try {
+        const fd = new FormData();
+        fd.append("name", name); fd.append("email", email);
+        const res = await fetch(`${API}/teacher/profile`, {
+          method: "PUT", headers: { Authorization: "Bearer " + token }, body: fd
+        });
+        if (!res.ok) throw new Error((await res.json()).detail || "Failed");
+
+        document.getElementById("pcName").textContent  = name;
+        document.getElementById("pcEmail").textContent = email;
+        document.getElementById("avatarCircle").textContent = name.charAt(0).toUpperCase();
+        const u = JSON.parse(localStorage.getItem("user") || "{}");
+        u.name = name; u.email = email;
+        localStorage.setItem("user", JSON.stringify(u));
+        if (document.getElementById("navProfileName")) document.getElementById("navProfileName").textContent = name;
+
+        inlineMsg("profileMsg","success","Profile updated successfully!");
+        toast("Profile saved");
+      } catch(e) {
+        inlineMsg("profileMsg","error", e.message || "Update failed.");
+      } finally {
+        btn.disabled = false; btn.textContent = "Save Profile";
+      }
+    }
+
+    /* ── Change Password ── */
+    async function changePassword() {
+      const curr    = document.getElementById("currPwd").value.trim();
+      const newPwd  = document.getElementById("newPwd").value.trim();
+      const confirm = document.getElementById("confirmPwd").value.trim();
+
+      if (!curr || !newPwd || !confirm) { inlineMsg("pwdMsg","error","All fields are required."); return; }
+      if (newPwd.length < 6)            { inlineMsg("pwdMsg","error","Password must be at least 6 characters."); return; }
+      if (newPwd !== confirm)            { inlineMsg("pwdMsg","error","Passwords do not match."); return; }
+
+      const btn = document.getElementById("savePwdBtn");
+      btn.disabled = true; btn.textContent = "Updating…";
+
+      try {
+        const fd = new FormData();
+        fd.append("current_password", curr);
+        fd.append("password", newPwd);
+        const res = await fetch(`${API}/teacher/profile`, {
+          method: "PUT", headers: { Authorization: "Bearer " + token }, body: fd
+        });
+        if (!res.ok) throw new Error((await res.json()).detail || "Failed");
+
+        document.getElementById("currPwd").value    = "";
+        document.getElementById("newPwd").value     = "";
+        document.getElementById("confirmPwd").value = "";
+        document.getElementById("strengthFill").style.width = "0%";
+        inlineMsg("pwdMsg","success","Password changed successfully!");
+        toast("Password updated");
+      } catch(e) {
+        inlineMsg("pwdMsg","error", e.message || "Failed to change password.");
+      } finally {
+        btn.disabled = false; btn.textContent = "Update Password";
+      }
+    }
+
+
+    /* ── Eye toggle ── */
+    function togglePwd(btn) {
+      const input = btn.closest('.pwd-wrap').querySelector('input');
+      const show  = input.type === 'password';
+      input.type  = show ? 'text' : 'password';
+      btn.innerHTML = show
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadProfile();
+      loadOrgInfo();
+    });
+  </script>
 </body>
-
 </html>

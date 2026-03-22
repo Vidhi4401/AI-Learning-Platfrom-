@@ -105,3 +105,118 @@ async function saveProfile() {
         alert(err.detail || "Update failed");
     }
 }
+
+/* ═══════════════════════════════════════
+   USER MANAGEMENT
+═══════════════════════════════════════ */
+const API_AUTH = "http://127.0.0.1:8000/api/v1/auth";
+const API_ADMIN = "http://127.0.0.1:8000/api/v1/admin";
+
+// Populate the reset-password user dropdown on page load
+async function loadUsersForReset() {
+  const sel = document.getElementById("resetUserSelect");
+  if (!sel) return;
+  try {
+    const token = localStorage.getItem("token");
+    // Fetch students and teachers
+    const [studRes, teachRes] = await Promise.all([
+      fetch(`${API_ADMIN}/students`, { headers: { Authorization: "Bearer " + token } }),
+      fetch(`${API_ADMIN}/teachers`, { headers: { Authorization: "Bearer " + token } })
+    ]);
+    const students = await studRes.json();
+    const teachers = await teachRes.json();
+
+    sel.innerHTML = '<option value="">— Select a user —</option>';
+    if (students.length) {
+      const grpS = document.createElement("optgroup");
+      grpS.label = "Students";
+      students.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u.id;
+        opt.textContent = `${u.name} (${u.email})`;
+        grpS.appendChild(opt);
+      });
+      sel.appendChild(grpS);
+    }
+    if (teachers.length) {
+      const grpT = document.createElement("optgroup");
+      grpT.label = "Teachers";
+      teachers.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u.id;
+        opt.textContent = `${u.name} (${u.email})`;
+        grpT.appendChild(opt);
+      });
+      sel.appendChild(grpT);
+    }
+  } catch(e) { console.error("Load users error", e); }
+}
+
+async function addUser() {
+  const name  = document.getElementById("newUserName").value.trim();
+  const email = document.getElementById("newUserEmail").value.trim();
+  const pwd   = document.getElementById("newUserPass").value;
+  const role  = document.getElementById("newUserRole").value;
+  const succ  = document.getElementById("addUserSuccess");
+  const err   = document.getElementById("addUserError");
+  succ.style.display = err.style.display = "none";
+
+  if (!name || !email || !pwd) { err.textContent = "Please fill all fields."; err.style.display = "block"; return; }
+  if (pwd.length < 6)          { err.textContent = "Password must be at least 6 characters."; err.style.display = "block"; return; }
+
+  const token    = localStorage.getItem("token");
+  const endpoint = role === "teacher" ? "add-teacher" : "add-student";
+  try {
+    const res  = await fetch(`${API_AUTH}/admin/${endpoint}`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body:    JSON.stringify({ name, email, password: pwd })
+    });
+    const data = await res.json();
+    if (!res.ok) { err.textContent = data.detail || "Failed to create user."; err.style.display = "block"; return; }
+
+    succ.textContent = `✅ ${role === "teacher" ? "Teacher" : "Student"} account created for ${name}.`;
+    succ.style.display = "block";
+    document.getElementById("newUserName").value  = "";
+    document.getElementById("newUserEmail").value = "";
+    document.getElementById("newUserPass").value  = "";
+    loadUsersForReset(); // refresh dropdown
+  } catch(e) {
+    err.textContent = "Server error. Please try again.";
+    err.style.display = "block";
+  }
+}
+
+async function resetUserPassword() {
+  const userId = document.getElementById("resetUserSelect").value;
+  const newPwd = document.getElementById("resetNewPwd").value;
+  const succ   = document.getElementById("resetPwdSuccess");
+  const err    = document.getElementById("resetPwdError");
+  succ.style.display = err.style.display = "none";
+
+  if (!userId)         { err.textContent = "Please select a user."; err.style.display = "block"; return; }
+  if (!newPwd)         { err.textContent = "Please enter a new password."; err.style.display = "block"; return; }
+  if (newPwd.length < 6) { err.textContent = "Password must be at least 6 characters."; err.style.display = "block"; return; }
+
+  const token = localStorage.getItem("token");
+  try {
+    const res  = await fetch(`${API_AUTH}/admin/reset-user-password/${userId}`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body:    JSON.stringify({ new_password: newPwd })
+    });
+    const data = await res.json();
+    if (!res.ok) { err.textContent = data.detail || "Reset failed."; err.style.display = "block"; return; }
+
+    succ.textContent = `✅ ${data.message}`;
+    succ.style.display = "block";
+    document.getElementById("resetNewPwd").value = "";
+    document.getElementById("resetUserSelect").value = "";
+  } catch(e) {
+    err.textContent = "Server error. Please try again.";
+    err.style.display = "block";
+  }
+}
+
+// Load users when settings page opens
+document.addEventListener("DOMContentLoaded", loadUsersForReset);

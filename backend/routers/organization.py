@@ -14,10 +14,7 @@ def get_db():
         db.close()
 
 
-@router.get("/organizations")
-def get_orgs(db: Session = Depends(get_db)):
-    return db.query(models.Organization).all()
-
+from cloudinary_utils import upload_to_cloudinary
 
 @router.get("/teacher/organization")
 def get_organization(
@@ -31,11 +28,16 @@ def get_organization(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # Intelligent logo URL
+    logo_url = org.logo
+    if logo_url and not logo_url.startswith("http"):
+        logo_url = f"http://127.0.0.1:8000/{logo_url}"
+
     return {
         "id":            org.id,
         "org_name":      org.name,
         "platform_name": org.platform_name or org.name,
-        "logo":          f"http://127.0.0.1:8000/{org.logo}" if org.logo else None,
+        "logo":          logo_url,
         "email":         org.email,
         "status":        org.status
     }
@@ -58,12 +60,11 @@ def update_organization(
     if platform_name:
         org.platform_name = platform_name
 
-    if logo:
-        os.makedirs("uploads", exist_ok=True)
-        file_path = f"uploads/{logo.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(logo.file, buffer)
-        org.logo = file_path
+    if logo and logo.filename:
+        # Use Cloudinary
+        cloud_url = upload_to_cloudinary(logo, folder="learnhub/logos")
+        if cloud_url:
+            org.logo = cloud_url
 
     db.commit()
     db.refresh(org)

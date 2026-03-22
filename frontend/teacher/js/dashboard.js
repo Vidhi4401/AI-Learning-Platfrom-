@@ -25,6 +25,7 @@ function updateDashboardUI(data) {
   document.getElementById("coursesCount").textContent      = data.total_courses      ?? 0;
   document.getElementById("quizzesCount").textContent      = data.total_quizzes      ?? 0;
   document.getElementById("assignmentsCount").textContent  = data.total_assignments  ?? 0;
+  document.getElementById("materialsCount").textContent    = data.total_materials    ?? 0;
   document.getElementById("certificatesCount").textContent = data.certificates_issued ?? 0;
 
   // ── Engagement Overview ──
@@ -94,7 +95,7 @@ async function onCourseFilterChange() {
 
   badge.style.display = "flex";
   badge.textContent = "Loading…";
-  setStatCounts("--", "--", "--", "--", "--");
+  setStatCounts("--", "--", "--", "--", "--", "--");
 
   const token = localStorage.getItem("token");
   try {
@@ -107,9 +108,10 @@ async function onCourseFilterChange() {
     // Map course-specific stats to dashboard UI
     const mappedData = {
         total_students: data.enrolled_students ?? 0,
-        total_courses: data.total_topics ?? 0, // Using topics instead of courses count here
+        total_courses: data.total_topics ?? 0,
         total_quizzes: data.total_quizzes ?? 0,
         total_assignments: data.total_assignments ?? 0,
+        total_materials: data.total_materials ?? 0,
         certificates_issued: data.certificates_issued ?? 0,
         students_label: "Enrolled Students",
         engagement: data.engagement
@@ -129,7 +131,7 @@ async function onCourseFilterChange() {
   } catch (err) {
     console.error("Course stats error:", err);
     badge.textContent = "⚠ Stats unavailable";
-    setStatCounts("--", "--", "--", "--", "--");
+    setStatCounts("--", "--", "--", "--", "--", "--");
   }
 }
 
@@ -199,11 +201,12 @@ async function loadDashboardCharts(courseId = null) {
     }
 }
 
-function setStatCounts(students, courses, quizzes, assignments, certs) {
+function setStatCounts(students, courses, quizzes, assignments, materials, certs) {
   document.getElementById("studentsCount").textContent     = students;
   document.getElementById("coursesCount").textContent      = courses;
   document.getElementById("quizzesCount").textContent      = quizzes;
   document.getElementById("assignmentsCount").textContent  = assignments;
+  document.getElementById("materialsCount").textContent    = materials;
   document.getElementById("certificatesCount").textContent = certs;
 }
 

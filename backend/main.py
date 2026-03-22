@@ -5,7 +5,7 @@ from database import engine, Base
 import os
 
 # ── Import all routers ──
-from routers import auth, organization, dashboard, courses, topics, videos, assignments, quizzes, profile, student, chatbot, admin_router
+from routers import auth, organization, dashboard, courses, topics, videos, assignments, quizzes, profile, student, chatbot, admin_router, materials
 
 app = FastAPI()
 
@@ -40,3 +40,4 @@ app.include_router(profile.router)
 app.include_router(student.router)
 app.include_router(chatbot.router)
 app.include_router(admin_router.router)
+app.include_router(materials.router)

@@ -134,14 +134,16 @@ class Video(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 class Certificate(Base):
-    __tablename__ = "certificates"
+    __tablename__ = "certificatess"
 
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("users.id"))
     course_id = Column(Integer, ForeignKey("courses.id"))
     eligible = Column(Boolean, default=False)
+    status = Column(String(20), default="pending") # pending, verified, rejected
     issued = Column(Boolean, default=False)
     issued_at = Column(DateTime)
+    request_date = Column(DateTime, server_default=func.now())
 
 
 class StudentPerformanceSummary(Base):
@@ -183,4 +185,14 @@ class ChatDoubt(Base):
     mode = Column(String)                                              # "AI" or "FACULTY"
     is_read_by_student = Column(Boolean, default=False)                # For student notification badge
     is_read_by_faculty = Column(Boolean, default=False)                # For faculty notification badge
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Material(Base):
+    __tablename__ = "materials"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    title      = Column(String)
+    file_url   = Column(String)          # Cloudinary secure_url
+    course_id  = Column(Integer, ForeignKey("courses.id"))
+    teacher_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -3,186 +3,464 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Settings</title>
+  <title>Settings — Student Portal</title>
   <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/student-settings.css">
+  <style>
+    .page-content { padding: 32px 40px; }
+
+    .page-hero { margin-bottom: 32px; }
+    .page-hero h1 { font-size: 26px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+    .page-hero p  { font-size: 14px; color: var(--muted); }
+
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ── Profile card ── */
+    .profile-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 22px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      position: sticky;
+      top: 90px;
+    }
+    .avatar-circle {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: linear-gradient(135deg, #0ea5e9, #7c3aed);
+      color: #fff; font-size: 30px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .pc-name  { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+    .pc-email { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .role-badge {
+      display: inline-block;
+      background: #e0f2fe; color: #0369a1;
+      padding: 3px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; margin-bottom: 18px;
+    }
+
+    /* Stats inside profile card */
+    .quick-stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      text-align: center;
+    }
+    .qs-item {
+      background: var(--page-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 8px;
+    }
+    .qs-val   { font-size: 22px; font-weight: 800; color: var(--ink); }
+    .qs-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Sections ── */
+    .settings-sections { display: flex; flex-direction: column; gap: 20px; }
+
+    .s-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 26px 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .s-card-title {
+      font-size: 15px; font-weight: 700; color: var(--ink);
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group:last-of-type { margin-bottom: 0; }
+    .form-group label {
+      display: block; font-size: 11.5px; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.4px; margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid var(--border); border-radius: 9px;
+      font-size: 14px; font-family: inherit; color: var(--ink);
+      outline: none; transition: border-color .2s; box-sizing: border-box;
+    }
+    .form-group input:focus { border-color: var(--accent); }
+
+    .pwd-strength {
+      height: 4px; border-radius: 2px; background: #f1f5f9; margin-top: 6px; overflow: hidden;
+    }
+    .pwd-strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0%; }
+
+    .s-footer {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 20px; padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-save {
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 9px;
+      padding: 10px 26px; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .btn-save:hover { opacity: .88; }
+    .btn-save:disabled { opacity: .6; cursor: not-allowed; }
+
+    .inline-msg {
+      font-size: 13px; font-weight: 600; padding: 8px 12px;
+      border-radius: 7px; display: none; margin-top: 12px;
+    }
+    .inline-msg.success { background: #dcfce7; color: #166534; }
+    .inline-msg.error   { background: #fee2e2; color: #dc2626; }
+
+    /* Info rows */
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row-label { color: var(--muted); font-weight: 500; }
+    .info-row-value { color: var(--ink); font-weight: 600; }
+    .status-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; background: #16a34a; margin-right: 6px;
+    }
+
+    /* Enrolled courses list */
+    .course-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f5f3ff; color: #6d28d9;
+      border: 1px solid #ede9fe;
+      border-radius: 20px; padding: 5px 14px;
+      font-size: 13px; font-weight: 600;
+      margin: 4px;
+    }
+
+    /* Toast */
+
+    /* ── Eye toggle for password fields ── */
+    .pwd-wrap { position: relative; }
+    .pwd-wrap input { padding-right: 42px; }
+    .pwd-eye {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: #94a3b8; font-size: 16px; padding: 0; line-height: 1;
+      display: flex; align-items: center;
+    }
+    .pwd-eye:hover { color: #475569; }
+
+    .toast {
+      position: fixed; bottom: 28px; right: 28px;
+      padding: 12px 22px; border-radius: 10px;
+      font-size: 14px; font-weight: 600; color: #fff;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      transform: translateY(80px); opacity: 0;
+      transition: transform .3s, opacity .3s;
+      z-index: 9999; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #16a34a; }
+    .toast.error   { background: #dc2626; }
+
+    @media (max-width: 900px) {
+      .settings-layout { grid-template-columns: 1fr; }
+      .profile-card { position: static; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
+
   <div id="sidebar" class="sidebar"></div>
   <div class="main-content">
     <div id="navbar" class="navbar"></div>
-    <div class="page-content">
 
-      <div class="page-header">
-        <h1>Settings</h1>
-        <p>Manage your account preferences</p>
+    <div class="page-content">
+      <div class="page-hero">
+        <h1>Account Settings</h1>
+        <p>Manage your profile and security.</p>
       </div>
 
-      <div class="settings-grid">
+      <div class="settings-layout">
 
-        <!-- ── Profile Information ── -->
-        <div class="settings-card">
-          <div class="card-header">
-            <span class="card-icon">👤</span>
-            <h3>Profile Information</h3>
+        <!-- Left: Profile snapshot -->
+        <div class="profile-card">
+          <div class="avatar-circle" id="avatarCircle">?</div>
+          <div class="pc-name"  id="pcName">Loading…</div>
+          <div class="pc-email" id="pcEmail"></div>
+          <div class="role-badge">Student</div>
+
+          <div class="quick-stats">
+            <div class="qs-item">
+              <div class="qs-val"  id="qsCourses">—</div>
+              <div class="qs-label">Enrolled</div>
+            </div>
+            <div class="qs-item">
+              <div class="qs-val"  id="qsCerts">—</div>
+              <div class="qs-label">Certificates</div>
+            </div>
           </div>
+        </div>
 
-          <div class="profile-row">
-            <div class="profile-avatar" id="profileAvatar">S</div>
-            <div class="profile-meta">
-              <div class="profile-name"  id="profileName">—</div>
-              <div class="profile-email" id="profileEmail">—</div>
-              <div class="profile-role">Student</div>
+        <!-- Right: Sections -->
+        <div class="settings-sections">
+
+          <!-- Profile -->
+          <div class="s-card">
+            <div class="s-card-title">👤 Profile Information</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="sName" placeholder="Your full name">
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="sEmail" placeholder="your@email.com">
+              </div>
+            </div>
+            <div id="profileMsg" class="inline-msg"></div>
+            <div class="s-footer">
+              <button class="btn-save" id="saveProfileBtn" onclick="saveProfile()">Save Profile</button>
             </div>
           </div>
 
-          <button class="btn btn-outline" id="editProfileBtn">✏️ Edit Profile</button>
-        </div>
-
-        <!-- ── Change Password ── -->
-        <div class="settings-card">
-          <div class="card-header">
-            <span class="card-icon">🔐</span>
-            <h3>Change Password</h3>
-          </div>
-
-          <div class="form-stack" id="passwordForm">
+          <!-- Change Password -->
+          <div class="s-card">
+            <div class="s-card-title">🔐 Change Password</div>
             <div class="form-group">
               <label>Current Password</label>
-              <input type="password" id="currentPwd" placeholder="Enter current password"/>
-            </div>
-            <div class="form-group">
-              <label>New Password</label>
-              <input type="password" id="newPwd" placeholder="Enter new password"/>
-            </div>
-            <div class="form-group">
-              <label>Confirm New Password</label>
-              <input type="password" id="confirmPwd" placeholder="Confirm new password"/>
-            </div>
-            <div class="pwd-msg" id="pwdMsg"></div>
-            <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
-          </div>
-        </div>
-
-        <!-- ── Theme ── -->
-        <div class="settings-card">
-          <div class="card-header">
-            <span class="card-icon">✨</span>
-            <h3>Theme Mode</h3>
-          </div>
-          <div class="theme-row">
-            <button class="theme-btn active" id="themeLight" onclick="setTheme('light')">
-              <span>☀️</span> Light
-            </button>
-            <button class="theme-btn" id="themeDark" onclick="setTheme('dark')">
-              <span>🌙</span> Dark
-            </button>
-          </div>
-          <p class="card-note">Dark mode coming soon — UI is being prepared.</p>
-        </div>
-
-        <!-- ── Notifications ── -->
-        <div class="settings-card">
-          <div class="card-header">
-            <span class="card-icon">🔔</span>
-            <h3>Notifications</h3>
-          </div>
-          <div class="toggle-list">
-            <div class="toggle-item">
-              <div>
-                <div class="toggle-title">Email Notifications</div>
-                <div class="toggle-sub">Receive course updates via email</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="notifEmail" checked onchange="saveNotifPref()">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="toggle-item">
-              <div>
-                <div class="toggle-title">Assignment Reminders</div>
-                <div class="toggle-sub">Get notified about upcoming deadlines</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="notifAssign" checked onchange="saveNotifPref()">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="toggle-item">
-              <div>
-                <div class="toggle-title">Quiz Notifications</div>
-                <div class="toggle-sub">Be notified when new quizzes are available</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="notifQuiz" checked onchange="saveNotifPref()">
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-          <p class="card-note">Preferences saved locally — email delivery coming soon.</p>
-        </div>
-
-        <!-- ── Account Actions ── -->
-        <div class="settings-card danger-card">
-          <div class="card-header">
-            <span class="card-icon">⚙️</span>
-            <h3>Account</h3>
-          </div>
-          <div class="account-btns">
-            <button class="btn btn-outline" onclick="downloadMyData()">⬇️ Download My Data</button>
-            <button class="btn btn-danger" onclick="openDeleteModal()">🗑️ Delete Account</button>
-          </div>
-        </div>
-
-      </div>
+              <div class="pwd-wrap">
+      <input type="password" id="currPwd" placeholder="Enter current password">
+      <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
     </div>
-  </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>New Password</label>
+                <div class="pwd-wrap">
+      <input type="password" id="newPwd" placeholder="Min. 6 characters"
+                       oninput="updateStrength(this.value)">
+      <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>
+                <div class="pwd-strength">
+                  <div class="pwd-strength-fill" id="strengthFill"></div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <div class="pwd-wrap">
+      <input type="password" id="confirmPwd" placeholder="Repeat password">
+      <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>
+              </div>
+            </div>
+            <div id="pwdMsg" class="inline-msg"></div>
+            <div class="s-footer">
+              <button class="btn-save" id="savePwdBtn" onclick="changePassword()">Update Password</button>
+            </div>
+          </div>
 
-  <!-- ── Edit Profile Modal ── -->
-  <div class="modal-overlay" id="editModal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3>Edit Profile</h3>
-        <button class="modal-close" onclick="closeModal('editModal')">✕</button>
-      </div>
-      <div class="form-stack">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="editName" placeholder="Your full name"/>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="editEmail" placeholder="your@email.com"/>
-        </div>
-        <div class="edit-msg" id="editMsg"></div>
-        <div class="modal-foot">
-          <button class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button>
-          <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+          <!-- Enrolled Courses -->
+          <div class="s-card">
+            <div class="s-card-title">📚 My Enrolled Courses</div>
+            <div id="enrolledList" style="min-height:40px;">
+              <span style="color:var(--muted);font-size:13px;">Loading courses…</span>
+            </div>
+          </div>
+
+          <!-- Account Info -->
+          <div class="s-card">
+            <div class="s-card-title">ℹ️ Account Information</div>
+            <div class="info-row">
+              <span class="info-row-label">Account Status</span>
+              <span class="info-row-value"><span class="status-dot"></span>Active</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row-label">Role</span>
+              <span class="info-row-value">Student</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row-label">Organization</span>
+              <span class="info-row-value" id="infoOrg">—</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row-label">Need to reset your password?</span>
+              <span class="info-row-value" style="color:var(--muted);font-size:13px;">Contact your administrator.</span>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ── Delete Confirm Modal ── -->
-  <div class="modal-overlay" id="deleteModal">
-    <div class="modal-box modal-sm">
-      <div class="modal-head">
-        <h3>Delete Account</h3>
-        <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
-      </div>
-      <div class="delete-body">
-        <div class="delete-icon">⚠️</div>
-        <p>Are you sure you want to delete your account?</p>
-        <p><strong>All your data will be permanently deleted.</strong></p>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-outline" onclick="closeModal('deleteModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="confirmDelete()">Yes, Delete</button>
-      </div>
-    </div>
-  </div>
+  <div class="toast" id="toast"></div>
 
   <script src="js/student-layout.js"></script>
-  <script src="js/student-settings.js"></script>
+  <script>
+    const API = "http://127.0.0.1:8000/api/v1";
+
+    function toast(msg, type = "success") {
+      const el = document.getElementById("toast");
+      el.textContent = (type === "success" ? "✓ " : "✕ ") + msg;
+      el.className   = `toast ${type} show`;
+      setTimeout(() => el.classList.remove("show"), 3500);
+    }
+
+    function inlineMsg(id, type, text) {
+      const el = document.getElementById(id);
+      el.className = `inline-msg ${type}`;
+      el.textContent = text;
+      el.style.display = "block";
+      setTimeout(() => { el.style.display = "none"; }, 4000);
+    }
+
+    function updateStrength(val) {
+      const fill = document.getElementById("strengthFill");
+      let score = 0;
+      if (val.length >= 6)                          score++;
+      if (val.length >= 10)                         score++;
+      if (/[A-Z]/.test(val) && /[0-9]/.test(val))  score++;
+      if (/[^A-Za-z0-9]/.test(val))                score++;
+      const colours = ["#ef4444","#f97316","#eab308","#16a34a"];
+      fill.style.width      = (score * 25) + "%";
+      fill.style.background = colours[score - 1] || "#f1f5f9";
+    }
+
+    async function loadProfile() {
+      try {
+        const res  = await fetch(`${API}/student/profile`, { headers: { Authorization: "Bearer " + token } });
+        const data = res.ok ? await res.json() : JSON.parse(localStorage.getItem("user") || "{}");
+        const name  = data.name  || user?.name  || "Student";
+        const email = data.email || user?.email || "—";
+        document.getElementById("sName").value  = name;
+        document.getElementById("sEmail").value = email;
+        document.getElementById("pcName").textContent  = name;
+        document.getElementById("pcEmail").textContent = email;
+        document.getElementById("avatarCircle").textContent = name.charAt(0).toUpperCase();
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadEnrolledCourses() {
+      try {
+        const [coursesRes, enrollRes, certsRes] = await Promise.all([
+          fetch(`${API}/student/courses`,     { headers: { Authorization: "Bearer " + token } }),
+          fetch(`${API}/student/enrollments`, { headers: { Authorization: "Bearer " + token } }),
+          fetch(`${API}/student/certificates`,{ headers: { Authorization: "Bearer " + token } })
+        ]);
+        const allCourses  = coursesRes.ok  ? await coursesRes.json()  : [];
+        const enrollments = enrollRes.ok   ? await enrollRes.json()   : [];
+        const certs       = certsRes.ok    ? await certsRes.json()    : [];
+
+        const enrolledIds = new Set(enrollments.map(e => e.course_id));
+        const enrolled    = allCourses.filter(c => enrolledIds.has(c.id));
+
+        // Quick stats
+        document.getElementById("qsCourses").textContent = enrolled.length;
+        document.getElementById("qsCerts").textContent   = certs.filter(c => c.issued).length;
+
+        // Org name from user in localStorage
+        const u = JSON.parse(localStorage.getItem("user") || "{}");
+        document.getElementById("infoOrg").textContent = u.platform_name || "—";
+
+        // Course chips
+        const container = document.getElementById("enrolledList");
+        if (!enrolled.length) {
+          container.innerHTML = `<span style="color:var(--muted);font-size:13px;">You haven't enrolled in any courses yet.</span>`;
+          return;
+        }
+        container.innerHTML = enrolled.map(c =>
+          `<span class="course-chip">📘 ${c.title}</span>`
+        ).join("");
+
+      } catch(e) { console.error(e); }
+    }
+
+    async function saveProfile() {
+      const name  = document.getElementById("sName").value.trim();
+      const email = document.getElementById("sEmail").value.trim();
+      if (!name || !email) { inlineMsg("profileMsg","error","Name and email are required."); return; }
+
+      const btn = document.getElementById("saveProfileBtn");
+      btn.disabled = true; btn.textContent = "Saving…";
+      try {
+        const fd = new FormData();
+        fd.append("name", name); fd.append("email", email);
+        const res = await fetch(`${API}/student/profile`, {
+          method: "PUT", headers: { Authorization: "Bearer " + token }, body: fd
+        });
+        if (!res.ok) throw new Error((await res.json()).detail || "Failed");
+
+        document.getElementById("pcName").textContent  = name;
+        document.getElementById("pcEmail").textContent = email;
+        document.getElementById("avatarCircle").textContent = name.charAt(0).toUpperCase();
+        const u = JSON.parse(localStorage.getItem("user") || "{}");
+        u.name = name; u.email = email;
+        localStorage.setItem("user", JSON.stringify(u));
+        if (document.getElementById("navProfileName")) document.getElementById("navProfileName").textContent = name;
+
+        inlineMsg("profileMsg","success","Profile updated!");
+        toast("Profile saved");
+      } catch(e) {
+        inlineMsg("profileMsg","error", e.message || "Update failed.");
+      } finally {
+        btn.disabled = false; btn.textContent = "Save Profile";
+      }
+    }
+
+    async function changePassword() {
+      const curr    = document.getElementById("currPwd").value.trim();
+      const newPwd  = document.getElementById("newPwd").value.trim();
+      const confirm = document.getElementById("confirmPwd").value.trim();
+
+      if (!curr || !newPwd || !confirm) { inlineMsg("pwdMsg","error","All fields are required."); return; }
+      if (newPwd.length < 6)            { inlineMsg("pwdMsg","error","Password must be at least 6 characters."); return; }
+      if (newPwd !== confirm)           { inlineMsg("pwdMsg","error","Passwords do not match."); return; }
+
+      const btn = document.getElementById("savePwdBtn");
+      btn.disabled = true; btn.textContent = "Updating…";
+      try {
+        const fd = new FormData();
+        fd.append("current_password", curr);
+        fd.append("password", newPwd);
+        const res = await fetch(`${API}/student/profile`, {
+          method: "PUT", headers: { Authorization: "Bearer " + token }, body: fd
+        });
+        if (!res.ok) throw new Error((await res.json()).detail || "Failed");
+
+        document.getElementById("currPwd").value    = "";
+        document.getElementById("newPwd").value     = "";
+        document.getElementById("confirmPwd").value = "";
+        document.getElementById("strengthFill").style.width = "0%";
+        inlineMsg("pwdMsg","success","Password changed successfully!");
+        toast("Password updated");
+      } catch(e) {
+        inlineMsg("pwdMsg","error", e.message || "Failed.");
+      } finally {
+        btn.disabled = false; btn.textContent = "Update Password";
+      }
+    }
+
+
+    /* ── Eye toggle ── */
+    function togglePwd(btn) {
+      const input = btn.closest('.pwd-wrap').querySelector('input');
+      const show  = input.type === 'password';
+      input.type  = show ? 'text' : 'password';
+      btn.innerHTML = show
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadProfile();
+      loadEnrolledCourses();
+    });
+  </script>
 </body>
 </html>

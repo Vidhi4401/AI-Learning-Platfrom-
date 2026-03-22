@@ -46,10 +46,15 @@
           </div>
         </div>
         <div class="detail-stat-card">
-          <!-- <span class="ds-icon">📝</span> -->
           <div>
             <div class="ds-label">Total Assignments</div>
             <div class="ds-value" id="statAssignments">--</div>
+          </div>
+        </div>
+        <div class="detail-stat-card">
+          <div>
+            <div class="ds-label">Total Materials</div>
+            <div class="ds-value" id="statMaterials">--</div>
           </div>
         </div>
         <div class="detail-stat-card">
@@ -67,6 +72,7 @@
         <button class="tab-btn" data-tab="topics">Topics</button>
         <button class="tab-btn" data-tab="quizzes">Quizzes</button>
         <button class="tab-btn" data-tab="assignments">Assignments</button>
+        <button class="tab-btn" data-tab="materials">Materials</button>
         <button class="tab-btn" data-tab="students">Student Performance</button>
       </div>
 
@@ -118,6 +124,17 @@
               <button class="btn-primary" onclick="goToAddAssignment()">+ Add Assignment</button>
             </div>
             <div id="assignmentsList"></div>
+          </div>
+        </div>
+
+        <!-- MATERIALS -->
+        <div class="tab-pane" id="tab-materials">
+          <div class="panel">
+            <div class="panel-top">
+              <h3>Course Materials</h3>
+              <button class="btn-primary" onclick="goToAddMaterial()">+ Upload Material</button>
+            </div>
+            <div id="materialsList" class="materials-list"></div>
           </div>
         </div>
 

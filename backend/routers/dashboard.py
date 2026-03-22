@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
-import models
+import models, os
+from datetime import datetime
 from dependencies import get_current_teacher
 from typing import Optional
 
@@ -66,6 +67,10 @@ def get_dashboard(
         models.Certificate.issued == True
     ).count() if course_ids else 0
 
+    total_materials = db.query(models.Material).filter(
+        models.Material.course_id.in_(course_ids)
+    ).count() if course_ids else 0
+
     # ── Real Engagement Metrics ──
     # 1. Video Completion Rate
     total_videos = db.query(models.Video).join(models.Topic).filter(models.Topic.course_id.in_(course_ids)).count() if course_ids else 0
@@ -97,6 +102,7 @@ def get_dashboard(
         "total_courses":   len(course_ids),
         "total_quizzes":   total_quizzes,
         "total_assignments":   total_assigns,
+        "total_materials":     total_materials,
         "certificates_issued": certificates_issued,
         "engagement": {
             "video_rate": video_rate,
@@ -111,27 +117,23 @@ from routers.student import predict_learner_level
 import pickle
 import pandas as pd
 
-# Load ML artifacts once (Paths relative to backend folder)
+# ── Absolute path to /backend/ml/ regardless of CWD ──
+_ROUTER_DIR = os.path.dirname(os.path.abspath(__file__))          # .../routers/
+_ML_DIR     = os.path.join(os.path.dirname(_ROUTER_DIR), "ml")   # .../ml/
+
+def _load_pkl(filename):
+    path = os.path.join(_ML_DIR, filename)
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
 try:
-    with open("ml/final_risk_model.pkl", "rb") as f:
-        risk_model = pickle.load(f)
-    with open("ml/final_scaler.pkl", "rb") as f:
-        risk_scaler = pickle.load(f)
-    with open("ml/model_features.pkl", "rb") as f:
-        model_feature_names = pickle.load(f)
+    risk_model         = _load_pkl("final_risk_model.pkl")
+    risk_scaler        = _load_pkl("final_scaler.pkl")
+    model_feature_names = _load_pkl("model_features.pkl")
+    print("[ML] Risk model loaded successfully")
 except Exception as e:
-    print(f"[ML Load Error] {e}. Trying absolute path...")
-    try:
-        # Fallback for different CWDs
-        with open("backend/ml/final_risk_model.pkl", "rb") as f:
-            risk_model = pickle.load(f)
-        with open("backend/ml/final_scaler.pkl", "rb") as f:
-            risk_scaler = pickle.load(f)
-        with open("backend/ml/model_features.pkl", "rb") as f:
-            model_feature_names = pickle.load(f)
-    except:
-        print("[ML Load Error] All paths failed. Risk model disabled.")
-        risk_model = None
+    print(f"[ML Load Error] {e}")
+    risk_model = risk_scaler = model_feature_names = None
 
 def get_student_metrics(db: Session, student_id: int, course_id: int = None):
     """
@@ -256,46 +258,51 @@ def get_all_students(
     results = []
     for s in students:
         course_count = db.query(models.Enrollment).filter(models.Enrollment.student_id == s.id).count()
-        # Direct calculation for teacher list
         features, level, risk = get_student_metrics(db, s.id)
-        
         results.append({
-            "id": s.id,
-            "name": s.name,
-            "email": s.email,
-            "course_count": course_count,
+            "id":            s.id,
+            "name":          s.name,
+            "email":         s.email,
+            "course_count":  course_count,
             "overall_score": round(features["overall_score"], 1),
+            "quiz_avg":      round(features["quiz_average"], 1),
+            "assign_avg":    round(features["assignment_average"], 1),
             "learner_level": level,
-            "dropout_risk": risk
+            "dropout_risk":  risk
         })
     return results
 
 @router.get("/students/export")
 def export_students_excel(
-    token: str = None, # Allow query token for browser downloads
+    token: str = None,
     db: Session = Depends(get_db),
     teacher: models.User = Depends(get_current_teacher)
 ):
-    """Generates Excel report for teacher's students."""
+    """Advanced multi-sheet Excel export for teacher's students."""
     students_data = get_all_students(db, teacher)
     if not students_data:
         raise HTTPException(status_code=400, detail="No student data to export")
-        
-    df = pd.DataFrame(students_data)
-    # Reorder and rename columns for readability
-    df_report = df[["name", "email", "course_count", "overall_score", "learner_level", "dropout_risk"]]
-    df_report.columns = ["Student Name", "Email", "Enrolled Courses", "Overall Score %", "Learner Level", "Dropout Risk"]
-    
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df_report.to_excel(writer, index=False, sheet_name='Students Performance')
-    
-    output.seek(0)
-    
-    headers = {
-        'Content-Disposition': f'attachment; filename="students_report_{datetime.now().strftime("%Y%m%d")}.xlsx"'
-    }
-    return StreamingResponse(output, headers=headers, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+    org = db.query(models.Organization).filter(
+        models.Organization.id == teacher.organization_id
+    ).first()
+    org_name = (org.platform_name or org.name) if org else "LearnHub"
+
+    from excel_export import build_teacher_report
+    buf = build_teacher_report(
+        students=students_data,
+        teacher_name=teacher.name,
+        org_name=org_name,
+        db=db,
+        get_student_metrics=get_student_metrics,
+        models=models
+    )
+
+    safe_name = "".join(c for c in teacher.name.replace(" ", "_") if ord(c) < 128) or "Teacher"
+    filename  = f"Students_Report_{safe_name}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    headers   = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(buf, headers=headers,
+                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @router.get("/students/{student_id}/detail")
 def get_student_detail(
@@ -327,14 +334,20 @@ def get_student_detail(
         topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course.id).all()]
         v_count = db.query(models.Video).filter(models.Video.topic_id.in_(topic_ids)).count() if topic_ids else 0
 
+        total_quizzes_c = db.query(models.Quiz).filter(models.Quiz.topic_id.in_(topic_ids)).count() if topic_ids else 0
+        total_assigns_c = db.query(models.Assignment).filter(models.Assignment.topic_id.in_(topic_ids)).count() if topic_ids else 0
         courses_data.append({
-            "title": course.title,
-            "quiz_avg": f"{round(c_features['quiz_average'])}%",
-            "assign_avg": f"{round(c_features['assignment_average'])}%",
-            "videos": f"{c_features['videos_completed']}/{v_count}",
-            "progress": f"{round(c_features['overall_score'])}%",
-            "level": c_level,
-            "risk": c_risk
+            "id":           course.id,
+            "title":        course.title,
+            "overall":      round(c_features["overall_score"], 1),
+            "quiz_avg":     round(c_features["quiz_average"], 1),
+            "assign_avg":   round(c_features["assignment_average"], 1),
+            "completion_rate": round(c_features["completion_rate"], 1),
+            "videos":       f"{c_features['videos_completed']}/{v_count}",
+            "quizzes":      f"{c_features['quizzes_attempted']}/{total_quizzes_c}",
+            "assignments":  f"{c_features['assignments_submitted']}/{total_assigns_c}",
+            "level":        c_level,
+            "risk":         c_risk
         })
 
     # 3. Recent Quiz Attempts
@@ -371,15 +384,23 @@ def get_student_detail(
         })
 
     return {
-        "name": student.name,
-        "email": student.email,
+        "name":           student.name,
+        "email":          student.email,
+        "joined":         student.created_at.strftime("%B %d, %Y") if student.created_at else "—",
         "enrolled_count": len(enrollments),
-        "overall_quiz": f"{round(global_features['quiz_average'])}%",
-        "overall_assign": f"{round(global_features['assignment_average'])}%",
-        "level": global_level,
-        "dropout_risk": global_risk,
+        "overall_score":  round(global_features["overall_score"], 1),
+        "quiz_average":   round(global_features["quiz_average"], 1),
+        "assign_average": round(global_features["assignment_average"], 1),
+        "completion_rate":round(global_features["completion_rate"], 1),
+        "quiz_attempt_rate":      round(global_features["quiz_attempt_rate"], 1),
+        "assign_submission_rate": round(global_features["assignment_submission_rate"], 1),
+        "videos_completed":       global_features["videos_completed"],
+        "quizzes_attempted":      global_features["quizzes_attempted"],
+        "assignments_submitted":  global_features["assignments_submitted"],
+        "level":          global_level,
+        "dropout_risk":   global_risk,
         "enrolled_courses": courses_data,
-        "quiz_history": quiz_history,
+        "quiz_history":   quiz_history,
         "assign_history": assign_history
     }
 
@@ -477,3 +498,39 @@ def get_analytics(
         "total_courses": 1 if course_id else len(db.query(models.Course).filter(models.Course.organization_id == org_id).all()),
         "total_students": len(results)
     }
+
+
+# ── TEACHER: Student Certificates ─────────────────────────────────────────────
+@router.get("/students/{student_id}/certificates")
+def get_student_certificates_for_teacher(
+    student_id: int,
+    db: Session = Depends(get_db),
+    teacher: models.User = Depends(get_current_teacher)
+):
+    """Return all certificate records for a student, filtered to this teacher's org."""
+    student = db.query(models.User).filter(
+        models.User.id == student_id,
+        models.User.organization_id == teacher.organization_id
+    ).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    certs = db.query(models.Certificate, models.Course.title)\
+        .join(models.Course, models.Certificate.course_id == models.Course.id)\
+        .filter(models.Certificate.student_id == student_id)\
+        .order_by(models.Certificate.request_date.desc())\
+        .all()
+
+    result = []
+    for cert, course_title in certs:
+        m, _, _ = get_student_metrics(db, student_id, cert.course_id)
+        result.append({
+            "id": cert.id,
+            "course_title": course_title,
+            "status": cert.status,
+            "issued": cert.issued,
+            "score": round(m["overall_score"], 1),
+            "request_date": cert.request_date.isoformat() if cert.request_date else None,
+            "issued_at": cert.issued_at.isoformat() if cert.issued_at else None,
+        })
+    return result

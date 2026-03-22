@@ -240,5 +240,5 @@ async function adminRejectCert(certId) {
 
 function downloadCert(certId) {
     const token = localStorage.getItem("token");
-    window.open(`${API}/student/certificates/${certId}/download?token=${token}`, "_blank");
+    window.open(`${API}/admin/certificates/${certId}/download?token=${token}`, "_blank");
 }

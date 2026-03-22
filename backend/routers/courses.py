@@ -155,6 +155,8 @@ async def process_course_pdf(
         raise HTTPException(status_code=500, detail="Failed to save generated content to database.")
 
 
+from cloudinary_utils import upload_to_cloudinary
+
 @router.post("/courses")
 def create_course(
     title: str = Form(...),
@@ -165,12 +167,9 @@ def create_course(
     db: Session = Depends(get_db),
     teacher: models.User = Depends(get_current_teacher)
 ):
-    file_path = None
-    if logo:
-        os.makedirs("uploads", exist_ok=True)
-        file_path = f"uploads/{logo.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(logo.file, buffer)
+    cloud_url = None
+    if logo and logo.filename:
+        cloud_url = upload_to_cloudinary(logo, folder="learnhub/courses")
 
     existing = db.query(models.Course).filter(
         models.Course.title == title,
@@ -185,7 +184,7 @@ def create_course(
         description=description,
         difficulty=difficulty,
         status=status,
-        logo=file_path,
+        logo=cloud_url,
         organization_id=teacher.organization_id,
         created_by=teacher.id
     )
@@ -315,6 +314,10 @@ def get_course_stats(
         models.Certificate.issued == True
     ).count()
 
+    total_materials = db.query(models.Material).filter(
+        models.Material.course_id == course_id
+    ).count()
+
     # ── Engagement for this course ──
     total_enrolled = enrolled_students
     
@@ -344,6 +347,7 @@ def get_course_stats(
         "total_topics":        total_topics,
         "total_quizzes":       total_quizzes,
         "total_assignments":   total_assignments,
+        "total_materials":     total_materials,
         "certificates_issued": certificates_issued,
         "engagement": {
             "video_rate": video_rate,

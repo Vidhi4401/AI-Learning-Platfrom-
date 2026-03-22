@@ -13,9 +13,14 @@ function isActive(page) {
 
 /* ===== READ BRANDING FROM LOCALSTORAGE ===== */
 const platformName = user.platform_name || "LearnHub";
-const orgLogo      = user.org_logo
-  ? `http://127.0.0.1:8000/${user.org_logo}`
-  : null;
+
+function getFileUrl(path) {
+  if (!path) return null;
+  if (path.startsWith("http")) return path;
+  return `http://127.0.0.1:8000/${path}`;
+}
+
+const orgLogo = getFileUrl(user.org_logo);
 
 /* ===== SIDEBAR ===== */
 document.getElementById("sidebar").innerHTML = `
@@ -40,6 +45,10 @@ document.getElementById("sidebar").innerHTML = `
 
     <a href="courses.html" class="${isActive("courses.html")}">
       <span>My Courses</span>
+    </a>
+
+    <a href="materials.html" class="${isActive("materials.html")}">
+      <span>Course Materials</span>
     </a>
 
     <a href="organization-courses.html" class="${isActive("organization-courses.html")}">

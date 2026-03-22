@@ -2,24 +2,23 @@ from database import engine, Base
 import models
 from sqlalchemy import text
 
-def super_force_fix():
-    print("--- 🚨 Super Force Recreating Performance Table 🚨 ---")
+def reset_database():
+    print("--- 🚨 Reseting ALL Database Tables 🚨 ---")
     try:
-        with engine.connect() as conn:
-            # Drop the table by force
-            print("1. Dropping old table using CASCADE...")
-            conn.execute(text("DROP TABLE IF EXISTS student_performance_summary CASCADE;"))
-            conn.commit()
-            print("   ✅ Table dropped.")
+        # This will drop all tables defined in models.py
+        print("1. Dropping all existing tables...")
+        Base.metadata.drop_all(bind=engine)
+        print("   ✅ All tables dropped.")
 
         print("2. Re-creating all tables from scratch...")
-        # This will create everything defined in models.py including the new column
+        # This will create everything defined in models.py including the new columns
         Base.metadata.create_all(bind=engine)
         print("   ✅ Database schema re-synced.")
         
-        print("\n🎉 SUCCESS! You can now restart your backend.")
+        print("\n🎉 SUCCESS! All tables (including Certificates) are now up to date.")
+        print("NOTE: You will need to create your Admin user again.")
     except Exception as e:
         print(f"❌ ERROR: {e}")
 
 if __name__ == "__main__":
-    super_force_fix()
+    reset_database()
