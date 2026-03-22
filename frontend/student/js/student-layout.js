@@ -41,6 +41,9 @@ document.getElementById("sidebar").innerHTML = `
     <a href="student-quizzes.html" class="${isActive("student-quizzes.html")}">
       <span>Quizzes</span>
     </a>
+    <a href="student-materials.html" class="${isActive("student-materials.html")}">
+      <span>Materials</span>
+    </a>
     <a href="student-performnace.html" class="${isActive("student-performnace.html")}">
       <span>Performance</span>
     </a>

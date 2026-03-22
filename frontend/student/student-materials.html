@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Materials — LearnHub</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/student-assignments.css"> <!-- Reusing existing layout styles -->
+  <style>
+    .material-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        border: 1px solid #f1f5f9;
+        transition: transform 0.2s;
+    }
+    .material-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    }
+    .mat-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .mat-course {
+        font-size: 0.85rem;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-left: 32px;
+    }
+    .view-btn {
+        background: #3b82f6;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+    .view-btn:hover {
+        background: #2563eb;
+    }
+    .loading-row, .empty-row {
+        text-align: center;
+        padding: 3rem;
+        color: #64748b;
+        background: white;
+        border-radius: 12px;
+        border: 2px dashed #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <section class="page-header">
+        <h1>Study Materials</h1>
+        <p>Access notes and resources for your enrolled courses.</p>
+      </section>
+
+      <!-- Filter Bar -->
+      <section class="filter-bar" style="margin-bottom: 2.5rem;">
+        <div class="filter-group">
+          <label>Filter by Course:</label>
+          <select id="courseFilter" onchange="filterMaterials()">
+            <option value="all">All Enrolled Courses</option>
+          </select>
+        </div>
+      </section>
+
+      <div id="materialsList">
+        <div class="loading-row">Fetching your notes...</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/student-layout.js"></script>
+  <script>
+    const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
+    const studentToken = localStorage.getItem("token");
+    let cachedMaterials = [];
+    let enrolledCoursesList = [];
+
+    async function startMaterialsPage() {
+        if (!studentToken) {
+            window.location.href = "../auth.html";
+            return;
+        }
+        await loadEnrolledCourses();
+        await fetchAllAvailableMaterials();
+    }
+
+    async function loadEnrolledCourses() {
+        try {
+            // 1. Get all courses and all enrollments to find matches
+            const [coursesRes, enrollRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/student/courses`, { headers: { "Authorization": `Bearer ${studentToken}` } }),
+                fetch(`${API_BASE_URL}/student/enrollments`, { headers: { "Authorization": `Bearer ${studentToken}` } })
+            ]);
+            
+            const allCourses = await coursesRes.json();
+            const enrollments = await enrollRes.json();
+            const enrolledIds = new Set(enrollments.map(e => e.course_id));
+
+            // 2. Filter to get only courses the student is in
+            enrolledCoursesList = allCourses.filter(c => enrolledIds.has(c.id));
+
+            // 3. Populate dropdown
+            const filterSelect = document.getElementById("courseFilter");
+            filterSelect.innerHTML = '<option value="all">All Enrolled Courses</option>';
+            enrolledCoursesList.forEach(course => {
+                const opt = document.createElement("option");
+                opt.value = course.id;
+                opt.textContent = course.title;
+                filterSelect.appendChild(opt);
+            });
+        } catch (error) {
+            console.error("Dropdown load error:", error);
+        }
+    }
+
+    async function fetchAllAvailableMaterials() {
+        const listContainer = document.getElementById("materialsList");
+        try {
+            if (enrolledCoursesList.length === 0) {
+                listContainer.innerHTML = '<div class="empty-row">You are not enrolled in any courses yet.</div>';
+                return;
+            }
+
+            // Fetch materials for every enrolled course
+            const fetchPromises = enrolledCoursesList.map(async (course) => {
+                try {
+                    const matResponse = await fetch(`${API_BASE_URL}/materials/course/${course.id}`, {
+                        headers: { "Authorization": `Bearer ${studentToken}` }
+                    });
+                    const mats = await matResponse.json();
+                    return mats.map(m => ({ ...m, courseName: course.title }));
+                } catch (e) {
+                    return [];
+                }
+            });
+
+            const allResults = await Promise.all(fetchPromises);
+            cachedMaterials = allResults.flat();
+            
+            displayMaterials(cachedMaterials);
+
+        } catch (error) {
+            console.error("Global fetch error:", error);
+            listContainer.innerHTML = `<div class="empty-row">Could not connect to server.</div>`;
+        }
+    }
+
+    function displayMaterials(list, isFiltered = false) {
+        const listContainer = document.getElementById("materialsList");
+        const filterValue = document.getElementById("courseFilter").value;
+        
+        if (!list || list.length === 0) {
+            if (filterValue !== "all") {
+                // If a specific course was selected but has no materials
+                listContainer.innerHTML = `
+                    <div class="empty-row">
+                        <h3>📚 No Materials Found</h3>
+                        <p>Study materials for this course are uploading soon. Please check back later!</p>
+                    </div>`;
+            } else {
+                listContainer.innerHTML = `<div class="empty-row">No materials have been uploaded by your teachers yet for your courses.</div>`;
+            }
+            return;
+        }
+
+        listContainer.innerHTML = list.map(m => `
+            <div class="material-card">
+                <div>
+                    <div class="mat-title"><span>📄</span> ${m.title}</div>
+                    <div class="mat-course">${m.courseName}</div>
+                </div>
+                <a href="http://127.0.0.1:8000/${m.file_url}" target="_blank" class="view-btn">View Notes</a>
+            </div>
+        `).join("");
+    }
+
+    function filterMaterials() {
+        const selectedCourseId = document.getElementById("courseFilter").value;
+        if (selectedCourseId === "all") {
+            displayMaterials(cachedMaterials);
+        } else {
+            const filteredList = cachedMaterials.filter(m => m.course_id == selectedCourseId);
+            displayMaterials(filteredList, true);
+        }
+    }
+
+    window.onload = () => setTimeout(startMaterialsPage, 100);
+  </script>
+</body>
+</html>

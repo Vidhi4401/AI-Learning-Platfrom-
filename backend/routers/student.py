@@ -15,11 +15,21 @@ from config import GROQ_API_KEY
 # =========================
 # LOAD MODELS ONLY ONCE (TOP OF FILE)
 # =========================
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# __file__ is backend/routers/student.py
+# parent 1 is backend/routers
+# parent 2 is backend
+# so backend/ml is correct
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# current_dir is backend/routers
+# backend_dir is backend
+backend_dir = os.path.dirname(current_dir)
+ml_dir = os.path.join(backend_dir, "ml")
 
-LEVEL_MODEL_PATH = os.path.join(base_dir, "ml", "final_level_model.pkl")
-RISK_MODEL_PATH = os.path.join(base_dir, "ml", "final_risk_model.pkl")
-SCALER_PATH = os.path.join(base_dir, "ml", "final_scaler.pkl")
+LEVEL_MODEL_PATH = os.path.abspath(os.path.join(ml_dir, "final_level_model.pkl"))
+RISK_MODEL_PATH = os.path.abspath(os.path.join(ml_dir, "final_risk_model.pkl"))
+SCALER_PATH = os.path.abspath(os.path.join(ml_dir, "final_scaler.pkl"))
+
+print(f"[ML Debug] Searching models in: {ml_dir}")
 
 try:
     level_model = joblib.load(LEVEL_MODEL_PATH)

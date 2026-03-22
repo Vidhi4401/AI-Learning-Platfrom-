@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from database import SessionLocal
-import models, schemas, shutil, os, io, json, PyPDF2
+import models, schemas, shutil, os, io, json
 from dependencies import get_current_teacher
 from groq import Groq
 from config import GROQ_API_KEY
@@ -315,6 +315,10 @@ def get_course_stats(
         models.Certificate.issued == True
     ).count()
 
+    total_materials = db.query(models.Material).filter(
+        models.Material.course_id == course_id
+    ).count()
+
     # ── Engagement for this course ──
     total_enrolled = enrolled_students
     
@@ -344,6 +348,7 @@ def get_course_stats(
         "total_topics":        total_topics,
         "total_quizzes":       total_quizzes,
         "total_assignments":   total_assignments,
+        "total_materials":     total_materials,
         "certificates_issued": certificates_issued,
         "engagement": {
             "video_rate": video_rate,

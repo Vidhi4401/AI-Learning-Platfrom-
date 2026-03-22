@@ -42,6 +42,10 @@ document.getElementById("sidebar").innerHTML = `
       <span>My Courses</span>
     </a>
 
+    <a href="materials.html" class="${isActive("materials.html")}">
+      <span>Course Materials</span>
+    </a>
+
     <a href="organization-courses.html" class="${isActive("organization-courses.html")}">
       <span>Organization Library</span>
     </a>

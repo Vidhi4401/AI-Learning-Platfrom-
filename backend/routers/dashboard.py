@@ -66,6 +66,10 @@ def get_dashboard(
         models.Certificate.issued == True
     ).count() if course_ids else 0
 
+    total_materials = db.query(models.Material).filter(
+        models.Material.course_id.in_(course_ids)
+    ).count() if course_ids else 0
+
     # ── Real Engagement Metrics ──
     # 1. Video Completion Rate
     total_videos = db.query(models.Video).join(models.Topic).filter(models.Topic.course_id.in_(course_ids)).count() if course_ids else 0
@@ -97,6 +101,7 @@ def get_dashboard(
         "total_courses":   len(course_ids),
         "total_quizzes":   total_quizzes,
         "total_assignments":   total_assigns,
+        "total_materials":   total_materials,
         "certificates_issued": certificates_issued,
         "engagement": {
             "video_rate": video_rate,
@@ -108,30 +113,25 @@ def get_dashboard(
 from sqlalchemy import func
 from routers.student import predict_learner_level
 
-import pickle
-import pandas as pd
+import joblib
+import os
 
-# Load ML artifacts once (Paths relative to backend folder)
+# Load ML artifacts once (Robust relative path logic)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+ml_dir = os.path.join(os.path.dirname(current_dir), "ml")
+
+RISK_MODEL_PATH = os.path.join(ml_dir, "final_risk_model.pkl")
+SCALER_PATH = os.path.join(ml_dir, "final_scaler.pkl")
+FEATURES_PATH = os.path.join(ml_dir, "model_features.pkl")
+
 try:
-    with open("ml/final_risk_model.pkl", "rb") as f:
-        risk_model = pickle.load(f)
-    with open("ml/final_scaler.pkl", "rb") as f:
-        risk_scaler = pickle.load(f)
-    with open("ml/model_features.pkl", "rb") as f:
-        model_feature_names = pickle.load(f)
+    risk_model = joblib.load(RISK_MODEL_PATH)
+    risk_scaler = joblib.load(SCALER_PATH)
+    model_feature_names = joblib.load(FEATURES_PATH)
+    print("[ML Dashboard] Risk models loaded successfully")
 except Exception as e:
-    print(f"[ML Load Error] {e}. Trying absolute path...")
-    try:
-        # Fallback for different CWDs
-        with open("backend/ml/final_risk_model.pkl", "rb") as f:
-            risk_model = pickle.load(f)
-        with open("backend/ml/final_scaler.pkl", "rb") as f:
-            risk_scaler = pickle.load(f)
-        with open("backend/ml/model_features.pkl", "rb") as f:
-            model_feature_names = pickle.load(f)
-    except:
-        print("[ML Load Error] All paths failed. Risk model disabled.")
-        risk_model = None
+    print(f"[ML Dashboard Load Error] {e}. Paths searched in: {ml_dir}")
+    risk_model, risk_scaler, model_feature_names = None, None, None
 
 def get_student_metrics(db: Session, student_id: int, course_id: int = None):
     """

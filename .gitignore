@@ -1,20 +1,32 @@
-backend/.env
-backend/__pycache__/
-*.pyc
-venv/
-# Ignore environment variables
+
+# Environment variables
+.env
 backend/.env
 
 # Python cache
 __pycache__/
+backend/__pycache__/
+backend/routers/__pycache__/
 *.pyc
-ml/
+
+# ML Models (Too large for GitHub, should be retrained)
+backend/ml/*.pkl
+ml/*.pkl
+
+# Uploads (Exclude actual files, keep folder structure)
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/uploads/materials/*
+!backend/uploads/materials/.gitkeep
+
 # Virtual environment
 venv/
-.env
+.venv/
+env/
 
-# OS files
+# OS/IDE files
 .DS_Store
 Thumbs.db
 .vscode/
-api.py
+.idea/
+*.log

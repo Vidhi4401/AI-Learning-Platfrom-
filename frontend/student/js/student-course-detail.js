@@ -24,11 +24,19 @@ async function loadCourseDetail() {
     if (!res.ok) throw new Error(res.status);
     courseData = await res.json();
 
+    // Fetch materials separately
+    const mRes = await fetch(`${API}/materials/course/${courseId}`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const materials = await mRes.json();
+    courseData.materials = materials;
+
     renderHero(courseData);
     renderStats(courseData);
     renderTopicsTab(courseData.topics);
     renderQuizzesTab(courseData.topics);
     renderAssignmentsTab(courseData.topics);
+    renderMaterialsTab(courseData.materials);
 
   } catch (err) {
     console.error("Course detail error:", err);
@@ -66,6 +74,7 @@ function renderHero(data) {
 =========================*/
 function renderStats(data) {
   const topics      = data.topics || [];
+  const materials   = data.materials || [];
   const totalVideos = topics.reduce((s, t) => s + (t.videos?.length || 0), 0);
   const totalQuiz   = topics.reduce((s, t) => s + (t.quizzes?.length || 0), 0);
   const totalAssign = topics.reduce((s, t) => s + (t.assignments?.length || 0), 0);
@@ -74,6 +83,36 @@ function renderStats(data) {
   document.getElementById("statVideos").textContent      = totalVideos;
   document.getElementById("statQuizzes").textContent     = totalQuiz;
   document.getElementById("statAssignments").textContent = totalAssign;
+  document.getElementById("statMaterials").textContent   = materials.length;
+}
+
+function renderMaterialsTab(materials) {
+  const panel = document.getElementById("materialsPanel");
+
+  if (!materials || materials.length === 0) {
+    panel.innerHTML = `<div class="empty-row">No materials available for this course yet.</div>`;
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="panel-top">
+      <h3>Course Materials</h3>
+      <span style="font-size:13px;color:var(--muted);">${materials.length} files</span>
+    </div>
+    <div class="resource-list" style="padding-top:10px;">
+      ${materials.map(m => `
+        <div class="resource-item">
+          <div>
+            <div class="resource-title" style="display:flex; align-items:center; gap:8px;">
+               <span style="font-size:18px;">📄</span> ${m.title}
+            </div>
+            <div class="resource-meta">Type: PDF / Resource</div>
+          </div>
+          <a href="http://127.0.0.1:8000/${m.file_url}" target="_blank" class="btn-start" style="text-decoration:none;">View Notes</a>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 /* =========================

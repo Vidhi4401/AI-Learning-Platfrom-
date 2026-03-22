@@ -170,6 +170,16 @@ class StudentPerformanceSummary(Base):
     dropout_risk = Column(String(20), nullable=True, default="Low") 
     last_updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+class Material(Base):
+    __tablename__ = "materials"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    file_url = Column(String)
+    course_id = Column(Integer, ForeignKey("courses.id"))
+    teacher_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 class ChatDoubt(Base):
     __tablename__ = "chat_doubts"
 
