@@ -27,7 +27,6 @@ function setupTabs() {
       if (btn.dataset.tab === "topics")      loadTopics();
       if (btn.dataset.tab === "quizzes")     loadAllQuizzes();
       if (btn.dataset.tab === "assignments") loadAllAssignments();
-      if (btn.dataset.tab === "materials")   loadMaterials();
     });
   });
 }
@@ -109,13 +108,6 @@ async function loadStatsCount() {
 
     document.getElementById("statQuizzes").textContent     = totalQuizzes;
     document.getElementById("statAssignments").textContent = totalAssignments;
-
-    // Load materials count separately
-    const mRes = await fetch(`${API}/materials/course/${courseId}`, {
-      headers: { Authorization: "Bearer " + token }
-    });
-    const materials = await mRes.json();
-    document.getElementById("statMaterials").textContent = Array.isArray(materials) ? materials.length : 0;
 
   } catch (err) {
     console.error("Stats error:", err);
@@ -332,36 +324,41 @@ async function deleteAssignment(assignmentId) {
 }
 
 /* =========================
+   REDIRECT HELPERS
+=========================*/
+function goToAddTopic() {
+  window.location.href = `add-course.html?step=2&course=${courseId}`;
+}
+
+function goToAddQuiz() {
+  window.location.href = `add-course.html?step=5&course=${courseId}`;
+}
+
+function goToAddAssignment() {
+  window.location.href = `add-course.html?step=4&course=${courseId}`;
+}
+
+/* =========================
    MATERIALS TAB
 =========================*/
 async function loadMaterials() {
   const token = localStorage.getItem("token");
   const container = document.getElementById("materialsList");
   container.innerHTML = `<div class="loading-row">Loading materials…</div>`;
-
   try {
     const res = await fetch(`${API}/materials/course/${courseId}`, {
       headers: { Authorization: "Bearer " + token }
     });
     const materials = await res.json();
-
     if (!materials || materials.length === 0) {
-      container.innerHTML = `<div class="empty-row">No materials yet. Click <strong>Add Material</strong> to upload notes.</div>`;
+      container.innerHTML = `<div class="empty-row">No materials yet. Click <strong>Upload Material</strong> to add notes.</div>`;
       return;
     }
-
     container.innerHTML = `
       <table class="detail-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+        <thead><tr><th>#</th><th>Title</th><th>Actions</th></tr></thead>
         <tbody id="materialsBody"></tbody>
       </table>`;
-
     const tbody = document.getElementById("materialsBody");
     materials.forEach((m, i) => {
       const tr = document.createElement("tr");
@@ -369,13 +366,11 @@ async function loadMaterials() {
         <td class="order-cell">#${i + 1}</td>
         <td class="name-cell"><strong>${m.title}</strong></td>
         <td class="actions-cell">
-          <a href="http://127.0.0.1:8000/${m.file_url}" target="_blank" class="tbl-btn view">👁</a>
+          <a href="${m.file_url}" target="_blank" class="tbl-btn view">👁 View</a>
           <button class="tbl-btn delete" onclick="deleteMaterial(${m.id})">🗑</button>
-        </td>
-      `;
+        </td>`;
       tbody.appendChild(tr);
     });
-
   } catch (err) {
     container.innerHTML = `<div class="empty-row">Failed to load materials.</div>`;
   }
@@ -390,21 +385,6 @@ async function deleteMaterial(id) {
   });
   loadMaterials();
   loadStatsCount();
-}
-
-/* =========================
-   REDIRECT HELPERS
-=========================*/
-function goToAddTopic() {
-  window.location.href = `add-course.html?step=2&course=${courseId}`;
-}
-
-function goToAddQuiz() {
-  window.location.href = `add-course.html?step=5&course=${courseId}`;
-}
-
-function goToAddAssignment() {
-  window.location.href = `add-course.html?step=4&course=${courseId}`;
 }
 
 function goToAddMaterial() {

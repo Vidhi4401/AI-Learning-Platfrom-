@@ -3,101 +3,221 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Students — LearnHub</title>
+<title>My Students — Faculty Portal</title>
 <link rel="stylesheet" href="css/main.css">
 <style>
-/* Local Overrides for Student List */
-.table-card {
-  background: #fff; border-radius: 16px; border: 1px solid #e9eaf0;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04); overflow: hidden;
-}
-.table-top {
-  padding: 20px 24px; border-bottom: 1px solid #f3f4f6;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.table-controls { display: flex; gap: 12px; align-items: center; }
+  .page-header-row { display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;gap:16px; }
+  .page-header-row h1 { font-size:24px;font-weight:800;color:var(--ink);margin-bottom:4px; }
+  .page-header-row p  { font-size:14px;color:var(--muted); }
 
-/* Risk Badges */
-.risk-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-.risk-high { background: #fee2e2; color: #dc2626; }
-.risk-medium { background: #fef3c7; color: #d97706; }
-.risk-low { background: #dcfce7; color: #16a34a; }
+  .summary-bar { display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px; }
+  .sum-card { background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px 22px; }
+  .sum-label { font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px; }
+  .sum-value { font-size:28px;font-weight:800;color:var(--ink); }
 
-.students-table { width: 100%; border-collapse: collapse; }
-.students-table th {
-  background: #fafafb; padding: 14px 24px; text-align: left;
-  font-size: 11.5px; font-weight: 700; color: #9ca3af;
-  text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f3f4f6;
-}
-.students-table td { padding: 16px 24px; border-bottom: 1px solid #f3f4f6; font-size: 14.5px; }
-.students-table tr:hover { background: #f9fafb; }
+  .table-wrap { background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden; }
+  .filters-row { display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);background:#fafafa; }
+  .filters-row input  { padding:8px 14px;border-radius:8px;border:1.5px solid #e5e7eb;font-family:inherit;font-size:13px;outline:none;width:230px; }
+  .filters-row input:focus { border-color:var(--accent); }
+  .filters-row select { padding:8px 12px;border-radius:8px;border:1.5px solid #e5e7eb;font-family:inherit;font-size:13px;background:#fff;outline:none; }
 
-.s-avatar {
-  width: 36px; height: 36px; border-radius: 10px;
-  background: var(--accent); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 14px;
-}
+  .data-table { width:100%;border-collapse:collapse; }
+  .data-table th { background:#fafafb;padding:12px 18px;text-align:left;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border); }
+  .data-table td { padding:13px 18px;font-size:14px;border-bottom:1px solid #f3f4f6; }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:#f9fafb; }
+
+  .s-avatar { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;background:var(--accent);color:#fff; }
+
+  .lvl-badge { padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase; }
+  .lvl-strong  { background:#dcfce7;color:#166534; }
+  .lvl-average { background:#fef3c7;color:#92400e; }
+  .lvl-weak    { background:#fee2e2;color:#991b1b; }
+
+  .risk-badge { padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase; }
+  .risk-high   { background:#fee2e2;color:#dc2626; }
+  .risk-medium { background:#fef3c7;color:#d97706; }
+  .risk-low    { background:#dcfce7;color:#16a34a; }
+
+  .btn-view { background:#f5f3ff;color:#6d28d9;border:1px solid #ede9fe;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s; }
+  .btn-view:hover { background:#ede9fe; }
+  .empty-row { text-align:center;padding:4rem;color:var(--muted);font-size:14px; }
 </style>
 </head>
 <body>
-
 <div id="sidebar" class="sidebar"></div>
 <div class="main-content">
   <div id="navbar" class="navbar"></div>
+  <main class="page-content">
 
-  <div class="page-content">
-    
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px;">
+    <div class="page-header-row">
       <div>
-        <h1 class="navbar-page-title" style="font-size:24px; margin-bottom:4px;">My Student Directory</h1>
-        <p style="font-size:14px; color:var(--muted);">Monitoring performance for students in your courses.</p>
+        <h1>My Students</h1>
+        <p>Students enrolled in your courses — performance, risk, and engagement.</p>
       </div>
-      <button class="btn btn-primary" onclick="exportToExcel()">📥 Export Student Report</button>
+      <button class="btn btn-primary" id="exportBtn" onclick="exportReport()" style="display:flex;align-items:center;gap:8px;min-width:180px;justify-content:center;">
+          <span id="exportIcon">📥</span>&nbsp;Export Full Report
+        </button>
     </div>
 
-    <div class="table-card">
-      <div class="table-top">
-        <div class="table-controls">
-          <input type="text" id="studentSearch" class="search" placeholder="Search name or email..." style="width:280px; margin:0; background:#f9fafb;">
-          
-          <select id="levelFilter" style="padding:8px 12px; border-radius:8px; border:1.5px solid #e5e7eb; font-family:inherit; font-size:13px; outline:none;">
-            <option value="all">All Levels</option>
-            <option value="Strong">Strong</option>
-            <option value="Average">Average</option>
-            <option value="Weak">Weak</option>
-          </select>
+    <div class="summary-bar">
+      <div class="sum-card"><div class="sum-label">Total Students</div><div class="sum-value" id="sumTotal">—</div></div>
+      <div class="sum-card"><div class="sum-label">High Risk</div><div class="sum-value" style="color:#dc2626;" id="sumHigh">—</div></div>
+      <div class="sum-card"><div class="sum-label">Strong Performers</div><div class="sum-value" style="color:#16a34a;" id="sumStrong">—</div></div>
+      <div class="sum-card"><div class="sum-label">Avg Score</div><div class="sum-value" style="color:#7c3aed;" id="sumAvg">—</div></div>
+    </div>
 
-          <select id="riskFilter" style="padding:8px 12px; border-radius:8px; border:1.5px solid #e5e7eb; font-family:inherit; font-size:13px; outline:none;">
-            <option value="all">All Risk Status</option>
-            <option value="High">High Risk</option>
-            <option value="Medium">Medium Risk</option>
-            <option value="Low">Low Risk</option>
-          </select>
-        </div>
+    <div class="table-wrap">
+      <div class="filters-row">
+        <input type="text" id="searchInput" placeholder="🔍  Name or email…" oninput="render()">
+        <select id="courseFilter" onchange="render()"><option value="all">All My Courses</option></select>
+        <select id="levelFilter" onchange="render()">
+          <option value="all">All Levels</option>
+          <option>Strong</option><option>Average</option><option>Weak</option>
+        </select>
+        <select id="riskFilter" onchange="render()">
+          <option value="all">All Risk</option>
+          <option value="High">High Risk</option>
+          <option value="Medium">Medium Risk</option>
+          <option value="Low">Low Risk</option>
+        </select>
       </div>
 
-      <table class="students-table">
+      <table class="data-table">
         <thead>
           <tr>
-            <th>Student Info</th>
-            <th>Courses</th>
-            <th>Avg Score</th>
+            <th>Student</th>
+            <th>Enrolled Courses</th>
+            <th>Overall Score</th>
+            <th>Quiz Avg</th>
             <th>AI Level</th>
             <th>Dropout Risk</th>
             <th>Action</th>
           </tr>
         </thead>
-        <tbody id="studentsTableBody">
-          <!-- Dynamic -->
+        <tbody id="tbody">
+          <tr><td colspan="7" class="empty-row">Loading students…</td></tr>
         </tbody>
       </table>
     </div>
 
-  </div>
+  </main>
 </div>
 
 <script src="js/layout.js"></script>
-<script src="js/students.js"></script>
+<script>
+  const API = "http://127.0.0.1:8000/api/v1";
+  let all = [];
+
+  document.addEventListener("DOMContentLoaded", () => { load(); loadCourseFilter(); });
+
+  async function load() {
+    try {
+      const res = await fetch(`${API}/teacher/students`, { headers: { Authorization: "Bearer " + token } });
+      all = await res.json();
+
+      if (!all.length) {
+        document.getElementById("tbody").innerHTML = '<tr><td colspan="7" class="empty-row">No students enrolled in your courses yet.</td></tr>';
+        ["sumTotal","sumHigh","sumStrong","sumAvg"].forEach(id => document.getElementById(id).textContent = "0");
+        return;
+      }
+
+      document.getElementById("sumTotal").textContent  = all.length;
+      document.getElementById("sumHigh").textContent   = all.filter(s => s.dropout_risk === "High").length;
+      document.getElementById("sumStrong").textContent = all.filter(s => s.learner_level === "Strong").length;
+      const avg = all.reduce((n,s) => n + s.overall_score, 0) / all.length;
+      document.getElementById("sumAvg").textContent    = Math.round(avg) + "%";
+
+      render();
+    } catch(e) {
+      document.getElementById("tbody").innerHTML = '<tr><td colspan="7" class="empty-row">Failed to load students.</td></tr>';
+    }
+  }
+
+  async function loadCourseFilter() {
+    try {
+      const res  = await fetch(`${API}/teacher/courses`, { headers: { Authorization: "Bearer " + token } });
+      const list = await res.json();
+      const sel  = document.getElementById("courseFilter");
+      list.forEach(c => {
+        const o = document.createElement("option");
+        o.value = c.id; o.textContent = c.title;
+        sel.appendChild(o);
+      });
+    } catch(e) {}
+  }
+
+  function render() {
+    const q      = document.getElementById("searchInput").value.toLowerCase();
+    const course = document.getElementById("courseFilter").value;
+    const level  = document.getElementById("levelFilter").value;
+    const risk   = document.getElementById("riskFilter").value;
+
+    const list = all.filter(s => {
+      if (q && !s.name.toLowerCase().includes(q) && !s.email.toLowerCase().includes(q)) return false;
+      if (level  !== "all" && s.learner_level !== level) return false;
+      if (risk   !== "all" && s.dropout_risk  !== risk)  return false;
+      return true;
+    });
+
+    const body = document.getElementById("tbody");
+    if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-row">No students match your filters.</td></tr>'; return; }
+
+    const sc = v => v >= 70 ? "#16a34a" : v >= 40 ? "#d97706" : "#dc2626";
+
+    body.innerHTML = list.map(s => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="s-avatar">${s.name.charAt(0).toUpperCase()}</div>
+            <div>
+              <div style="font-weight:700;color:var(--ink);">${s.name}</div>
+              <div style="font-size:12px;color:var(--muted);">${s.email}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-weight:600;">${s.course_count} course${s.course_count !== 1 ? "s" : ""}</td>
+        <td><span style="font-weight:800;font-size:17px;color:${sc(s.overall_score)};">${s.overall_score}%</span></td>
+        <td><span style="font-weight:600;color:${sc(s.quiz_avg||0)};">${(s.quiz_avg||0)}%</span></td>
+        <td><span class="lvl-badge lvl-${(s.learner_level||"weak").toLowerCase()}">${s.learner_level}</span></td>
+        <td><span class="risk-badge risk-${(s.dropout_risk||"low").toLowerCase()}">${s.dropout_risk} Risk</span></td>
+        <td><button class="btn-view" onclick="location.href='student-detail.html?id=${s.id}'">View →</button></td>
+      </tr>`).join("");
+  }
+
+  async function exportReport() {
+    const btn  = document.getElementById("exportBtn");
+    const icon = document.getElementById("exportIcon");
+    if (!btn) return;
+
+    btn.disabled = true;
+    icon.textContent = "⏳";
+    btn.childNodes[2].textContent = " Generating…";
+
+    try {
+      const res = await fetch(`${API}/teacher/students/export`, {
+        headers: { Authorization: "Bearer " + token }
+      });
+      if (!res.ok) { alert("Export failed. No student data available."); return; }
+      const blob     = await res.blob();
+      const url      = URL.createObjectURL(blob);
+      const a        = document.createElement("a");
+      const cd       = res.headers.get("Content-Disposition") || "";
+      const match    = cd.match(/filename="?([^"]+)"?/);
+      a.download     = match ? match[1] : "Students_Report.xlsx";
+      a.href         = url;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch(e) {
+      alert("Export failed: " + e.message);
+    } finally {
+      btn.disabled = false;
+      icon.textContent = "📥";
+      btn.childNodes[2].textContent = " Export Full Report";
+    }
+  }
+</script>
 </body>
 </html>

@@ -7,9 +7,14 @@ if (!token || !user) {
 
 const currentPage  = window.location.pathname.split("/").pop();
 const platformName = user.platform_name || "LearnHub";
-const orgLogo      = user.org_logo
-  ? `http://127.0.0.1:8000/${user.org_logo}`
-  : null;
+
+function getFileUrl(path) {
+  if (!path) return null;
+  if (path.startsWith("http")) return path;
+  return `http://127.0.0.1:8000/${path}`;
+}
+
+const orgLogo = getFileUrl(user.org_logo);
 
 function isActive(page) {
   return currentPage === page ? "active" : "";

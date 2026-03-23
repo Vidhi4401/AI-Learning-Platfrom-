@@ -54,7 +54,7 @@ async function loadIssued() {
                 <td>${c.course_title}</td>
                 <td>${new Date(c.issued_at).toLocaleDateString()}</td>
                 <td><span class="badge badge-active">Issued</span></td>
-                <td><button class="btn btn-ghost" onclick="viewCert(${c.id})">👁 View</button></td>
+                <td><button class="btn btn-ghost" onclick="window.open('http://127.0.0.1:8000/api/v1/admin/certificates/${c.id}/download?token=${token}', '_blank')">👁 View</button></td>
             </tr>
         `).join("") || '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--muted);">No certificates issued yet.</td></tr>';
     } catch (err) {}
@@ -90,9 +90,4 @@ async function rejectCert(certId) {
             location.reload();
         }
     } catch (err) { alert("Action failed"); }
-}
-
-function viewCert(certId) {
-    const t = localStorage.getItem("token");
-    window.open(`http://127.0.0.1:8000/api/v1/admin/certificates/${certId}/download?token=${t}`, "_blank");
 }

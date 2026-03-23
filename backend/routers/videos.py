@@ -36,6 +36,8 @@ def get_video_duration(url: str, teacher: models.User = Depends(get_current_teac
     return {"duration": 10}
 
 
+from cloudinary_utils import upload_to_cloudinary
+
 @router.post("/api/v1/teacher/topics/{topic_id}/videos")
 def create_video(
     topic_id: int,
@@ -47,14 +49,11 @@ def create_video(
 ):
     final_url = video_url
 
-    if video_file:
-        os.makedirs("uploads/videos", exist_ok=True)
-        # To avoid filename collisions, we could add a timestamp or uuid, 
-        # but for now let's keep it simple as requested.
-        file_path = f"uploads/videos/{video_file.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(video_file.file, buffer)
-        final_url = file_path # This stores 'uploads/videos/name.mp4'
+    if video_file and video_file.filename:
+        # Use Cloudinary instead of local
+        cloud_url = upload_to_cloudinary(video_file, folder="learnhub/videos", resource_type="video")
+        if cloud_url:
+            final_url = cloud_url
 
     if not final_url:
         raise HTTPException(status_code=400, detail="Provide either a video URL or a video file.")

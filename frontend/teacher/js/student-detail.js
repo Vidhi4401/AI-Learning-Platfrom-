@@ -72,6 +72,7 @@ async function loadAllData() {
         });
 
         renderAll("all");
+        loadCertificates();
 
     } catch (err) {
         console.error("Data load failed", err);
@@ -247,3 +248,43 @@ function renderInsights(qAvg, aAvg, vPct, attempts, submissions, courses) {
 
 function avg(arr) { return arr.length === 0 ? 0 : arr.reduce((a,b)=>a+b,0)/arr.length; }
 function fmt(val) { return Math.round(val) + "%"; }
+
+// ── CERTIFICATES ──────────────────────────────────────────────────────────────
+async function loadCertificates() {
+    const token = localStorage.getItem("token");
+    const body  = document.getElementById("certTableBody");
+    if (!body) return;
+
+    try {
+        const res = await fetch(`${API}/teacher/students/${studentId}/certificates`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (!res.ok) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#9ca3af;">Could not load certificates.</td></tr>'; return; }
+        const certs = await res.json();
+
+        if (!certs.length) {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#9ca3af;">No certificate requests found for this student.</td></tr>';
+            return;
+        }
+
+        const statusBadge = (status, issued) => {
+            if (issued)              return `<span style="background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;">✅ Issued</span>`;
+            if (status === "rejected") return `<span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;">✕ Rejected</span>`;
+            return `<span style="background:#fef3c7;color:#d97706;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;">⏳ Pending</span>`;
+        };
+
+        body.innerHTML = certs.map(c => `
+            <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="padding:14px 16px;font-weight:600;color:#111827;">${c.course_title}</td>
+                <td style="padding:14px 16px;font-weight:700;color:${c.score >= 70 ? '#16a34a' : '#d97706'};">${c.score}%</td>
+                <td style="padding:14px 16px;">${statusBadge(c.status, c.issued)}</td>
+                <td style="padding:14px 16px;font-size:13px;color:#6b7280;">${c.request_date ? new Date(c.request_date).toLocaleDateString("en-GB", {day:"numeric",month:"short",year:"numeric"}) : "—"}</td>
+                <td style="padding:14px 16px;font-size:13px;color:#6b7280;">${c.issued_at ? new Date(c.issued_at).toLocaleDateString("en-GB", {day:"numeric",month:"short",year:"numeric"}) : "—"}</td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error("Certs load failed", err);
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#9ca3af;">Error loading certificates.</td></tr>';
+    }
+}

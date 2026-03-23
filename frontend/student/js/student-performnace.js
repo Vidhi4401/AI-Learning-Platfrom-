@@ -62,6 +62,7 @@ async function loadAll() {
 
     // 6. Render everything
     renderAll("all");
+    loadCertificates();
 
   } catch (err) {
     console.error("loadAll error:", err);
@@ -482,4 +483,79 @@ async function syncPerformanceToDB(metrics) {
     } catch (err) {
         console.error("Sync error", err);
     }
+}
+
+/* ============================================================
+   CERTIFICATES
+============================================================*/
+async function loadCertificates() {
+  const el = document.getElementById("certsList");
+  if (!el) return;
+  try {
+    const res = await fetch(`${API}/student/certificates`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    if (!res.ok) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;">Could not load certificates.</p>'; return; }
+    const certs = await res.json();
+
+    if (!certs.length) {
+      el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1.5rem;">No certificates issued yet. Complete a course to earn one!</p>';
+      return;
+    }
+
+    const fmtDate = iso => iso ? new Date(iso).toLocaleDateString("en-GB", {day:"numeric",month:"short",year:"numeric"}) : "—";
+
+    el.innerHTML = certs.map(c => {
+      const badgeBg    = c.issued ? "#dcfce7"  : c.status === "rejected" ? "#fee2e2"  : "#fef3c7";
+      const badgeColor = c.issued ? "#16a34a"  : c.status === "rejected" ? "#dc2626"  : "#d97706";
+      const badgeText  = c.issued ? "✅ Issued" : c.status === "rejected" ? "✕ Rejected" : "⏳ Pending";
+
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    padding:14px 18px;border:1px solid var(--border-color);
+                    border-radius:12px;margin-bottom:10px;background:#fafafa;">
+          <div>
+            <div style="font-weight:700;color:var(--text-main);font-size:15px;">📄 ${c.course_title}</div>
+            ${c.issued_at ? `<div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Issued on ${fmtDate(c.issued_at)}</div>` : ""}
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="background:${badgeBg};color:${badgeColor};padding:4px 12px;
+                         border-radius:20px;font-size:12px;font-weight:700;">${badgeText}</span>
+            ${c.issued
+              ? `<button onclick="downloadCert(${c.id}, '${c.course_title.replace(/'/g,"\\'")}' )"
+                   style="background:var(--accent);color:#fff;border:none;border-radius:8px;
+                          padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;">
+                   ⬇ Download PDF
+                 </button>`
+              : ""}
+          </div>
+        </div>`;
+    }).join("");
+
+  } catch(e) {
+    console.error("Cert load failed", e);
+    const el2 = document.getElementById("certsList");
+    if (el2) el2.innerHTML = '<p style="color:var(--text-muted);text-align:center;">Error loading certificates.</p>';
+  }
+}
+
+async function downloadCert(certId, courseTitle) {
+  // Use fetch so the Authorization header is sent correctly, then trigger download
+  try {
+    const res = await fetch(`${API}/student/certificates/${certId}/download`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    if (!res.ok) { alert("Certificate not available for download."); return; }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `Certificate_${courseTitle.replace(/\s+/g,"_")}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert("Download failed. Please try again.");
+  }
 }

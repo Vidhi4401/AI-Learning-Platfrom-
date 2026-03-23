@@ -20,7 +20,7 @@ async function loadOrgLibrary() {
             return `
                 <div class="course-card">
                     <div class="course-img">
-                        ${c.logo ? `<img src="http://127.0.0.1:8000/${c.logo}" alt="${c.title}">` : '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">No Thumbnail</div>'}
+                        ${c.logo ? `<img src="${getFileUrl(c.logo)}" alt="${c.title}">` : '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">No Thumbnail</div>'}
                     </div>
                     <div class="course-content">
                         <h3 class="course-title">${c.title}</h3>

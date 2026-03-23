@@ -89,12 +89,9 @@ function renderCourses() {
   grid.innerHTML = "";
 
   filtered.forEach(course => {
-    const isEnrolled  = enrolledIds.has(course.id);
-    const isCompleted = completedIds.has(course.id);
-    const imgUrl = course.logo
-      ? `http://127.0.0.1:8000/${course.logo}`
-      : null;
-
+  const isEnrolled  = enrolledIds.has(course.id);
+  const isCompleted = completedIds.has(course.id);
+  const imgUrl = getFileUrl(course.logo);
     const card = document.createElement("div");
     card.className = "course-card";
 

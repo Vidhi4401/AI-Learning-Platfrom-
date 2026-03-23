@@ -1,0 +1,9 @@
+# Prevent Windows text-mode corruption for binary ML model files
+*.pkl     binary
+*.joblib  binary
+*.h5      binary
+*.pt      binary
+*.pth     binary
+*.onnx    binary
+*.npy     binary
+*.npz     binary

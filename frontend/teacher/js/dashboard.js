@@ -108,7 +108,7 @@ async function onCourseFilterChange() {
     // Map course-specific stats to dashboard UI
     const mappedData = {
         total_students: data.enrolled_students ?? 0,
-        total_courses: data.total_topics ?? 0, // Using topics instead of courses count here
+        total_courses: data.total_topics ?? 0,
         total_quizzes: data.total_quizzes ?? 0,
         total_assignments: data.total_assignments ?? 0,
         total_materials: data.total_materials ?? 0,

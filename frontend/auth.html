@@ -1,451 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LearnAI | Login & Register</title>
-
+  <title>LearnHub | Login</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Segoe UI", sans-serif;
-    }
-
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background: linear-gradient(135deg, #f8fafc, #e0e7ff);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
-    /* Card */
     .auth-card {
       background: #fff;
       width: 100%;
       max-width: 420px;
       padding: 2.5rem;
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
     }
-
-    /* Header */
     .logo-container {
       display: flex;
-      /* Enables flexbox layout for children */
       align-items: center;
-      /* Vertically centers the items */
       justify-content: center;
-      /* Horizontally centers the items as a group */
-      margin-top: 0.2rem;
-      margin-bottom: 1rem;
-      width: 100%;
-      /* Ensures the container spans the full width for centering */
+      margin-bottom: 1.5rem;
+      gap: 10px;
     }
-
-    .logo-text {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #1e40af;
-      /* Hex code for the requested color */
-      /* Add any other text styles here */
-    }
-
     .logo-img {
-      background-color: #3b82f6;
-      /* Hex code for the requested background */
-      color: #fff;
-      /* Text color if any text is inside the image (not typical, but as requested) */
-      border-radius: 8px;
-      height: 100px;
-      margin-right: 0.5rem;
-      /* Adds some space between the image and the text */
+      height: 54px;
+      border-radius: 10px;
     }
-
-
+    .logo-text {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #1e40af;
+    }
     .auth-title {
       text-align: center;
-      font-size: 1.4rem;
+      font-size: 1.25rem;
       font-weight: 700;
-      margin-bottom: 1.5rem;
       color: #1e293b;
+      margin-bottom: 1.75rem;
     }
-
-    /* Form */
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
+    .form-group { margin-bottom: 1.1rem; }
     label {
       display: block;
-      font-size: .9rem;
+      font-size: .85rem;
+      font-weight: 600;
       color: #475569;
-      margin-bottom: .3rem;
+      margin-bottom: .35rem;
     }
-
-    input {
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
       width: 100%;
-      padding: .65rem .75rem;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      font-size: 1rem;
-    }
-
-    input:focus {
+      padding: .7rem .9rem;
+      border-radius: 9px;
+      border: 1.5px solid #cbd5e1;
+      font-size: .97rem;
+      font-family: inherit;
+      color: #1e293b;
+      transition: border-color .2s;
       outline: none;
-      border-color: #3b82f6;
     }
+    input:focus { border-color: #3b82f6; }
 
-    /* Button */
+    /* ── Eye toggle for password fields ── */
+    .pwd-wrap { position: relative; }
+    .pwd-wrap input { padding-right: 42px; }
+    .pwd-eye {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: #94a3b8; font-size: 16px; padding: 0; line-height: 1;
+      display: flex; align-items: center;
+    }
+    .pwd-eye:hover { color: #475569; }
+
     .btn {
       width: 100%;
       margin-top: 1rem;
-      padding: .7rem;
+      padding: .75rem;
       background: #3b82f6;
-      color: white;
+      color: #fff;
       border: none;
-      border-radius: 8px;
+      border-radius: 9px;
       font-size: 1rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
+      transition: background .2s;
     }
+    .btn:hover { background: #2563eb; }
+    .btn:disabled { opacity: .65; cursor: not-allowed; }
 
-    .btn:hover {
-      background: #2563eb;
-    }
-
-    /* Toggle */
-    .toggle {
-      text-align: center;
-      margin-top: 1.2rem;
-      font-size: .9rem;
-      color: #475569;
-    }
-
-    .toggle span {
-      color: #3b82f6;
-      cursor: pointer;
+    /* Error / info banners */
+    .alert {
+      border-radius: 8px;
+      padding: .65rem 1rem;
+      font-size: .88rem;
       font-weight: 600;
-    }
-
-    /* Hide */
-    .hidden {
+      margin-bottom: 1rem;
       display: none;
     }
+    .alert-error { background: #fee2e2; color: #dc2626; }
+    .alert-info  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
 
-    /* Optional text */
-    .optional {
-      font-size: .75rem;
-      color: #94a3b8;
+    /* Contact admin note */
+    .contact-note {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      text-align: center;
+      font-size: .84rem;
+      color: #64748b;
+      line-height: 1.5;
     }
+    .contact-note strong { color: #1e293b; }
   </style>
 </head>
-
 <body>
 
   <div class="auth-card">
 
-    <!-- LOGO -->
     <div class="logo-container">
-      <img src="image.png" alt="Company Logo" class="logo-img">
+      <img src="image.png" alt="Logo" class="logo-img"
+           onerror="this.style.display='none'">
       <span class="logo-text">LearnHub</span>
     </div>
 
+    <div class="auth-title">Sign in to your account</div>
 
-    <!-- LOGIN -->
-    <div id="login-form">
-      <div class="auth-title">Login to your account</div>
+    <div id="alertBox" class="alert alert-error"></div>
 
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="your@email.com" required>
-      </div>
-
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="Enter password" required>
-      </div>
-
-      <button class="btn" onclick="login()">Login</button>
-      <div style="text-align:right;margin-top:.5rem;">
-        <span style="color:#3b82f6;cursor:pointer;font-size:.85rem;" onclick="showForgot()">Forgot Password?</span>
-      </div>
-
-      <div class="toggle">
-        Don’t have an account? <span onclick="showRegister()">Sign Up</span>
-      </div>
+    <div class="form-group">
+      <label>Email address</label>
+      <input type="email" id="loginEmail" placeholder="you@organization.com"
+             onkeydown="if(event.key==='Enter') login()">
     </div>
 
-    <!-- REGISTER -->
-    <div id="register-form" class="hidden">
-      <div class="auth-title">Create your account</div>
-
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="reg-name" placeholder="John Doe" required>
-      </div>
-
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="reg-email" placeholder="your@email.com" required>
-      </div>
-      <div class="form-group">
-        <label>Organization</label>
-        <select id="reg-org" required style="width:100%;padding:.65rem;border-radius:8px;border:1px solid #cbd5e1;">
-          <option value="">Select Organization</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="reg-password" placeholder="Create password" required>
-      </div>
-
-      <div class="form-group">
-        <label>
-          Enrollment Number
-          <span class="optional">(optional)</span>
-        </label>
-        <input type="text" id="reg-enroll" placeholder="Enrollment ID">
-      </div>
-
-      <button class="btn" onclick="register()">Create Account</button>
-
-      <div class="toggle">
-        Already have an account? <span onclick="showLogin()">Login</span>
-      </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="pwd-wrap">
+      <input type="password" id="loginPassword" placeholder="Enter your password"
+             onkeydown="if(event.key==='Enter') login()">
+      <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
     </div>
-    <!-- FORGOT PASSWORD -->
-    <div id="forgot-form" class="hidden">
-      <div class="auth-title">Reset your password</div>
-
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="forgot-email" placeholder="Enter your email">
-      </div>
-
-      <button class="btn" onclick="sendReset()">Generate Reset Token</button>
-
-      <div class="form-group" style="margin-top:1rem;">
-        <label>Reset Token</label>
-        <input type="text" id="reset-token" placeholder="Paste token here">
-      </div>
-
-      <div class="form-group">
-        <label>New Password</label>
-        <input type="password" id="new-password" placeholder="Enter new password">
-      </div>
-
-      <button class="btn" onclick="resetPassword()">Update Password</button>
-
-      <div class="toggle">
-        Back to <span onclick="showLogin()">Login</span>
-      </div>
     </div>
 
+    <button class="btn" id="loginBtn" onclick="login()">Sign In</button>
+
+    <div class="contact-note">
+      <strong>Need access?</strong><br>
+      Accounts are created by your organization's administrator.<br>
+      Contact your admin to get your login credentials or to reset your password.
+    </div>
 
   </div>
 
   <script>
-    function showRegister() {
-      document.getElementById("login-form").classList.add("hidden");
-      document.getElementById("forgot-form").classList.add("hidden");
-      document.getElementById("register-form").classList.remove("hidden");
+
+    /* ── Eye toggle ── */
+    function togglePwd(btn) {
+      const input = btn.closest('.pwd-wrap').querySelector('input');
+      const show  = input.type === 'password';
+      input.type  = show ? 'text' : 'password';
+      btn.innerHTML = show
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
     }
 
+    const API = "http://127.0.0.1:8000/api/v1";
 
-    function showLogin() {
-      document.getElementById("register-form").classList.add("hidden");
-      document.getElementById("forgot-form").classList.add("hidden");
-      document.getElementById("login-form").classList.remove("hidden");
+    function showError(msg) {
+      const el = document.getElementById("alertBox");
+      el.textContent = msg;
+      el.className = "alert alert-error";
+      el.style.display = "block";
     }
-
 
     async function login() {
-  const email = document.getElementById("login-email").value;
-  const pwd   = document.getElementById("login-password").value;
+      const email = document.getElementById("loginEmail").value.trim();
+      const pwd   = document.getElementById("loginPassword").value;
+      const btn   = document.getElementById("loginBtn");
 
-  if (!email || !pwd) {
-    alert("Please fill all fields");
-    return;
-  }
+      if (!email || !pwd) { showError("Please enter your email and password."); return; }
 
-  try {
-    const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: pwd })
-    });
+      btn.disabled    = true;
+      btn.textContent = "Signing in…";
+      document.getElementById("alertBox").style.display = "none";
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      alert(errorData.detail || "Login failed");
-      return;
-    }
-
-    const data = await response.json();
-
-    localStorage.setItem("token", data.access_token);
-    localStorage.setItem("user", JSON.stringify({
-      id:              data.id,
-      name:            data.name,           // ← directly on data
-      email:           data.email,          // ← directly on data
-      role:            data.role,           // ← directly on data
-      platform_name:   data.platform_name,  // ← directly on data
-      org_logo:        data.org_logo        // ← directly on data
-    }));
-
-    if (data.role === "admin") {
-      window.location.href = "admin/dashboard.html";
-    } else if (data.role === "teacher") {
-      window.location.href = "teacher/dashboard.html";
-    } else {
-      window.location.href = "student/student-courses.html";
-    }
-
-  } catch (error) {
-    console.error("Login attempt error:", error);
-    alert("Backend connection error: " + error.message + ". Check your server console for details.");
-  }
-}
-    async function loadOrganizations() {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/organizations");
+        const res  = await fetch(`${API}/auth/login`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ email, password: pwd })
+        });
         const data = await res.json();
 
-        const select = document.getElementById("reg-org");
-
-        data.forEach(org => {
-          const option = document.createElement("option");
-          option.value = org.id;
-          option.textContent = org.name;
-          select.appendChild(option);
-        });
-
-      } catch (err) {
-        console.error("Failed to load organizations");
-      }
-    }
-
-    window.onload = loadOrganizations;
-
-    async function register() {
-      const name = document.getElementById("reg-name").value;
-      const email = document.getElementById("reg-email").value;
-      const pwd = document.getElementById("reg-password").value;
-      const org = document.getElementById("reg-org").value;
-
-      if (!name || !email || !pwd || !org) {
-        alert("Please fill all required fields");
-        return;
-      }
-
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/v1/auth/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            name: name,
-            email: email,
-            password: pwd,
-            organization_id: parseInt(org)
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          alert(errorData.detail || "Registration failed");
+        if (!res.ok) {
+          showError(data.detail || "Invalid email or password.");
           return;
         }
 
-        const data = await response.json();
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("user", JSON.stringify({
+          id:            data.id,
+          name:          data.name,
+          email:         data.email,
+          role:          data.role,
+          platform_name: data.platform_name,
+          org_logo:      data.org_logo
+        }));
 
-        alert("Registration successful! Please login.");
-        showLogin();
-
-      } catch (error) {
-        console.error(error);
-        alert("Backend not connected. Make sure server is running.");
-      }
-    }
-    function showForgot() {
-      document.getElementById("login-form").classList.add("hidden");
-      document.getElementById("register-form").classList.add("hidden");
-      document.getElementById("forgot-form").classList.remove("hidden");
-    }
-
-    async function sendReset() {
-      const email = document.getElementById("forgot-email").value;
-
-      if (!email) {
-        alert("Enter your email");
-        return;
-      }
-
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/v1/auth/forgot-password", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          alert(data.detail || "Error generating token");
-          return;
-        }
-
-        alert("Reset token generated. Copy it below.");
-        document.getElementById("reset-token").value = data.reset_token;
+        if      (data.role === "admin")   window.location.href = "admin/dashboard.html";
+        else if (data.role === "teacher") window.location.href = "teacher/dashboard.html";
+        else                              window.location.href = "student/student-courses.html";
 
       } catch (err) {
-        alert("Server error");
+        showError("Could not connect to server. Make sure the backend is running.");
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = "Sign In";
       }
     }
-    async function resetPassword() {
-      const token = document.getElementById("reset-token").value;
-      const newPwd = document.getElementById("new-password").value;
-
-      if (!token || !newPwd) {
-        alert("Fill all fields");
-        return;
-      }
-
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/v1/auth/reset-password", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: token,
-            new_password: newPwd
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          alert(data.detail || "Reset failed");
-          return;
-        }
-
-        alert("Password updated successfully!");
-        showLogin();
-
-      } catch (err) {
-        alert("Server error");
-      }
-    }
-
-
   </script>
 
-
 </body>
-
 </html>

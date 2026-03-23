@@ -274,17 +274,36 @@ import io, pandas as pd
 
 @router.get("/students")
 def get_all_students(admin=Depends(get_current_admin), db: Session = Depends(get_db)):
-    students = db.query(models.User).filter(models.User.organization_id == admin.organization_id, models.User.role == "student").all()
+    students = db.query(models.User).filter(
+        models.User.organization_id == admin.organization_id,
+        models.User.role == "student"
+    ).order_by(models.User.created_at.desc()).all()
     result = []
     for s in students:
-        # FIXED UNPACKING (3 values)
         metrics, level, risk = get_student_metrics(db, s.id)
-        enrollments = db.query(models.Enrollment, models.Course.title).join(models.Course).filter(models.Enrollment.student_id == s.id).order_by(models.Enrollment.enrolled_at.desc()).all()
+        enrollments = (
+            db.query(models.Enrollment, models.Course.title)
+            .join(models.Course)
+            .filter(models.Enrollment.student_id == s.id)
+            .order_by(models.Enrollment.enrolled_at.desc())
+            .all()
+        )
+        issued_certs = db.query(models.Certificate).filter(
+            models.Certificate.student_id == s.id,
+            models.Certificate.issued == True
+        ).count()
         result.append({
-            "id": s.id, "name": s.name, "email": s.email,
+            "id":            s.id,
+            "name":          s.name,
+            "email":         s.email,
+            "is_active":     s.status,
             "overall_score": round(metrics["overall_score"], 1),
-            "learner_level": level, "dropout_risk": risk,
-            "course_count": len(enrollments), "main_course": enrollments[0][1] if enrollments else "—"
+            "learner_level": level,
+            "dropout_risk":  risk,
+            "course_count":  len(enrollments),
+            "certs_issued":  issued_certs,
+            "main_course":   enrollments[0][1] if enrollments else "—",
+            "joined":        s.created_at.strftime("%b %d, %Y") if s.created_at else "—",
         })
     return result
 
@@ -323,35 +342,261 @@ def get_admin_student_enrollments(student_id: int, admin=Depends(get_current_adm
 
 @router.get("/students/export")
 def export_all_students_excel(
-    token: str = None, # Allow query token for browser downloads
+    token: str = None,
     admin=Depends(get_current_admin), db: Session = Depends(get_db)
 ):
-    """Generates platform-wide Excel report."""
+    """Advanced multi-sheet platform-wide Excel report."""
     data = get_all_students(admin, db)
-    if not data: raise HTTPException(status_code=400, detail="No data")
-    df = pd.DataFrame(data)
-    df_report = df[["name", "email", "main_course", "course_count", "overall_score", "learner_level", "dropout_risk"]]
-    df_report.columns = ["Student Name", "Email", "Main Course", "Courses Enrolled", "Platform Score %", "AI Level", "Dropout Risk"]
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df_report.to_excel(writer, index=False, sheet_name='Platform Performance')
-    output.seek(0)
-    headers = {'Content-Disposition': f'attachment; filename="platform_students_{datetime.now().strftime("%Y%m%d")}.xlsx"'}
-    return StreamingResponse(output, headers=headers, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    if not data:
+        raise HTTPException(status_code=400, detail="No data")
+
+    org = db.query(models.Organization).filter(
+        models.Organization.id == admin.organization_id
+    ).first()
+    org_name = (org.platform_name or org.name) if org else "LearnHub"
+
+    from excel_export import build_admin_report
+    buf = build_admin_report(
+        students=data,
+        org_name=org_name,
+        db=db,
+        get_student_metrics=get_student_metrics,
+        models=models
+    )
+
+    safe_org = "".join(c for c in org_name.replace(" ", "_") if ord(c) < 128) or "Org"
+    filename = f"Platform_Students_{safe_org}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    headers  = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(buf, headers=headers,
+                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @router.get("/students/{student_id}/detail")
 def get_admin_student_detail(student_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)):
-    student = db.query(models.User).filter(models.User.id == student_id, models.User.organization_id == admin.organization_id).first()
-    if not student: raise HTTPException(status_code=404, detail="Student not found")
-    # FIXED UNPACKING (3 values)
-    metrics, level, risk = get_student_metrics(db, student_id)
+    student = db.query(models.User).filter(
+        models.User.id == student_id,
+        models.User.organization_id == admin.organization_id
+    ).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    # ── Global metrics + ML predictions ──
+    global_metrics, global_level, global_risk = get_student_metrics(db, student_id)
+
+    # ── Enrolled courses ──
+    enrollments = db.query(models.Enrollment).filter(
+        models.Enrollment.student_id == student_id
+    ).order_by(models.Enrollment.enrolled_at).all()
+
+    courses_data = []
+    for enr in enrollments:
+        course = db.query(models.Course).filter(models.Course.id == enr.course_id).first()
+        if not course:
+            continue
+        c_metrics, c_level, c_risk = get_student_metrics(db, student_id, course.id)
+        topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course.id).all()]
+        total_vids    = db.query(models.Video).filter(models.Video.topic_id.in_(topic_ids)).count() if topic_ids else 0
+        total_quizzes = db.query(models.Quiz).filter(models.Quiz.topic_id.in_(topic_ids)).count() if topic_ids else 0
+        total_assigns = db.query(models.Assignment).filter(models.Assignment.topic_id.in_(topic_ids)).count() if topic_ids else 0
+        courses_data.append({
+            "id":             course.id,
+            "title":          course.title,
+            "enrolled_at":    enr.enrolled_at.strftime("%b %d, %Y") if enr.enrolled_at else "—",
+            "overall":        round(c_metrics["overall_score"], 1),
+            "quiz_avg":       round(c_metrics["quiz_average"], 1),
+            "assign_avg":     round(c_metrics["assignment_average"], 1),
+            "completion_rate":round(c_metrics["completion_rate"], 1),
+            "videos":         f"{c_metrics['videos_completed']}/{total_vids}",
+            "quizzes":        f"{c_metrics['quizzes_attempted']}/{total_quizzes}",
+            "assignments":    f"{c_metrics['assignments_submitted']}/{total_assigns}",
+            "level":          c_level,
+            "risk":           c_risk,
+        })
+
+    # ── Recent quiz history (last 8) ──
+    recent_attempts = (
+        db.query(models.QuizAttempt, models.Quiz.title, models.Course.title.label("course"))
+        .join(models.Quiz,   models.QuizAttempt.quiz_id   == models.Quiz.id)
+        .join(models.Topic,  models.Quiz.topic_id          == models.Topic.id)
+        .join(models.Course, models.Topic.course_id        == models.Course.id)
+        .filter(models.QuizAttempt.student_id == student_id)
+        .order_by(models.QuizAttempt.attempted_at.desc())
+        .limit(8).all()
+    )
+    quiz_history = []
+    for att, q_title, c_title in recent_attempts:
+        q_count = db.query(models.QuizQuestion).filter(models.QuizQuestion.quiz_id == att.quiz_id).count()
+        pct = round((att.score / q_count) * 100) if q_count > 0 else 0
+        quiz_history.append({
+            "quiz":   q_title,
+            "course": c_title,
+            "score":  f"{att.score}/{q_count}",
+            "pct":    pct,
+            "date":   att.attempted_at.strftime("%b %d, %Y") if att.attempted_at else "—",
+        })
+
+    # ── Recent assignment submissions (last 8) ──
+    recent_subs = (
+        db.query(models.AssignmentSubmission, models.Assignment.title,
+                 models.Assignment.total_marks, models.Course.title.label("course"))
+        .join(models.Assignment, models.AssignmentSubmission.assignment_id == models.Assignment.id)
+        .join(models.Topic,      models.Assignment.topic_id                == models.Topic.id)
+        .join(models.Course,     models.Topic.course_id                    == models.Course.id)
+        .filter(models.AssignmentSubmission.student_id == student_id)
+        .order_by(models.AssignmentSubmission.submitted_at.desc())
+        .limit(8).all()
+    )
+    assign_history = []
+    for sub, a_title, t_marks, c_title in recent_subs:
+        pct = round((sub.obtained_marks / t_marks) * 100) if t_marks and t_marks > 0 else 0
+        assign_history.append({
+            "title":  a_title,
+            "course": c_title,
+            "score":  f"{sub.obtained_marks}/{t_marks}",
+            "pct":    pct,
+            "date":   sub.submitted_at.strftime("%b %d, %Y") if sub.submitted_at else "—",
+        })
+
+    # ── Joined date ──
+    joined = student.created_at.strftime("%B %d, %Y") if student.created_at else "—"
+
     return {
-        "id": student.id, "name": student.name, "email": student.email,
-        "learner_level": level, "dropout_risk": risk,
-        "avg_quiz_score": metrics["quiz_average"],
-        "avg_assignment_score": metrics["assignment_average"],
-        "completion_rate": metrics["completion_rate"]
+        "id":             student.id,
+        "name":           student.name,
+        "email":          student.email,
+        "joined":         joined,
+        "is_active":      student.status,
+        "learner_level":  global_level,
+        "dropout_risk":   global_risk,
+        "overall_score":  round(global_metrics["overall_score"], 1),
+        "quiz_average":   round(global_metrics["quiz_average"], 1),
+        "assign_average": round(global_metrics["assignment_average"], 1),
+        "completion_rate":round(global_metrics["completion_rate"], 1),
+        "quiz_attempt_rate":      round(global_metrics["quiz_attempt_rate"], 1),
+        "assign_submission_rate": round(global_metrics["assignment_submission_rate"], 1),
+        "videos_completed":       global_metrics["videos_completed"],
+        "quizzes_attempted":      global_metrics["quizzes_attempted"],
+        "assignments_submitted":  global_metrics["assignments_submitted"],
+        "enrolled_count":  len(enrollments),
+        "enrolled_courses": courses_data,
+        "quiz_history":    quiz_history,
+        "assign_history":  assign_history,
     }
+
+# ── ADMIN CERTIFICATES ────────────────────────────────────────────────────────
+@router.get("/certificates/requests")
+def get_pending_requests(admin=Depends(get_current_admin), db: Session = Depends(get_db)):
+    # Get pending certificates join with student and course
+    reqs = db.query(models.Certificate, models.User.name, models.User.email, models.Course.title)\
+        .join(models.User, models.Certificate.student_id == models.User.id)\
+        .join(models.Course, models.Certificate.course_id == models.Course.id)\
+        .filter(models.Certificate.status == "pending")\
+        .all()
+    
+    result = []
+    for cert, name, email, title in reqs:
+        # Get student score for this course
+        m, l, r = get_student_metrics(db, cert.student_id, cert.course_id)
+        result.append({
+            "id": cert.id, "student_name": name, "student_email": email,
+            "course_title": title, "score": round(m["overall_score"]),
+            "request_date": cert.request_date.isoformat() if cert.request_date else None
+        })
+    return result
+
+@router.get("/certificates/issued")
+def get_issued_certificates(admin=Depends(get_current_admin), db: Session = Depends(get_db)):
+    issued = db.query(models.Certificate, models.User.name, models.Course.title)\
+        .join(models.User, models.Certificate.student_id == models.User.id)\
+        .join(models.Course, models.Certificate.course_id == models.Course.id)\
+        .filter(models.Certificate.issued == True)\
+        .all()
+    
+    return [{
+        "id": c.id, "student_name": name, "course_title": title,
+        "issued_at": c.issued_at.isoformat() if c.issued_at else None
+    } for c, name, title in issued]
+
+@router.post("/certificates/{cert_id}/issue")
+def issue_certificate(cert_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)):
+    cert = db.query(models.Certificate).filter(models.Certificate.id == cert_id).first()
+    if not cert: raise HTTPException(status_code=404, detail="Request not found")
+    
+    cert.status = "verified"
+    cert.issued = True
+    cert.issued_at = datetime.utcnow()
+    db.commit()
+    return {"message": "Certificate issued"}
+
+@router.post("/certificates/{cert_id}/reject")
+def reject_certificate(cert_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)):
+    cert = db.query(models.Certificate).filter(models.Certificate.id == cert_id).first()
+    if not cert: raise HTTPException(status_code=404, detail="Request not found")
+    
+    cert.status = "rejected"
+    db.commit()
+    return {"message": "Request rejected"}
+
+@router.get("/certificates/{cert_id}/download")
+def admin_download_certificate(cert_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)):
+    """Admin can download/view any issued certificate."""
+    cert = db.query(models.Certificate).filter(
+        models.Certificate.id     == cert_id,
+        models.Certificate.issued == True
+    ).first()
+    if not cert:
+        raise HTTPException(status_code=404, detail="Certificate not found or not yet issued.")
+
+    student = db.query(models.User).filter(models.User.id == cert.student_id).first()
+    course  = db.query(models.Course).filter(models.Course.id == cert.course_id).first()
+    org     = db.query(models.Organization).filter(models.Organization.id == admin.organization_id).first()
+
+    from certificate_generator import generate_certificate_pdf
+    from fastapi.responses import StreamingResponse
+
+    pdf_buffer = generate_certificate_pdf(
+        student_name=student.name,
+        course_name=course.title,
+        org_name=(org.platform_name or org.name) if org else "LearnHub",
+        issue_date=cert.issued_at.strftime("%B %d, %Y") if cert.issued_at else None
+    )
+    def _safe(s):
+        return "".join(ch for ch in s.replace(" ", "_") if ord(ch) < 128 and ch not in r'\/:*?"<>|') or "file"
+
+    headers = {
+        'Content-Disposition':
+            f'inline; filename="Certificate_{_safe(student.name)}_{_safe(course.title)}.pdf"'
+    }
+    return StreamingResponse(pdf_buffer, headers=headers, media_type='application/pdf')
+
+@router.get("/students/{student_id}/certificates")
+def get_admin_student_certificates(student_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)):
+    """All certificate records for a specific student (admin view)."""
+    student = db.query(models.User).filter(
+        models.User.id == student_id,
+        models.User.organization_id == admin.organization_id
+    ).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    certs = db.query(models.Certificate, models.Course.title)\
+        .join(models.Course, models.Certificate.course_id == models.Course.id)\
+        .filter(models.Certificate.student_id == student_id)\
+        .order_by(models.Certificate.request_date.desc())\
+        .all()
+
+    result = []
+    for cert, course_title in certs:
+        m, _, _ = get_student_metrics(db, student_id, cert.course_id)
+        result.append({
+            "id": cert.id,
+            "course_title": course_title,
+            "status": cert.status,
+            "issued": cert.issued,
+            "score": round(m["overall_score"], 1),
+            "request_date": cert.request_date.isoformat() if cert.request_date else None,
+            "issued_at": cert.issued_at.isoformat() if cert.issued_at else None,
+        })
+    return result
 
 # ── ADMIN ANALYTICS ───────────────────────────────────────────────────────────
 @router.get("/analytics")
@@ -422,19 +667,37 @@ def get_organization(admin=Depends(get_current_admin), db: Session = Depends(get
     if not org: raise HTTPException(status_code=404, detail="Not found")
     return {"org_name": org.name, "platform_name": org.platform_name, "logo": f"http://127.0.0.1:8000/{org.logo}" if org.logo else None}
 
+from cloudinary_utils import upload_to_cloudinary
+
 @router.put("/organization")
-async def update_organization(org_name: str = Form(None), platform_name: str = Form(None), logo: UploadFile = File(None), admin=Depends(get_current_admin), db: Session = Depends(get_db)):
-    org = db.query(models.Organization).filter(models.Organization.id == admin.organization_id).first()
+async def update_organization(
+    org_name: str = Form(None),
+    platform_name: str = Form(None),
+    logo: UploadFile = File(None),
+    admin=Depends(get_current_admin), db: Session = Depends(get_db)
+):
+    org = db.query(models.Organization).filter(
+        models.Organization.id == admin.organization_id
+    ).first()
+    if not org: raise HTTPException(status_code=404, detail="Organization not found")
+
     if org_name: org.name = org_name
     if platform_name: org.platform_name = platform_name
+
     if logo and logo.filename:
-        upload_dir = "uploads/logos"
-        os.makedirs(upload_dir, exist_ok=True)
-        file_path = f"{upload_dir}/{admin.organization_id}_{logo.filename}"
-        with open(file_path, "wb") as f: shutil.copyfileobj(logo.file, f)
-        org.logo = file_path
+        # Use Cloudinary instead of local uploads/ folder
+        cloud_url = upload_to_cloudinary(logo, folder="learnhub/logos")
+        if cloud_url:
+            org.logo = cloud_url
+
     db.commit()
-    return {"message": "Updated"}
+    db.refresh(org)
+    return {
+        "org_name": org.name,
+        "platform_name": org.platform_name,
+        "logo": org.logo, # Now returns full secure_url
+        "logo_url": org.logo
+    }
 
 @router.get("/profile")
 def get_admin_profile(admin=Depends(get_current_admin), db: Session = Depends(get_db)):

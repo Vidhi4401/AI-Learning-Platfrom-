@@ -153,6 +153,11 @@ class TeacherStatusUpdate(BaseModel):
 class AdminPasswordReset(BaseModel):
     new_password: str
 
+class AdminAddUserSchema(BaseModel):
+    name: str
+    email: str
+    password: str
+
 class AdminProfileUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None

@@ -233,24 +233,29 @@ function showResult(r) {
   if      (pct >= 80) { emoji = "🏆"; heading = "Excellent Work!"; }
   else if (pct >= 60) { emoji = "👍"; heading = "Good Job!"; }
 
-  document.getElementById("resultEmoji").textContent   = emoji;
-  document.getElementById("resultHeading").textContent = heading;
-  document.getElementById("resultBig").textContent     = `${score}/${total}`;
-  document.getElementById("resultPctEl").textContent   = `${Math.round(pct)}%`;
-  document.getElementById("resultRow").innerHTML = `
-    <div>
-      <div class="r-stat-val" style="color:#16a34a;">${correct}</div>
-      <div class="r-stat-label">Correct</div>
-    </div>
-    <div>
-      <div class="r-stat-val" style="color:#ef4444;">${wrong}</div>
-      <div class="r-stat-label">Wrong</div>
-    </div>
-    <div>
-      <div class="r-stat-val" style="color:#9ca3af;">${skipped}</div>
-      <div class="r-stat-label">Skipped</div>
-    </div>
-  `;
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setEl("resultEmoji",   emoji);
+  setEl("resultHeading", heading);
+  setEl("resultBig",     `${score}/${total}`);
+  setEl("resultPctEl",   `${Math.round(pct)}%`);
+
+  const rowEl = document.getElementById("resultRow");
+  if (rowEl) {
+    rowEl.innerHTML = `
+      <div>
+        <div class="r-stat-val" style="color:#16a34a;">${correct}</div>
+        <div class="r-stat-label">Correct</div>
+      </div>
+      <div>
+        <div class="r-stat-val" style="color:#ef4444;">${wrong}</div>
+        <div class="r-stat-label">Wrong</div>
+      </div>
+      <div>
+        <div class="r-stat-val" style="color:#9ca3af;">${skipped}</div>
+        <div class="r-stat-label">Skipped</div>
+      </div>
+    `;
+  }
 }
 
 /* =========================

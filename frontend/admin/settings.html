@@ -84,6 +84,67 @@
             <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="saveProfile()">Update Profile & Security</button>
         </section>
 
+        <!-- USER MANAGEMENT -->
+        <section class="settings-section" style="margin-top:24px;">
+          <h2 class="section-title">👥 User Management</h2>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">
+            Add students or teachers to your organization, or reset a user's password.
+          </p>
+
+          <!-- Add User -->
+          <div style="background:var(--page-bg);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;">
+            <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:16px;">➕ Add New User</h3>
+            <div id="addUserSuccess" style="display:none;background:#dcfce7;color:#166534;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:14px;"></div>
+            <div id="addUserError"   style="display:none;background:#fee2e2;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:14px;"></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+              <div class="form-group" style="margin:0;">
+                <label>Full Name</label>
+                <input type="text" id="newUserName" class="form-input" placeholder="Full name">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Role</label>
+                <select id="newUserRole" class="form-input" style="height:42px;">
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+              <div class="form-group" style="margin:0;">
+                <label>Email Address</label>
+                <input type="email" id="newUserEmail" class="form-input" placeholder="user@org.com">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Initial Password</label>
+                <input type="password" id="newUserPass" class="form-input" placeholder="Set a password">
+              </div>
+            </div>
+            <button class="btn btn-primary" style="padding:9px 24px;" onclick="addUser()">Create Account</button>
+          </div>
+
+          <!-- Reset Password -->
+          <div style="background:var(--page-bg);border:1px solid var(--border);border-radius:12px;padding:24px;">
+            <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:16px;">🔑 Reset User Password</h3>
+            <div id="resetPwdSuccess" style="display:none;background:#dcfce7;color:#166534;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:14px;"></div>
+            <div id="resetPwdError"   style="display:none;background:#fee2e2;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:14px;"></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+              <div class="form-group" style="margin:0;">
+                <label>Select User</label>
+                <select id="resetUserSelect" class="form-input" style="height:42px;">
+                  <option value="">— Loading users… —</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>New Password</label>
+                <input type="password" id="resetNewPwd" class="form-input" placeholder="New password">
+              </div>
+            </div>
+            <button class="btn btn-primary" style="padding:9px 24px;" onclick="resetUserPassword()">Reset Password</button>
+          </div>
+        </section>
+
       </div>
     </main>
   </div>

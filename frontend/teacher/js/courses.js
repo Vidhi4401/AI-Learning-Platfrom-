@@ -37,9 +37,7 @@ function renderCourses(courses) {
   }
 
   courses.forEach(course => {
-    const imageUrl = course.logo
-      ? `http://127.0.0.1:8000/${course.logo}`
-      : "https://via.placeholder.com/400x200";
+    const imageUrl = getFileUrl(course.logo) || "https://via.placeholder.com/400x200";
 
     const isPublished = !!course.status;
     const difficulty  = course.difficulty || "General";
