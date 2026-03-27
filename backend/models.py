@@ -197,12 +197,14 @@ class ChatDoubt(Base):
     is_read_by_faculty = Column(Boolean, default=False)                # For faculty notification badge
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-class Material(Base):
-    __tablename__ = "materials"
+class Meeting(Base):
+    __tablename__ = "meetings"
 
-    id         = Column(Integer, primary_key=True, index=True)
-    title      = Column(String)
-    file_url   = Column(String)          # Cloudinary secure_url
-    course_id  = Column(Integer, ForeignKey("courses.id"))
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String, nullable=True)
+    meeting_link = Column(String)
+    meeting_date = Column(DateTime)
+    course_id = Column(Integer, ForeignKey("courses.id"))
     teacher_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())

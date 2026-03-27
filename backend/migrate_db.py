@@ -32,6 +32,27 @@ def migrate():
             print("Adding 'global_learner_level' to performance table...")
             conn.execute(text("ALTER TABLE student_performance_summary ADD COLUMN global_learner_level VARCHAR(20);"))
 
+        # 3. Check and Create Meetings Table if missing
+        print("Checking for meetings table...")
+        if not inspector.has_table('meetings'):
+            print("Creating 'meetings' table...")
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS meetings (
+                    id SERIAL PRIMARY KEY,
+                    title VARCHAR NOT NULL,
+                    description TEXT,
+                    meeting_link VARCHAR NOT NULL,
+                    meeting_date TIMESTAMP NOT NULL,
+                    course_id INTEGER REFERENCES courses(id),
+                    teacher_id INTEGER REFERENCES users(id),
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+            """))
+            conn.commit()
+            print("✅ Meetings table created.")
+        else:
+            print("✅ Meetings table already exists.")
+
         conn.commit()
         print("✅ Migration completed successfully!")
 

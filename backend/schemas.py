@@ -179,3 +179,23 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class MeetingCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    meeting_link: str
+    meeting_date: datetime
+    course_id: int
+
+class MeetingResponse(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    meeting_link: str
+    meeting_date: datetime
+    course_id: int
+    teacher_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

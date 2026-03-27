@@ -27,6 +27,7 @@ function setupTabs() {
       if (btn.dataset.tab === "topics")      loadTopics();
       if (btn.dataset.tab === "quizzes")     loadAllQuizzes();
       if (btn.dataset.tab === "assignments") loadAllAssignments();
+      if (btn.dataset.tab === "materials")   loadMaterials();
     });
   });
 }
@@ -366,7 +367,7 @@ async function loadMaterials() {
         <td class="order-cell">#${i + 1}</td>
         <td class="name-cell"><strong>${m.title}</strong></td>
         <td class="actions-cell">
-          <a href="${m.file_url}" target="_blank" class="tbl-btn view">👁 View</a>
+          <a href="${getFileUrl(m.file_url)}" target="_blank" class="tbl-btn view">👁 View</a>
           <button class="tbl-btn delete" onclick="deleteMaterial(${m.id})">🗑</button>
         </td>`;
       tbody.appendChild(tr);

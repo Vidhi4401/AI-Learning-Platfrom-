@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meetings — LearnHub</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .meetings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .meeting-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      border-left: 4px solid #4f46e5;
+    }
+    .meeting-card h3 {
+      margin: 0 0 10px 0;
+      color: #1e293b;
+    }
+    .meeting-meta {
+      font-size: 0.9em;
+      color: #64748b;
+      margin-bottom: 12px;
+    }
+    .course-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      background: #e0e7ff;
+      color: #4338ca;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .btn-join {
+      display: block;
+      width: 100%;
+      background: #4f46e5;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-join:hover {
+      background: #4338ca;
+    }
+    .no-meetings {
+      text-align: center;
+      padding: 40px;
+      background: white;
+      border-radius: 12px;
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <section class="page-header">
+        <h1>Live Meetings</h1>
+        <p>Join live sessions scheduled by your teachers.</p>
+      </section>
+
+      <div class="meetings-grid" id="meetingsList">
+        <div class="no-meetings">Loading meetings...</div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="js/student-layout.js"></script>
+  <script src="js/student-meetings.js"></script>
+</body>
+</html>

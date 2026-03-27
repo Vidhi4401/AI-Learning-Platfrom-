@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from database import engine, Base
+import models
 import os
 
 # ── Import all routers ──
-from routers import auth, organization, dashboard, courses, topics, videos, assignments, quizzes, profile, student, chatbot, admin_router, materials
+from routers import auth, organization, dashboard, courses, topics, videos, assignments, quizzes, profile, student, chatbot, admin_router, materials, meetings
 
 app = FastAPI()
 
@@ -41,3 +42,4 @@ app.include_router(student.router)
 app.include_router(chatbot.router)
 app.include_router(admin_router.router)
 app.include_router(materials.router)
+app.include_router(meetings.router)

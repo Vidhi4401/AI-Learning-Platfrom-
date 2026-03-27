@@ -264,7 +264,7 @@
               <div class="mat-course-cell">${m.courseTitle}</div>
             </div>
             <div class="mat-actions">
-              <a href="${m.file_url}" target="_blank" class="mat-view-btn">👁 View</a>
+              <a href="${getFileUrl(m.file_url)}" target="_blank" class="mat-view-btn">👁 View</a>
               <button class="mat-del-btn" onclick="deleteMaterial(${m.id})">🗑 Delete</button>
             </div>
           </div>

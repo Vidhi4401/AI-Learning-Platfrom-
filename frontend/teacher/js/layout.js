@@ -63,6 +63,10 @@ document.getElementById("sidebar").innerHTML = `
       <span>My Students</span>
     </a>
 
+    <a href="meetings.html" class="${isActive("meetings.html")}">
+      <span>Live Meetings</span>
+    </a>
+
     <a href="doubts.html" class="${isActive("doubts.html")}" style="display:flex; justify-content:space-between; align-items:center;">
       <span>Doubts</span>
       <span id="faculty-doubt-badge" style="background:#ef4444; color:white; border-radius:10px; padding:2px 8px; font-size:12px; font-weight:bold; display:none;">0</span>
