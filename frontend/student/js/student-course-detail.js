@@ -562,7 +562,7 @@ async function loadMaterialsTab() {
           <span style="font-size:26px;">${fileIcon(m.file_url)}</span>
           <span style="font-weight:600; color:var(--ink); font-size:14px;">${m.title}</span>
         </div>
-        <a href="${m.file_url}" target="_blank"
+        <a href="${getFileUrl(m.file_url)}" target="_blank"
            style="background:var(--accent);color:#fff;padding:8px 18px;border-radius:8px;
                   font-size:13px;font-weight:600;text-decoration:none;">
           ⬇ Open

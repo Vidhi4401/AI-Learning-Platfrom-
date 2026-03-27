@@ -241,6 +241,20 @@ def get_course_detail(
     }
 
 
+@router.get("/my-courses")
+def get_my_enrolled_courses(
+    current_user: models.User = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    # Join Enrollments with Courses
+    results = db.query(models.Course).join(
+        models.Enrollment, models.Enrollment.course_id == models.Course.id
+    ).filter(
+        models.Enrollment.student_id == current_user.id
+    ).all()
+
+    return results
+
 # ────────────────────────────────────────────
 #  CERTIFICATES
 # ────────────────────────────────────────────

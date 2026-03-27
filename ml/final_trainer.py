@@ -8,7 +8,9 @@ import joblib
 import os
 
 # Create ml directory in backend if not exists
-ARTIFACT_DIR = "backend/ml"
+# Get the root directory (one level up from this script)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ARTIFACT_DIR = os.path.join(BASE_DIR, "backend", "ml")
 os.makedirs(ARTIFACT_DIR, exist_ok=True)
 
 def engineer_features(df):
