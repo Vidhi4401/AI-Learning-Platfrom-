@@ -258,24 +258,66 @@ def request_certificate(
     if existing:
         return {"message": "Request already exists", "status": existing.status}
 
-    # Check all videos watched >= 90%
+    # ── Get all topic IDs for this course ──────────────────────────────────
     topic_ids = [t.id for t in
                  db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
+
+    if not topic_ids:
+        raise HTTPException(status_code=400,
+                            detail="This course has no content yet.")
+
+    # ── Check 1: All videos watched >= 80% ────────────────────────────────
     video_ids = [v.id for v in
                  db.query(models.Video.id).filter(models.Video.topic_id.in_(topic_ids)).all()]
 
     if video_ids:
         watched_count = db.query(models.VideoProgress).filter(
-            models.VideoProgress.student_id     == student.id,
+            models.VideoProgress.student_id      == student.id,
             models.VideoProgress.video_id.in_(video_ids),
-            models.VideoProgress.watch_percentage >= 90
+            models.VideoProgress.watch_percentage >= 80
         ).count()
         if watched_count < len(video_ids):
             raise HTTPException(
                 status_code=400,
-                detail=f"Complete all videos first ({watched_count}/{len(video_ids)})"
+                detail=f"Complete all videos first — watched {watched_count} of {len(video_ids)}."
             )
 
+    # ── Check 2: All quizzes attempted ────────────────────────────────────
+    quiz_ids = [q.id for q in
+                db.query(models.Quiz.id).filter(models.Quiz.topic_id.in_(topic_ids)).all()]
+
+    if quiz_ids:
+        attempted_quiz_ids = {
+            a.quiz_id for a in db.query(models.QuizAttempt.quiz_id).filter(
+                models.QuizAttempt.student_id == student.id,
+                models.QuizAttempt.quiz_id.in_(quiz_ids)
+            ).all()
+        }
+        if len(attempted_quiz_ids) < len(quiz_ids):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Attempt all quizzes first — completed {len(attempted_quiz_ids)} of {len(quiz_ids)}."
+            )
+
+    # ── Check 3: All assignments submitted ────────────────────────────────
+    assign_ids = [a.id for a in
+                  db.query(models.Assignment.id).filter(
+                      models.Assignment.topic_id.in_(topic_ids)).all()]
+
+    if assign_ids:
+        submitted_assign_ids = {
+            s.assignment_id for s in db.query(models.AssignmentSubmission.assignment_id).filter(
+                models.AssignmentSubmission.student_id == student.id,
+                models.AssignmentSubmission.assignment_id.in_(assign_ids)
+            ).all()
+        }
+        if len(submitted_assign_ids) < len(assign_ids):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Submit all assignments first — submitted {len(submitted_assign_ids)} of {len(assign_ids)}."
+            )
+
+    # ── All checks passed → create certificate request ────────────────────
     new_cert = models.Certificate(
         student_id=student.id, course_id=course_id,
         status="pending", eligible=True
