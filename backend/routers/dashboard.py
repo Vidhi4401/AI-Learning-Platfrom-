@@ -137,8 +137,31 @@ except Exception as e:
 
 def get_student_metrics(db: Session, student_id: int, course_id: int = None):
     """
-    Calculates all 11 ML features from raw DB tables and predicts Level & Risk.
+    Check pre-calculated StudentPerformanceSummary table first.
+    If course_id is provided, or summary doesn't exist, calculate from raw DB tables.
     """
+    # ── 1. Check Pre-calculated Summary (Global view) ──
+    if course_id is None:
+        perf = db.query(models.StudentPerformanceSummary).filter(
+            models.StudentPerformanceSummary.student_id == student_id
+        ).first()
+        if perf:
+            metrics = {
+                "overall_score": perf.overall_score or 0,
+                "quiz_average": perf.quiz_average or 0,
+                "assignment_average": perf.assignment_average or 0,
+                "completion_rate": perf.completion_rate or 0,
+                "avg_watch_time": perf.avg_watch_time or 0,
+                "quiz_attempt_rate": perf.quiz_attempt_rate or 0,
+                "assignment_submission_rate": perf.assignment_submission_rate or 0,
+                "videos_completed": perf.videos_completed or 0,
+                "quizzes_attempted": perf.quizzes_attempted or 0,
+                "assignments_submitted": perf.assignments_submitted or 0,
+                "total_course_items": perf.total_course_items or 0
+            }
+            return metrics, perf.learner_level or "Average", perf.dropout_risk or "Low"
+
+    # ── 2. Fallback: Manual Calculation (Filtered or Missing) ──
     # 1. Filter Topics
     if course_id:
         topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
@@ -350,7 +373,31 @@ def get_student_detail(
             "risk":         c_risk
         })
 
-    # 3. Recent Quiz Attempts
+    # 3. Detailed Video Progress (NEW)
+    video_progress_data = []
+    v_records = db.query(
+        models.VideoProgress, 
+        models.Video.video_url,
+        models.Topic.title.label("topic_title"),
+        models.Course.title.label("course_title")
+    ).join(models.Video, models.VideoProgress.video_id == models.Video.id)\
+     .join(models.Topic, models.Video.topic_id == models.Topic.id)\
+     .join(models.Course, models.Topic.course_id == models.Course.id)\
+     .filter(models.VideoProgress.student_id == student_id).all()
+    
+    for vp, v_url, t_title, c_title in v_records:
+        video_progress_data.append({
+            "course": c_title,
+            "topic": t_title,
+            "url": v_url,
+            "watch_time": vp.watch_time,
+            "percentage": vp.watch_percentage,
+            "skip_count": getattr(vp, "skip_count", 0),
+            "playback_speed": getattr(vp, "playback_speed", 1.0),
+            "status": "Complete" if vp.watch_percentage >= 80 else "In Progress"
+        })
+
+    # 4. Recent Quiz Attempts
     attempts = db.query(models.QuizAttempt, models.Quiz.title, models.Course.title.label("course_title"))\
         .join(models.Quiz, models.QuizAttempt.quiz_id == models.Quiz.id)\
         .join(models.Topic, models.Quiz.topic_id == models.Topic.id)\
@@ -400,6 +447,7 @@ def get_student_detail(
         "level":          global_level,
         "dropout_risk":   global_risk,
         "enrolled_courses": courses_data,
+        "video_progress": video_progress_data,
         "quiz_history":   quiz_history,
         "assign_history": assign_history
     }

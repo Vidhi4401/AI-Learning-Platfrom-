@@ -14,6 +14,8 @@ def get_db():
     finally:
         db.close()
 
+from routers.notifications import create_notification
+
 @router.post("/", response_model=schemas.MeetingResponse)
 def create_meeting(
     meeting: schemas.MeetingCreate,
@@ -43,6 +45,20 @@ def create_meeting(
         db.add(db_meeting)
         db.commit()
         db.refresh(db_meeting)
+        
+        # Notify all enrolled students
+        enrolled_students = db.query(models.Enrollment.student_id).filter(
+            models.Enrollment.course_id == meeting.course_id
+        ).all()
+        
+        for (sid,) in enrolled_students:
+            create_notification(
+                db, sid,
+                "New Meeting Scheduled",
+                f"A new live session '{meeting.title}' has been scheduled for {course.title}.",
+                "student-meetings.html"
+            )
+
         print(f"[Meeting Success] Created meeting ID: {db_meeting.id}")
         return db_meeting
     except Exception as e:

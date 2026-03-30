@@ -1,7 +1,10 @@
-
 # Environment variables
 .env
 backend/.env
+
+# ML Models (ignore completely)
+backend/ml/*
+ml/*
 
 # Python cache
 __pycache__/
@@ -9,11 +12,7 @@ backend/__pycache__/
 backend/routers/__pycache__/
 *.pyc
 
-# ML Models (Too large for GitHub, should be retrained)
-backend/ml/*.pkl
-ml/*.pkl
-
-# Uploads (Exclude actual files, keep folder structure)
+# Uploads (keep folder structure only)
 backend/uploads/*
 !backend/uploads/.gitkeep
 backend/uploads/materials/*

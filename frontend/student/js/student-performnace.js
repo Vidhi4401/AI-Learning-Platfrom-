@@ -179,15 +179,79 @@ function renderAll(courseFilter) {
     renderCourseChart(courses, attempts, submissions);
     renderSkillChart(courses, attempts, submissions);
     renderEngagement(courses, attempts, submissions, videoIds);
-    renderInsights(quizAvg, assignAvg, videoCompPct, attempts, submissions, courses);
+
+    // Skill Gap Analysis (New AI-Driven Logic)
+    if (courseFilter !== "all") {
+        fetchSkillGap(courseFilter);
+    } else {
+        renderInsights(quizAvg, assignAvg, videoCompPct, attempts, submissions, courses);
+    }
   } catch (err) {
     console.error("Chart rendering error:", err);
   }
-}
+  }
 
-/* ============================================================
-   COURSE COMPARISON CHART
-============================================================*/
+  async function fetchSkillGap(courseId) {
+    const card = document.getElementById("insightsCard");
+    const sList = document.getElementById("strengthsList");
+    const iList = document.getElementById("improveList");
+    const aList = document.getElementById("actionsList");
+    const mBanner = document.getElementById("motivateBanner");
+
+    sList.innerHTML = '<li>Analyzing...</li>';
+    iList.innerHTML = '<li>Analyzing...</li>';
+    aList.innerHTML = '<li>Generating recommendations...</li>';
+    mBanner.innerHTML = '<span>Llama-3 is analyzing your performance...</span>';
+
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API}/student/skill-gap/${courseId}`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const data = await res.json();
+
+        if (data.error) {
+            sList.innerHTML = '<li>Analysis currently unavailable.</li>';
+            return;
+        }
+
+        sList.innerHTML = data.strengths?.map(s => `<li>${s}</li>`).join("") || "<li>Complete more tasks to see strengths!</li>";
+        iList.innerHTML = data.weaknesses?.map(w => `<li>${w}</li>`).join("") || "<li>Looking good! No major gaps found.</li>";
+        
+        // Render Recovery Plan
+        if (data.recovery_plan && data.recovery_plan.length > 0) {
+            aList.innerHTML = data.recovery_plan.map(p => `
+                <li style="margin-bottom:12px;">
+                    <strong style="color:#1e293b;">${p.topic}:</strong> ${p.action}
+                    ${p.video_suggestion ? `<div style="font-size:12px;color:#64748b;margin-top:2px;">💡 Suggestion: ${p.video_suggestion}</div>` : ""}
+                </li>
+            `).join("");
+        } else {
+            aList.innerHTML = "<li>Keep up the excellent work! Stay consistent.</li>";
+        }
+
+        // Render Review Guide if available
+        if (data.review_guide) {
+            mBanner.innerHTML = `
+                <div style="background:#f1f5f9; padding:12px; border-radius:8px; margin-bottom:12px; border-left:4px solid #3b82f6;">
+                    <div style="font-weight:700; font-size:13px; color:#1e293b; margin-bottom:4px;">📘 MINI-REVIEW GUIDE</div>
+                    <div style="font-size:14px; color:#475569;">${data.review_guide}</div>
+                </div>
+                <strong>AI Insight:</strong> <span>${data.motivation}</span>
+            `;
+        } else {
+            mBanner.innerHTML = `<strong>AI Insight:</strong> <span>${data.motivation}</span>`;
+        }
+
+    } catch (err) {
+        console.error("Skill gap fetch failed", err);
+    }
+  }
+
+  /* ============================================================
+   INSIGHTS (Fallback for "All Courses" view)
+  ============================================================*/
+
 function renderCourseChart(courses, attempts, submissions) {
   const labels     = [];
   const assignData = [];
@@ -466,10 +530,11 @@ async function syncPerformanceToDB(metrics) {
             const data = await res.json();
             const levelEl = document.getElementById("aiLearnerLevel");
             const descEl  = document.getElementById("levelDesc");
+            const riskEl  = document.getElementById("dropoutRiskBadge"); // New Element
             
             if (levelEl && data.level) {
                 levelEl.textContent = data.level;
-                // Styling
+                // Level Styling
                 levelEl.style.background = data.level === "Strong" ? "#dcfce7" : (data.level === "Average" ? "#fef3c7" : "#fee2e2");
                 levelEl.style.color = data.level === "Strong" ? "#166534" : (data.level === "Average" ? "#92400e" : "#991b1b");
                 
@@ -478,6 +543,13 @@ async function syncPerformanceToDB(metrics) {
                     else if (data.level === "Average") descEl.textContent = "Good progress. On the right track.";
                     else descEl.textContent = "Foundational review recommended.";
                 }
+            }
+
+            if (riskEl && data.risk) {
+                riskEl.textContent = `Dropout Risk: ${data.risk}`;
+                riskEl.style.display = 'inline-block';
+                riskEl.style.background = data.risk === "High" ? "#fee2e2" : (data.risk === "Medium" ? "#fef3c7" : "#dcfce7");
+                riskEl.style.color = data.risk === "High" ? "#991b1b" : (data.risk === "Medium" ? "#92400e" : "#166534");
             }
         }
     } catch (err) {

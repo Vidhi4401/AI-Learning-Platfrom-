@@ -52,17 +52,31 @@
   <!-- INVITE MODAL -->
   <div id="inviteModal" class="modal">
     <div class="modal-content">
-        <span class="close-modal" onclick="closeModal('inviteModal')">&times;</span>
-        <div class="modal-header"><h3>Invite New Teacher</h3></div>
-        <label>Full Name</label>
-        <input type="text" id="inviteName" placeholder="e.g. Dr. Emily Smith">
-        <label>Email Address</label>
-        <input type="email" id="inviteEmail" placeholder="teacher@email.com">
-        <label>Temporary Password</label>
-        <input type="password" id="invitePass" placeholder="••••••••">
-        <div style="margin-top:24px; display:flex; gap:12px;">
-            <button class="btn btn-primary" style="flex:1;" onclick="submitInvite()">Create Account</button>
-            <button class="btn btn-ghost" onclick="closeModal('inviteModal')">Cancel</button>
+        <div class="modal-header-custom">
+            <button class="close-modal-custom" onclick="closeModal('inviteModal')">&times;</button>
+            <h3>Invite New Teacher</h3>
+            <p>Create a faculty account to manage courses.</p>
+        </div>
+        <div class="modal-body">
+            <div class="form-group-custom">
+                <label>Full Name</label>
+                <input type="text" id="inviteName" class="form-input-custom" placeholder="e.g. Dr. Emily Smith">
+            </div>
+            <div class="form-group-custom">
+                <label>Email Address</label>
+                <input type="email" id="inviteEmail" class="form-input-custom" placeholder="teacher@email.com">
+            </div>
+            <div class="form-group-custom">
+                <label>Temporary Password</label>
+                <div class="pwd-wrap">
+                    <input type="password" id="invitePass" class="form-input-custom" placeholder="••••••••">
+                    <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+            </div>
+            <div style="margin-top:32px; display:flex; gap:12px;">
+                <button class="btn btn-primary" style="flex:2; justify-content:center; padding:14px;" onclick="submitInvite()">Create Account</button>
+                <button class="btn btn-ghost" style="flex:1; justify-content:center;" onclick="closeModal('inviteModal')">Cancel</button>
+            </div>
         </div>
     </div>
   </div>
@@ -70,15 +84,30 @@
   <!-- RESET PASS MODAL -->
   <div id="resetModal" class="modal">
     <div class="modal-content">
-        <span class="close-modal" onclick="closeModal('resetModal')">&times;</span>
-        <div class="modal-header"><h3>Reset Password</h3><p id="resetTeacherName" style="font-size:13px; color:var(--muted);"></p></div>
-        <label>New Password</label>
-        <input type="password" id="newPass" placeholder="••••••••">
-        <label>Confirm Password</label>
-        <input type="password" id="confirmPass" placeholder="••••••••">
-        <div style="margin-top:24px; display:flex; gap:12px;">
-            <button class="btn btn-primary" style="flex:1;" onclick="submitReset()">Update Password</button>
-            <button class="btn btn-ghost" onclick="closeModal('resetModal')">Cancel</button>
+        <div class="modal-header-custom" style="background: linear-gradient(135deg, #475569, #1e293b);">
+            <button class="close-modal-custom" onclick="closeModal('resetModal')">&times;</button>
+            <h3>Reset Password</h3>
+            <p id="resetTeacherName">Update faculty security credentials.</p>
+        </div>
+        <div class="modal-body">
+            <div class="form-group-custom">
+                <label>New Password</label>
+                <div class="pwd-wrap">
+                    <input type="password" id="newPass" class="form-input-custom" placeholder="••••••••">
+                    <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+            </div>
+            <div class="form-group-custom">
+                <label>Confirm Password</label>
+                <div class="pwd-wrap">
+                    <input type="password" id="confirmPass" class="form-input-custom" placeholder="••••••••">
+                    <button type="button" class="pwd-eye" onclick="togglePwd(this)" tabindex="-1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+            </div>
+            <div style="margin-top:32px; display:flex; gap:12px;">
+                <button class="btn btn-primary" style="flex:2; justify-content:center; padding:14px; background:#1e293b;" onclick="submitReset()">Update Password</button>
+                <button class="btn btn-ghost" style="flex:1; justify-content:center;" onclick="closeModal('resetModal')">Cancel</button>
+            </div>
         </div>
     </div>
   </div>

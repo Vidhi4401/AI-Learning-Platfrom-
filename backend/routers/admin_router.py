@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy import func
 from datetime import datetime, timedelta
 import models, os, shutil, json
@@ -141,6 +141,19 @@ def get_teachers(admin=Depends(get_current_admin), db: Session = Depends(get_db)
         })
     return result
 
+@router.delete("/teachers/{teacher_id}")
+def delete_teacher(teacher_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)):
+    teacher = db.query(models.User).filter(
+        models.User.id == teacher_id,
+        models.User.organization_id == admin.organization_id,
+        models.User.role == "teacher"
+    ).first()
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+    db.delete(teacher)
+    db.commit()
+    return {"message": "Teacher deleted successfully"}
+
 @router.get("/teachers/{teacher_id}/detail")
 def get_teacher_detail(
     teacher_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)
@@ -232,6 +245,8 @@ def delete_course(course_id: int, admin=Depends(get_current_admin), db: Session 
     db.commit()
     return {"message": "Course deleted"}
 
+from routers.notifications import create_notification
+
 @router.put("/courses/{course_id}/assign")
 def assign_course_to_teacher(course_id: int, teacher_id: int = Form(...), admin=Depends(get_current_admin), db: Session = Depends(get_db)):
     course = db.query(models.Course).filter(models.Course.id == course_id, models.Course.organization_id == admin.organization_id).first()
@@ -240,6 +255,15 @@ def assign_course_to_teacher(course_id: int, teacher_id: int = Form(...), admin=
     if not teacher: raise HTTPException(status_code=400, detail="Invalid teacher")
     course.created_by = teacher_id
     db.commit()
+
+    # Notify Teacher
+    create_notification(
+        db, teacher_id, 
+        "New Course Assigned", 
+        f"The administrator has assigned you to the course: {course.title}",
+        "courses.html"
+    )
+
     return {"message": f"Course assigned to {teacher.name}"}
 
 @router.get("/courses/{course_id}")
@@ -505,36 +529,27 @@ def get_pending_requests(admin=Depends(get_current_admin), db: Session = Depends
 
 @router.get("/certificates/issued")
 def get_issued_certificates(admin=Depends(get_current_admin), db: Session = Depends(get_db)):
-    issued = db.query(models.Certificate, models.User.name, models.Course.title)\
-        .join(models.User, models.Certificate.student_id == models.User.id)\
-        .join(models.Course, models.Certificate.course_id == models.Course.id)\
-        .filter(models.Certificate.issued == True)\
-        .all()
+    # Use aliased to join User table twice (one for student, one for teacher)
+    Student = aliased(models.User)
+    Teacher = aliased(models.User)
+    
+    issued = db.query(
+        models.Certificate, 
+        Student.name.label("student_name"), 
+        models.Course.title, 
+        Teacher.name.label("teacher_name")
+    )\
+    .join(Student, models.Certificate.student_id == Student.id)\
+    .join(models.Course, models.Certificate.course_id == models.Course.id)\
+    .join(Teacher, models.Course.created_by == Teacher.id)\
+    .filter(models.Certificate.issued == True)\
+    .all()
     
     return [{
-        "id": c.id, "student_name": name, "course_title": title,
+        "id": c.id, "student_name": student_name, "course_title": title,
+        "teacher_name": teacher_name,
         "issued_at": c.issued_at.isoformat() if c.issued_at else None
-    } for c, name, title in issued]
-
-@router.post("/certificates/{cert_id}/issue")
-def issue_certificate(cert_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)):
-    cert = db.query(models.Certificate).filter(models.Certificate.id == cert_id).first()
-    if not cert: raise HTTPException(status_code=404, detail="Request not found")
-    
-    cert.status = "verified"
-    cert.issued = True
-    cert.issued_at = datetime.utcnow()
-    db.commit()
-    return {"message": "Certificate issued"}
-
-@router.post("/certificates/{cert_id}/reject")
-def reject_certificate(cert_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)):
-    cert = db.query(models.Certificate).filter(models.Certificate.id == cert_id).first()
-    if not cert: raise HTTPException(status_code=404, detail="Request not found")
-    
-    cert.status = "rejected"
-    db.commit()
-    return {"message": "Request rejected"}
+    } for c, student_name, title, teacher_name in issued]
 
 @router.get("/certificates/{cert_id}/download")
 def admin_download_certificate(cert_id: int, admin=Depends(get_current_admin), db: Session = Depends(get_db)):
@@ -557,6 +572,8 @@ def admin_download_certificate(cert_id: int, admin=Depends(get_current_admin), d
         student_name=student.name,
         course_name=course.title,
         org_name=(org.platform_name or org.name) if org else "LearnHub",
+        logo_url=org.logo if org else None,
+        signature_url=org.signature_url if org else None,
         issue_date=cert.issued_at.strftime("%B %d, %Y") if cert.issued_at else None
     )
     def _safe(s):
@@ -661,11 +678,22 @@ def get_admin_analytics(admin=Depends(get_current_admin), db: Session = Depends(
     }
 
 # ── ADMIN ORGANIZATION & PROFILE (REMAINING) ──────────────────────────────────
+def get_full_url(path: str):
+    if not path: return None
+    if path.startswith("http"): return path
+    # Local files served from backend (127.0.0.1:8000)
+    return f"http://127.0.0.1:8000/{path}"
+
 @router.get("/organization")
 def get_organization(admin=Depends(get_current_admin), db: Session = Depends(get_db)):
     org = db.query(models.Organization).filter(models.Organization.id == admin.organization_id).first()
     if not org: raise HTTPException(status_code=404, detail="Not found")
-    return {"org_name": org.name, "platform_name": org.platform_name, "logo": f"http://127.0.0.1:8000/{org.logo}" if org.logo else None}
+    return {
+        "org_name": org.name, 
+        "platform_name": org.platform_name, 
+        "logo": get_full_url(org.logo),
+        "signature": get_full_url(org.signature_url)
+    }
 
 from cloudinary_utils import upload_to_cloudinary
 
@@ -674,6 +702,7 @@ async def update_organization(
     org_name: str = Form(None),
     platform_name: str = Form(None),
     logo: UploadFile = File(None),
+    signature: UploadFile = File(None),
     admin=Depends(get_current_admin), db: Session = Depends(get_db)
 ):
     org = db.query(models.Organization).filter(
@@ -685,18 +714,22 @@ async def update_organization(
     if platform_name: org.platform_name = platform_name
 
     if logo and logo.filename:
-        # Use Cloudinary instead of local uploads/ folder
         cloud_url = upload_to_cloudinary(logo, folder="learnhub/logos")
         if cloud_url:
             org.logo = cloud_url
+
+    if signature and signature.filename:
+        sig_url = upload_to_cloudinary(signature, folder="learnhub/signatures")
+        if sig_url:
+            org.signature_url = sig_url
 
     db.commit()
     db.refresh(org)
     return {
         "org_name": org.name,
         "platform_name": org.platform_name,
-        "logo": org.logo, # Now returns full secure_url
-        "logo_url": org.logo
+        "logo": get_full_url(org.logo),
+        "signature": get_full_url(org.signature_url)
     }
 
 @router.get("/profile")
@@ -705,7 +738,7 @@ def get_admin_profile(admin=Depends(get_current_admin), db: Session = Depends(ge
 
 @router.put("/profile")
 def update_admin_profile(name: str = Form(None), email: str = Form(None), current_password: str = Form(None), new_password: str = Form(None), admin_user=Depends(get_current_admin), db: Session = Depends(get_db)):
-    from auth import verify_password
+    from auth import verify_password, hash_password
     if name: admin_user.name = name
     if email: admin_user.email = email
     if current_password and new_password:

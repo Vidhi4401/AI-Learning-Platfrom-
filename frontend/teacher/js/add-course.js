@@ -140,6 +140,8 @@ document.getElementById('coursePdf').addEventListener('change', function(e) {
   }
 });
 
+let currentPdfData = null; // Store generated JSON for saving
+
 async function generateFromPdf() {
   const token = localStorage.getItem("token");
   const courseId = document.getElementById("pdfCourseSelect").value;
@@ -151,40 +153,146 @@ async function generateFromPdf() {
   }
 
   // UI state: processing
-  document.getElementById("processBtnRow").style.display = 'none';
-  document.getElementById("processingStatus").style.display = 'block';
+  const btnRow = document.getElementById("processBtnRow");
+  const status = document.getElementById("processingStatus");
+  const preview = document.getElementById("pdfPreviewArea");
+  
+  btnRow.style.display = 'none';
+  status.style.display = 'block';
+  preview.style.display = 'none';
 
   const formData = new FormData();
   formData.append("file", pdfFile);
 
   try {
-    const res = await fetch(`${API}/teacher/courses/${courseId}/process-pdf`, {
+    const res = await fetch(`${API}/teacher/courses/${courseId}/process-pdf-preview`, {
       method: "POST",
       headers: { Authorization: "Bearer " + token },
       body: formData
     });
 
-    const result = await res.json();
-
     if (res.ok) {
-      showToast(result.message);
-      // Move to Step 3
-      setTimeout(() => {
-        document.querySelector('[data-step="3"]').click();
-        // Pre-select course in next steps
-        document.getElementById("videoCourseSelect").value = courseId;
-        loadTopicsForVideo();
-      }, 1500);
+      currentPdfData = await res.json();
+      renderPdfPreview(currentPdfData);
+      preview.style.display = "block";
+      showToast("Content generated! Please review below.", "success");
     } else {
+      const result = await res.json();
       showToast(result.detail || "PDF processing failed", "error");
+      btnRow.style.display = 'flex';
     }
   } catch (err) {
     console.error(err);
     showToast("Server error during PDF processing", "error");
+    btnRow.style.display = 'flex';
   } finally {
-    document.getElementById("processBtnRow").style.display = 'flex';
-    document.getElementById("processingStatus").style.display = 'none';
+    status.style.display = 'none';
   }
+}
+
+function renderPdfPreview(data) {
+    const list = document.getElementById("generatedContentList");
+    list.innerHTML = "";
+
+    if (!data.topics || data.topics.length === 0) {
+        list.innerHTML = "<p>No content could be generated from this PDF.</p>";
+        return;
+    }
+
+    data.topics.forEach((t, i) => {
+        const topicDiv = document.createElement("div");
+        topicDiv.style = "background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px;";
+        
+        let quizHtml = "";
+        if (t.quiz && t.quiz.questions) {
+            quizHtml = `
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #cbd5e1;">
+                    <h5 style="margin: 0 0 10px 0; color: #334155; font-size: 14px;">📝 Quiz: ${t.quiz.title}</h5>
+                    <div style="font-size: 12px; color: #64748b;">${t.quiz.questions.length} Questions generated</div>
+                </div>
+            `;
+        }
+
+        let assignHtml = "";
+        if (t.assignment) {
+            assignHtml = `
+                <div style="margin-top: 10px;">
+                    <h5 style="margin: 0 0 5px 0; color: #334155; font-size: 14px;">📂 Assignment: ${t.assignment.title}</h5>
+                    <p style="font-size: 12px; color: #64748b; margin: 0;">${t.assignment.description.substring(0, 100)}...</p>
+                </div>
+            `;
+        }
+
+        topicDiv.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h4 style="margin: 0; color: #1e40af; font-size: 16px;">Topic ${i+1}: ${t.topic_name}</h4>
+                <button class="btn-ghost" onclick="removeGeneratedTopic(${i})" style="color: #ef4444; padding: 2px 8px; font-size: 12px;">Remove</button>
+            </div>
+            ${quizHtml}
+            ${assignHtml}
+        `;
+        list.appendChild(topicDiv);
+    });
+}
+
+function removeGeneratedTopic(index) {
+    if (currentPdfData && currentPdfData.topics) {
+        currentPdfData.topics.splice(index, 1);
+        renderPdfPreview(currentPdfData);
+        if (currentPdfData.topics.length === 0) {
+            resetPdfStep();
+        }
+    }
+}
+
+async function saveGeneratedContent() {
+    const token = localStorage.getItem("token");
+    const courseId = document.getElementById("pdfCourseSelect").value;
+    const btn = document.getElementById("btnSavePdf");
+    
+    if (!currentPdfData || !courseId) return;
+
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+
+    try {
+        const res = await fetch(`${API}/teacher/courses/${courseId}/save-pdf-content`, {
+            method: "POST",
+            headers: { 
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(currentPdfData)
+        });
+
+        if (res.ok) {
+            showToast("Course content saved successfully!", "success");
+            setTimeout(() => {
+                // Move to Step 3
+                document.querySelector('[data-step="3"]').click();
+                // Pre-select course in next steps
+                document.getElementById("videoCourseSelect").value = courseId;
+                loadTopicsForVideo();
+            }, 1000);
+        } else {
+            const err = await res.json();
+            showToast(err.detail || "Failed to save content", "error");
+        }
+    } catch (err) {
+        showToast("Server error while saving", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = "💾 Save All to Course";
+    }
+}
+
+function resetPdfStep() {
+    currentPdfData = null;
+    document.getElementById("pdfPreviewArea").style.display = "none";
+    document.getElementById("processBtnRow").style.display = "flex";
+    document.getElementById("coursePdf").value = "";
+    document.getElementById("pdfSelected").style.display = "none";
+    document.getElementById("pdfPlaceholder").style.display = "block";
 }
 
 /* =========================

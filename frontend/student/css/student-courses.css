@@ -80,6 +80,10 @@
   border: 1px solid #e8e6e0;
   transition: transform 0.22s ease, box-shadow 0.22s ease;
   animation: fadeUp 0.4s ease both;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  height: 100%;
 }
 
 .course-card:hover {
@@ -100,6 +104,7 @@
   height: 190px;
   background: #eeecea;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .course-image img {
@@ -153,7 +158,12 @@
 }
 
 /* ── CONTENT ── */
-.course-content { padding: 18px 20px 16px; }
+.course-content {
+  padding: 18px 20px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
 .course-title {
   font-family: 'Syne', sans-serif;
@@ -173,9 +183,10 @@
   line-height: 1.55;
   margin-bottom: 16px;
   display: -webkit-box;
-/* -webkit-line-clamp: 2; */
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: 60px;
 }
 
 /* ── FOOTER ── */
@@ -185,6 +196,7 @@
   align-items: center;
   padding-top: 14px;
   border-top: 1px solid #f0eeea;
+  margin-top: auto;
 }
 
 /* ── ENROLL BUTTON ── */

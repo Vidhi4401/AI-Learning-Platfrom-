@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Certificates — Faculty Portal</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .cert-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-pending { background: #fef3c7; color: #d97706; }
+    .status-verified { background: #dcfce7; color: #166534; }
+    .status-rejected { background: #fee2e2; color: #dc2626; }
+    
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+      padding: 16px;
+      background: var(--page-bg);
+      border-radius: 8px;
+    }
+    .metric-item { text-align: center; }
+    .metric-value { font-size: 18px; font-weight: 700; color: var(--ink); }
+    .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar"></div>
+
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+
+    <main class="page-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h1 style="font-size:24px;">Course Certificates</h1>
+      </div>
+
+      <div class="tabs-container" style="margin-bottom:32px; background:white; padding:6px; border-radius:12px; display:inline-flex; border:1px solid var(--border); gap:8px;">
+        <button class="tab-btn active" onclick="switchTab('pending')" id="tab-pending" style="padding:10px 24px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:14px; transition:all 0.2s;">
+          ⏳ Pending Requests
+        </button>
+        <button class="tab-btn" onclick="switchTab('issued')" id="tab-issued" style="padding:10px 24px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:14px; transition:all 0.2s;">
+          📜 Issued History
+        </button>
+      </div>
+
+      <style>
+        .tab-btn {
+          background: transparent;
+          color: var(--muted);
+        }
+        .tab-btn:hover {
+          background: var(--page-bg);
+          color: var(--ink);
+        }
+        .tab-btn.active {
+          background: var(--accent);
+          color: white;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+        }
+      </style>
+
+      <div id="requestsContainer">
+        <!-- Dynamic Content -->
+        <div style="text-align:center; padding:40px; color:var(--muted);">Loading requests...</div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/certificates.js"></script>
+</body>
+</html>

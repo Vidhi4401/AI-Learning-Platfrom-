@@ -15,7 +15,29 @@ document.addEventListener("DOMContentLoaded", () => {
             reader.readAsDataURL(file);
         }
     });
+
+    // Signature Preview Logic
+    document.getElementById('sigFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('sigPreview').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:contain;">`;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
 });
+
+/* ── Eye toggle ── */
+function togglePwd(btn) {
+  const input = btn.closest('.pwd-wrap').querySelector('input');
+  const show  = input.type === 'password';
+  input.type  = show ? 'text' : 'password';
+  btn.innerHTML = show
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+}
 
 async function loadBranding() {
     const token = localStorage.getItem("token");
@@ -31,6 +53,9 @@ async function loadBranding() {
         if (data.logo) {
             document.getElementById("logoPreview").innerHTML = `<img src="${data.logo}" style="width:100%;height:100%;object-fit:cover;">`;
         }
+        if (data.signature) {
+            document.getElementById("sigPreview").innerHTML = `<img src="${data.signature}" style="width:100%;height:100%;object-fit:contain;">`;
+        }
     } catch (err) {}
 }
 
@@ -43,6 +68,9 @@ async function saveBranding() {
     const logoFile = document.getElementById("logoFile").files[0];
     if (logoFile) formData.append("logo", logoFile);
 
+    const sigFile = document.getElementById("sigFile").files[0];
+    if (sigFile) formData.append("signature", sigFile);
+
     try {
         const res = await fetch(`${API}/admin/organization`, {
             method: "PUT",
@@ -54,13 +82,13 @@ async function saveBranding() {
             const data = await res.json();
             alert("Platform settings updated!");
             
-            // Sync with sidebar and storage
+            // Sync with storage
             const user = JSON.parse(localStorage.getItem("user"));
-            user.platform_name = data.org_name; // prompt says use org_name as branding
+            user.platform_name = data.platform_name || data.org_name;
             if (data.logo) user.org_logo = data.logo;
             localStorage.setItem("user", JSON.stringify(user));
             
-            location.reload(); // Refresh to update layout.js
+            location.reload(); 
         }
     } catch (err) { alert("Failed to save branding"); }
 }
@@ -78,15 +106,32 @@ async function loadProfile() {
 }
 
 async function saveProfile() {
+    const name = document.getElementById("adminName").value.trim();
+    const email = document.getElementById("adminEmail").value.trim();
+    
+    // Validation
+    if (!window.utils.validateName(name)) {
+        alert("Please enter a valid name (at least 2 characters, alphabets only).");
+        return;
+    }
+    if (!window.utils.validateEmail(email)) {
+        alert("Please enter a valid email address.");
+        return;
+    }
+
     const token = localStorage.getItem("token");
     const formData = new FormData();
-    formData.append("name", document.getElementById("adminName").value);
-    formData.append("email", document.getElementById("adminEmail").value);
+    formData.append("name", name);
+    formData.append("email", email);
     
     const curr = document.getElementById("currPass").value;
     const next = document.getElementById("newPass").value;
     
     if (curr && next) {
+        if (!window.utils.validatePassword(next)) {
+            alert("New password must be at least 8 characters long.");
+            return;
+        }
         formData.append("current_password", curr);
         formData.append("new_password", next);
     }
@@ -161,8 +206,9 @@ async function addUser() {
   const err   = document.getElementById("addUserError");
   succ.style.display = err.style.display = "none";
 
-  if (!name || !email || !pwd) { err.textContent = "Please fill all fields."; err.style.display = "block"; return; }
-  if (pwd.length < 6)          { err.textContent = "Password must be at least 6 characters."; err.style.display = "block"; return; }
+  if (!window.utils.validateName(name)) { err.textContent = "Please enter a valid name (at least 2 characters)."; err.style.display = "block"; return; }
+  if (!window.utils.validateEmail(email)) { err.textContent = "Please enter a valid email address."; err.style.display = "block"; return; }
+  if (!window.utils.validatePassword(pwd)) { err.textContent = "Password must be at least 8 characters long."; err.style.display = "block"; return; }
 
   const token    = localStorage.getItem("token");
   const endpoint = role === "teacher" ? "add-teacher" : "add-student";
@@ -196,7 +242,7 @@ async function resetUserPassword() {
 
   if (!userId)         { err.textContent = "Please select a user."; err.style.display = "block"; return; }
   if (!newPwd)         { err.textContent = "Please enter a new password."; err.style.display = "block"; return; }
-  if (newPwd.length < 6) { err.textContent = "Password must be at least 6 characters."; err.style.display = "block"; return; }
+  if (!window.utils.validatePassword(newPwd)) { err.textContent = "Password must be at least 8 characters long."; err.style.display = "block"; return; }
 
   const token = localStorage.getItem("token");
   try {

@@ -124,6 +124,7 @@
     <div class="tabs-bar">
       <button class="tab-btn active" data-tab="overview">Overview</button>
       <button class="tab-btn" data-tab="courses">Courses</button>
+      <button class="tab-btn" data-tab="engagement">Engagement & Videos</button>
       <button class="tab-btn" data-tab="activity">Activity</button>
       <button class="tab-btn" data-tab="certs">Certificates</button>
     </div>
@@ -195,6 +196,32 @@
       </div>
     </div>
 
+    <!-- ENGAGEMENT & VIDEOS -->
+    <div class="tab-pane" id="tab-engagement">
+      <div class="panel">
+        <div class="panel-title">Detailed Video Engagement</div>
+        <div style="font-size:13px; color:var(--muted); margin-bottom:16px;">
+          Note: Completion status is "Complete" once a student watches at least <strong>80%</strong> of the video.
+        </div>
+        <table class="perf-table">
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Topic</th>
+              <th>Watch Time</th>
+              <th>Progress</th>
+              <th>Skips</th>
+              <th>Avg Speed</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="videoProgBody">
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted);">No video history recorded.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- ACTIVITY -->
     <div class="tab-pane" id="tab-activity">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
@@ -263,6 +290,7 @@ async function loadDetail() {
     renderVerdict();
     renderOverview();
     renderCourses();
+    renderVideoProgress();
     renderActivity();
   } catch(e) {
     document.getElementById("heroName").textContent = "Failed to load student.";
@@ -384,6 +412,40 @@ function renderCourses() {
         </tr>`).join("")}
       </tbody>
     </table>`;
+}
+
+function renderVideoProgress() {
+  const vp = d.video_progress;
+  const body = document.getElementById("videoProgBody");
+  if(!vp || !vp.length){
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted);">No video history recorded.</td></tr>';
+    return;
+  }
+  
+  const bar=(v,color)=>`<div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${v}%;background:${color};"></div></div><span style="font-size:12px;font-weight:700;min-width:30px;">${v}%</span></div>`;
+  const fmtTime = sec => {
+    const min = Math.floor(sec/60);
+    const s = sec % 60;
+    return `${min}m ${s}s`;
+  };
+
+  body.innerHTML = vp.map(v => `
+    <tr>
+      <td style="font-size:12px;color:var(--muted);">${v.course}</td>
+      <td style="font-weight:700;color:var(--ink);">${v.topic}</td>
+      <td style="font-weight:600;">${fmtTime(v.watch_time)}</td>
+      <td>${bar(v.percentage, v.percentage >= 80 ? "#10b981" : "#3b82f6")}</td>
+      <td style="text-align:center;font-weight:700;color:${v.skip_count > 5 ? '#dc2626' : 'var(--ink)'};">
+        ${v.skip_count}
+      </td>
+      <td style="text-align:center;">${v.playback_speed}x</td>
+      <td>
+        <span class="lvl-badge ${v.status === 'Complete' ? 'lvl-strong' : 'lvl-average'}">
+          ${v.status}
+        </span>
+      </td>
+    </tr>
+  `).join("");
 }
 
 function renderActivity() {

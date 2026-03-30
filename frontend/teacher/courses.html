@@ -23,8 +23,18 @@
 
       <section class="page-header">
         <h1>Courses</h1>
-        <button id="addCourseBtn">Add New Course</button>
+        <button id="addCourseBtn" class="btn btn-primary">Add New Course</button>
       </section>
+
+      <!-- Filters -->
+      <div style="display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap;">
+        <input type="text" id="courseSearch" class="search" placeholder="Search by title or description..." style="width:350px; margin:0;">
+        <select id="statusFilter" onchange="renderCourses()">
+          <option value="all">All Status</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+        </select>
+      </div>
 
       <div class="courses-grid" id="coursesGrid"></div>
 

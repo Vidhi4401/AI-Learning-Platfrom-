@@ -7,6 +7,7 @@ from groq import Groq
 import os
 from config import GROQ_API_KEY
 from dependencies import get_current_user, get_db
+from routers.notifications import create_notification
 
 router = APIRouter(prefix="/api/v1/chat", tags=["Chatbot"])
 
@@ -15,8 +16,8 @@ STRIPPED_KEY = GROQ_API_KEY.strip() if GROQ_API_KEY else ""
 client = Groq(api_key=STRIPPED_KEY)
 
 @router.post("/ai-ask")
-def ai_ask_only(data: schemas.ChatDoubtCreate):
-    """Instant AI response without database storage."""
+def ai_ask_only(data: schemas.ChatDoubtCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    """AI response with database storage for persistent history."""
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -25,7 +26,23 @@ def ai_ask_only(data: schemas.ChatDoubtCreate):
                 {"role": "user", "content": data.query}
             ],
         )
-        return {"response": completion.choices[0].message.content, "mode": "AI"}
+        ai_response = completion.choices[0].message.content
+
+        # Save to DB for history persistence
+        new_doubt = models.ChatDoubt(
+            student_id=current_user.id,
+            query=data.query,
+            response=ai_response,
+            mode="AI",
+            is_read_by_student=True,
+            is_read_by_faculty=False,
+            course_id=data.course_id,
+            topic_id=data.topic_id
+        )
+        db.add(new_doubt)
+        db.commit()
+
+        return {"response": ai_response, "mode": "AI"}
     except Exception as e:
         print(f"[Chatbot] AI-Only Error: {str(e)}")
         return {"response": "I'm having trouble connecting to my AI brain right now.", "mode": "AI"}
@@ -195,4 +212,13 @@ def reply_to_doubt(data: schemas.FacultyReplySchema, db: Session = Depends(get_d
     doubt.is_read_by_faculty = True 
     
     db.commit()
+
+    # Notify Student
+    create_notification(
+        db, doubt.student_id, 
+        "Doubt Answered", 
+        f"A teacher has replied to your doubt: {data.response[:50]}...",
+        "student-courses.html"
+    )
+
     return {"message": "Reply sent successfully"}

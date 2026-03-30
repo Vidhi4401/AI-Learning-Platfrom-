@@ -175,6 +175,16 @@
 
     const API = "http://127.0.0.1:8000/api/v1";
 
+    /* ===== VALIDATION UTILITIES ===== */
+    const utils = {
+      validateEmail: (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      },
+      validatePassword: (password) => {
+        return password.length >= 8;
+      }
+    };
+
     function showError(msg) {
       const el = document.getElementById("alertBox");
       el.textContent = msg;
@@ -188,6 +198,15 @@
       const btn   = document.getElementById("loginBtn");
 
       if (!email || !pwd) { showError("Please enter your email and password."); return; }
+      
+      if (!utils.validateEmail(email)) {
+        showError("Please enter a valid email address (e.g. user@example.com).");
+        return;
+      }
+      if (!utils.validatePassword(pwd)) {
+        showError("Password must be at least 8 characters long.");
+        return;
+      }
 
       btn.disabled    = true;
       btn.textContent = "Signing in…";

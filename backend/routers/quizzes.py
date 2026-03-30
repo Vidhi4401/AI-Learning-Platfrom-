@@ -14,6 +14,8 @@ def get_db():
         db.close()
 
 
+from routers.notifications import create_notification
+
 @router.post("/api/v1/teacher/topics/{topic_id}/quizzes")
 def create_quiz(
     topic_id: int,
@@ -25,6 +27,22 @@ def create_quiz(
     db.add(quiz)
     db.commit()
     db.refresh(quiz)
+
+    # Notify students
+    topic = db.query(models.Topic).filter(models.Topic.id == topic_id).first()
+    if topic:
+        course = db.query(models.Course).filter(models.Course.id == topic.course_id).first()
+        enrolled = db.query(models.Enrollment.student_id).filter(
+            models.Enrollment.course_id == topic.course_id
+        ).all()
+        for (sid,) in enrolled:
+            create_notification(
+                db, sid,
+                "New Quiz Available",
+                f"A new quiz '{data.title}' is now available in {course.title if course else 'your course'}.",
+                "student-quizzes.html"
+            )
+
     return {"quiz_id": quiz.id}
 
 

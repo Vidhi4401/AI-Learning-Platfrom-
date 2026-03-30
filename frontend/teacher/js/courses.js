@@ -1,5 +1,6 @@
 const API = "http://127.0.0.1:8000/api/v1";
 const grid = document.getElementById("coursesGrid");
+let allCourses = [];
 
 function goToAdd() {
   window.location.href = "add-course.html";
@@ -9,6 +10,10 @@ function goToAdd() {
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("addCourseBtn");
   if (btn) btn.addEventListener("click", goToAdd);
+  
+  const searchInput = document.getElementById("courseSearch");
+  if (searchInput) searchInput.addEventListener("input", renderCourses);
+  
   loadCourses();
 });
 
@@ -20,23 +25,38 @@ async function loadCourses() {
     headers: { Authorization: "Bearer " + token }
   });
 
-  const courses = await res.json();
-  renderCourses(courses);
+  allCourses = await res.json();
+  renderCourses();
 }
 
-function renderCourses(courses) {
+function renderCourses() {
+  const searchTerm = document.getElementById("courseSearch")?.value.toLowerCase() || "";
+  const statusFilter = document.getElementById("statusFilter")?.value || "all";
+  
   grid.innerHTML = "";
 
-  if (!courses || courses.length === 0) {
+  const filtered = allCourses.filter(course => {
+    const matchesSearch = course.title.toLowerCase().includes(searchTerm) || 
+                          (course.description && course.description.toLowerCase().includes(searchTerm));
+    
+    const isPublished = !!course.status;
+    const matchesStatus = statusFilter === "all" || 
+                         (statusFilter === "published" && isPublished) || 
+                         (statusFilter === "draft" && !isPublished);
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  if (!filtered || filtered.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
         <span>📚</span>
-        <p>No courses yet. Click <strong>Add New Course</strong> to get started.</p>
+        <p>No courses match your filters.</p>
       </div>`;
     return;
   }
 
-  courses.forEach(course => {
+  filtered.forEach(course => {
     const imageUrl = getFileUrl(course.logo) || "https://via.placeholder.com/400x200";
 
     const isPublished = !!course.status;
@@ -44,6 +64,7 @@ function renderCourses(courses) {
 
     const card = document.createElement("div");
     card.className = "course-card";
+    card.setAttribute("onclick", `viewCourse(${course.id})`);
 
     card.innerHTML = `
       <div class="course-image">
@@ -60,10 +81,10 @@ function renderCourses(courses) {
             ${isPublished ? "Published" : "Draft"}
           </span>
 
-          <div class="actions">
-            <button title="View" onclick="viewCourse(${course.id})">👁️</button>
-            <button title="Edit" onclick="editCourse(${course.id})">✏️</button>
-            <button title="Delete" onclick="deleteCourse(${course.id})">🗑️</button>
+          <div class="actions" onclick="event.stopPropagation()">
+            <button class="btn-ghost" title="View" onclick="viewCourse(${course.id})">👁️</button>
+            <button class="btn-ghost" title="Edit" onclick="editCourse(${course.id})">✏️</button>
+            <button class="btn-ghost" style="color:#ef4444;" title="Delete" onclick="deleteCourse(${course.id})">🗑️</button>
           </div>
         </div>
       </div>

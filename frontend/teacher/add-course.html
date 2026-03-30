@@ -105,6 +105,23 @@
           <div class="btn-row" id="processBtnRow">
             <button class="primary" id="btnGenerate" onclick="generateFromPdf()">✨ Generate Content</button>
           </div>
+
+          <!-- PREVIEW AREA (NEW) -->
+          <div id="pdfPreviewArea" style="display: none; margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+              <h3 style="margin:0;">Preview Generated Content</h3>
+              <p style="font-size:12px; color: #64748b; margin:0;">Review before saving to course.</p>
+            </div>
+            
+            <div id="generatedContentList" style="display: flex; flex-direction: column; gap: 15px;">
+               <!-- Topics injected here -->
+            </div>
+
+            <div class="btn-row" style="margin-top: 30px; padding-top:20px; border-top:1px solid #e2e8f0;">
+              <button class="btn-ghost" onclick="resetPdfStep()">Cancel</button>
+              <button class="primary" id="btnSavePdf" onclick="saveGeneratedContent()">💾 Save All to Course</button>
+            </div>
+          </div>
         </div>
 
         <!-- STEP 3: Videos -->
@@ -185,7 +202,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/layout.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/add-course.js"></script>
 
 </body>

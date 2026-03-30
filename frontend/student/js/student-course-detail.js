@@ -80,29 +80,57 @@ function renderHero(data) {
   const heroInfo = document.querySelector(".hero-info");
   if (heroInfo) {
     const certContainer = document.createElement("div");
-    certContainer.style.marginTop = "20px";
+    certContainer.style.marginTop = "24px";
 
     if (data.cert_issued) {
       certContainer.innerHTML = `
-        <button class="btn-enroll enrolled"
-          style="background:#16a34a;cursor:pointer;"
-          onclick="window.location.href='student-courses.html'">
-          🏆 Certificate Issued
+        <button class="btn-enroll enrolled" 
+          style="background: linear-gradient(135deg, #059669, #10b981); color: white; border: none; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3); padding: 12px 28px; font-weight: 700; display: flex; align-items: center; gap: 10px;"
+          onclick="downloadCertificate(${data.cert_id})">
+          <span>🏆</span> Download Certificate
         </button>`;
     } else if (data.cert_status === "pending") {
       certContainer.innerHTML = `
-        <p style="color:#eab308;font-weight:600;font-size:14px;">
-          ⏳ Certificate request pending — Admin will verify and issue it.
-        </p>`;
+        <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 14px 20px; display: inline-flex; align-items: center; gap: 12px;">
+          <span style="font-size: 20px;">⏳</span>
+          <div>
+            <p style="color: #92400e; font-weight: 700; font-size: 14px; margin: 0;">Request Pending</p>
+            <p style="color: #b45309; font-size: 12px; margin: 2px 0 0;">Faculty is reviewing your performance.</p>
+          </div>
+        </div>`;
+    } else if (data.cert_status === "rejected") {
+      certContainer.innerHTML = `
+        <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 12px; padding: 16px 20px; max-width: 400px;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span style="color: #dc2626; font-size: 18px;">❌</span>
+            <p style="color: #991b1b; font-weight: 700; font-size: 14px; margin: 0;">Request Not Approved</p>
+          </div>
+          <p style="color: #b91c1c; font-size: 12.5px; line-height: 1.5; margin: 0 0 14px;">
+            Your certificate request was not approved by the instructor. Please review course materials and assignments to improve your score.
+          </p>
+          <button class="btn-enroll not-enrolled" 
+            style="width: 100%; background: #dc2626; border: none; padding: 10px; font-weight: 600;" 
+            onclick="claimCertificate()">
+            Try Re-requesting
+          </button>
+        </div>`;
     } else {
       certContainer.innerHTML = `
-        <button class="btn-enroll not-enrolled" onclick="claimCertificate()">
-          🎓 Claim Certificate
+        <button class="btn-enroll not-enrolled" 
+          style="background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; border: none; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3); padding: 12px 28px; font-weight: 700; cursor: pointer;"
+          onclick="claimCertificate()">
+          🎓 Claim Your Certificate
         </button>`;
     }
 
     heroInfo.appendChild(certContainer);
   }
+}
+
+function downloadCertificate(certId) {
+  if (!certId) return;
+  const url = `${API}/student/certificates/${certId}/download?token=${token}`;
+  window.open(url, "_blank");
 }
 
 async function claimCertificate() {

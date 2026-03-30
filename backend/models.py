@@ -13,6 +13,7 @@ class Organization(Base):
     logo         = Column(String, nullable=True)            # uploaded logo path
     email        = Column(String, nullable=True)            # org contact email
     status       = Column(Boolean, default=True)            # active/inactive
+    signature_url= Column(String, nullable=True)            # NEW: for admin signature
     created_at   = Column(DateTime(timezone=True), server_default=func.now())
     
 class User(Base):
@@ -208,3 +209,14 @@ class Meeting(Base):
     course_id = Column(Integer, ForeignKey("courses.id"))
     teacher_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    user_id     = Column(Integer, ForeignKey("users.id"))
+    title       = Column(String)
+    message     = Column(String)
+    link        = Column(String, nullable=True) # Where to redirect on click
+    is_read     = Column(Boolean, default=False)
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())

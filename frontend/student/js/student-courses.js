@@ -10,6 +10,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadEnrollments();
   renderCourses();
   setupTabs();
+  
+  const searchInput = document.getElementById("courseSearch");
+  if (searchInput) searchInput.addEventListener("input", renderCourses);
 });
 
 /* =========================
@@ -59,6 +62,7 @@ async function loadEnrollments() {
 =========================*/
 function renderCourses() {
   const grid = document.getElementById("coursesGrid");
+  const searchTerm = document.getElementById("courseSearch")?.value.toLowerCase() || "";
 
   // Update tab counts
   document.getElementById("count-all").textContent       = allCourses.length;
@@ -69,6 +73,15 @@ function renderCourses() {
   let filtered = allCourses;
   if (currentFilter === "enrolled")  filtered = allCourses.filter(c => enrolledIds.has(c.id));
   if (currentFilter === "completed") filtered = allCourses.filter(c => completedIds.has(c.id));
+
+  // Apply Search
+  if (searchTerm) {
+    filtered = filtered.filter(c => 
+      c.title.toLowerCase().includes(searchTerm) || 
+      (c.description && c.description.toLowerCase().includes(searchTerm)) ||
+      (c.teacher_name && c.teacher_name.toLowerCase().includes(searchTerm))
+    );
+  }
 
   // Empty states
   if (filtered.length === 0) {
@@ -94,6 +107,7 @@ function renderCourses() {
   const imgUrl = getFileUrl(course.logo);
     const card = document.createElement("div");
     card.className = "course-card";
+    card.setAttribute("onclick", `viewCourse(${course.id})`);
 
     card.innerHTML = `
       <div class="course-image">
@@ -113,7 +127,7 @@ function renderCourses() {
           👨‍🏫 Faculty: ${course.teacher_name || "Unknown"}
         </div>
 
-        <div class="course-footer">
+        <div class="course-footer" onclick="event.stopPropagation()">
           <div style="font-size:12px;color:#9ca3af;font-family:'DM Sans',sans-serif;" id="meta-${course.id}">
             Loading…
           </div>

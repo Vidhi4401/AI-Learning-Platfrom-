@@ -384,7 +384,9 @@
     async function saveProfile() {
       const name  = document.getElementById("sName").value.trim();
       const email = document.getElementById("sEmail").value.trim();
-      if (!name || !email) { inlineMsg("profileMsg","error","Name and email are required."); return; }
+      
+      if (!window.utils.validateName(name)) { inlineMsg("profileMsg","error","Please enter a valid name (at least 2 characters, alphabets only)."); return; }
+      if (!window.utils.validateEmail(email)) { inlineMsg("profileMsg","error","Please enter a valid email address."); return; }
 
       const btn = document.getElementById("saveProfileBtn");
       btn.disabled = true; btn.textContent = "Saving…";
@@ -419,7 +421,7 @@
       const confirm = document.getElementById("confirmPwd").value.trim();
 
       if (!curr || !newPwd || !confirm) { inlineMsg("pwdMsg","error","All fields are required."); return; }
-      if (newPwd.length < 6)            { inlineMsg("pwdMsg","error","Password must be at least 6 characters."); return; }
+      if (!window.utils.validatePassword(newPwd)) { inlineMsg("pwdMsg","error","Password must be at least 8 characters long."); return; }
       if (newPwd !== confirm)           { inlineMsg("pwdMsg","error","Passwords do not match."); return; }
 
       const btn = document.getElementById("savePwdBtn");

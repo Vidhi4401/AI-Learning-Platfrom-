@@ -12,11 +12,7 @@ function toggleChat() {
     chatWindow.classList.toggle('hidden');
     if (!chatWindow.classList.contains('hidden')) {
         markAsRead();
-        if (currentChatMode === 'FACULTY') {
-            loadFacultyHistory();
-        } else {
-            renderChat('AI');
-        }
+        loadChatHistory();
     }
 }
 
@@ -38,11 +34,7 @@ function setChatMode(mode) {
 
     chatInput.placeholder = mode === 'AI' ? "Ask AI for instant help..." : "Ask Faculty (may take time)...";
     
-    if (mode === 'AI') {
-        renderChat('AI');
-    } else {
-        loadFacultyHistory();
-    }
+    loadChatHistory();
 }
 
 async function loadTeachersForSelection() {
@@ -69,8 +61,8 @@ function renderChat(mode) {
     chatMessages.innerHTML = '';
     const messages = mode === 'AI' ? aiMessages : facultyMessages;
     
-    if (mode === 'FACULTY' && messages.length === 0) {
-        chatMessages.innerHTML = `<div class="message ai">No faculty chat history yet. Select a teacher and ask a doubt!</div>`;
+    if (messages.length === 0) {
+        chatMessages.innerHTML = `<div class="message ai">No chat history yet. Ask a doubt!</div>`;
         return;
     }
 
@@ -80,6 +72,14 @@ function renderChat(mode) {
         msgDiv.textContent = msg.text;
         chatMessages.appendChild(msgDiv);
     });
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function appendMessage(sender, text) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender}`;
+    msgDiv.textContent = text;
+    chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
@@ -101,14 +101,8 @@ async function sendChatMessage() {
     const urlParams = new URLSearchParams(window.location.search);
     const contextCourseId = urlParams.get('id') || urlParams.get('course');
 
-    // Add to UI state
-    if (currentChatMode === 'AI') {
-        aiMessages.push({ sender: 'student', text: text });
-        renderChat('AI');
-    } else {
-        appendMessage('student', text);
-    }
-    
+    // Optimistically show user message
+    appendMessage('student', text);
     chatInput.value = '';
 
     const token = localStorage.getItem('token');
@@ -117,12 +111,19 @@ async function sendChatMessage() {
         if (currentChatMode === 'AI') {
             const response = await fetch(`http://127.0.0.1:8000/api/v1/chat/ai-ask`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: text, mode: 'AI' })
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    query: text, 
+                    mode: 'AI',
+                    course_id: contextCourseId ? parseInt(contextCourseId) : null
+                })
             });
             const data = await response.json();
-            aiMessages.push({ sender: 'ai', text: data.response });
-            renderChat('AI');
+            // Reload history to show the saved AI response
+            loadChatHistory();
         } else {
             await fetch(`http://127.0.0.1:8000/api/v1/chat/ask?student_id=${user.id}`, {
                 method: 'POST',
@@ -138,7 +139,7 @@ async function sendChatMessage() {
                     faculty_id: parseInt(selectedFacultyId)
                 })
             });
-            loadFacultyHistory();
+            loadChatHistory();
         }
     } catch (error) {
         console.error("Chat error:", error);
@@ -146,30 +147,29 @@ async function sendChatMessage() {
     }
 }
 
-function appendMessage(sender, text) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${sender}`;
-    msgDiv.textContent = text;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-async function loadFacultyHistory() {
+async function loadChatHistory() {
     try {
         const response = await fetch(`http://127.0.0.1:8000/api/v1/chat/history?student_id=${user.id}`);
         const history = await response.json();
         
+        aiMessages = [];
         facultyMessages = [];
-        history.filter(h => h.mode === 'FACULTY').forEach(chat => {
-            facultyMessages.push({ sender: 'student', text: chat.query });
-            if (chat.response) {
-                facultyMessages.push({ sender: 'faculty', text: chat.response });
+
+        history.forEach(chat => {
+            if (chat.mode === 'AI') {
+                aiMessages.push({ sender: 'student', text: chat.query });
+                if (chat.response) {
+                    aiMessages.push({ sender: 'ai', text: chat.response });
+                }
+            } else {
+                facultyMessages.push({ sender: 'student', text: chat.query });
+                if (chat.response) {
+                    facultyMessages.push({ sender: 'faculty', text: chat.response });
+                }
             }
         });
         
-        if (currentChatMode === 'FACULTY') {
-            renderChat('FACULTY');
-        }
+        renderChat(currentChatMode);
     } catch (err) {
         console.error("History load error");
     }
@@ -198,3 +198,4 @@ async function markAsRead() {
 
 setInterval(checkNotifications, 30000);
 checkNotifications();
+loadChatHistory();

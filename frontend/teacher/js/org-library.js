@@ -29,8 +29,8 @@ async function loadOrgLibrary() {
                     </div>
                     <div style="padding: 16px 20px; border-top: 1px solid var(--border);">
                         ${isOwner 
-                            ? `<button class="btn btn-primary" onclick="location.href='course-detail.html?id=${c.id}'" style="width:100%;">Manage Content</button>`
-                            : `<button class="btn btn-ghost" disabled style="width:100%; cursor:not-allowed;">Read Only View</button>`
+                            ? `<button class="btn btn-manage" onclick="location.href='course-detail.html?id=${c.id}'" style="width:100%;">Manage Content</button>`
+                            : `<button class="btn btn-readonly" disabled style="width:100%;">Read Only View</button>`
                         }
                     </div>
                 </div>

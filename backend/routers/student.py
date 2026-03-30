@@ -10,6 +10,7 @@ from typing import List, Optional
 from database import SessionLocal
 import models, schemas, joblib, pandas as pd
 from dependencies import get_current_user
+from routers.notifications import create_notification
 from config import GROQ_API_KEY
 from passlib.context import CryptContext
 
@@ -33,7 +34,7 @@ except Exception as e:
 
 
 # =========================
-# ML PREDICTION HELPER
+# ML PREDICTION HELPERS
 # =========================
 def predict_learner_level(features: dict) -> str:
     try:
@@ -49,10 +50,36 @@ def predict_learner_level(features: dict) -> str:
         clean = {f: features.get(f, 0) for f in recognized}
         df     = pd.DataFrame([clean])
         scaled = scaler.transform(df)
-        return level_model.predict(scaled)[0]
+        pred   = level_model.predict(scaled)[0]
+        return str(pred) # Ensure it's a standard Python string
     except Exception as e:
-        print(f"[ML Prediction Error] {e}")
+        print(f"[ML Level Prediction Error] {e}")
         return "Average"
+
+def predict_dropout_risk(features: dict) -> str:
+    try:
+        if risk_model is None or scaler is None:
+            return "Low"
+
+        recognized = [
+            "overall_score", "quiz_average", "assignment_average",
+            "completion_rate", "avg_watch_time", "quiz_attempt_rate",
+            "assignment_submission_rate", "videos_completed",
+            "quizzes_attempted", "assignments_submitted", "total_course_items"
+        ]
+        clean = {f: features.get(f, 0) for f in recognized}
+        df     = pd.DataFrame([clean])
+        scaled = scaler.transform(df)
+        pred   = risk_model.predict(scaled)[0]
+        
+        # If the model returns 0/1 instead of strings, map them
+        if isinstance(pred, (int, float, pd.api.types.is_integer_dtype, pd.api.types.is_float_dtype)):
+            return "High" if int(pred) == 1 else "Low"
+            
+        return str(pred) # Ensure it's a standard Python string
+    except Exception as e:
+        print(f"[ML Risk Prediction Error] {e}")
+        return "Low"
 
 
 # =========================
@@ -235,6 +262,7 @@ def get_course_detail(
         "difficulty":  course.difficulty,
         "logo":        course.logo,
         "is_enrolled": is_enrolled,
+        "cert_id": getattr(cert, "id", None),
         "cert_status": getattr(cert, "status", None),
         "cert_issued": getattr(cert, "issued", False),
         "topics":      topics_data
@@ -256,8 +284,100 @@ def get_my_enrolled_courses(
     return results
 
 # ────────────────────────────────────────────
-#  CERTIFICATES
+#  CERTIFICATES (with Auto-Request logic)
 # ────────────────────────────────────────────
+
+def check_and_auto_request_certificate(db: Session, student_id: int, course_id: int):
+    """
+    Internal helper: Checks if student meets all criteria.
+    If yes, creates or updates a PENDING certificate record.
+    """
+    # 1. Check if already exists
+    existing = db.query(models.Certificate).filter(
+        models.Certificate.student_id == student_id,
+        models.Certificate.course_id  == course_id
+    ).first()
+    
+    # If it's already pending or issued, do nothing
+    if existing and (existing.status == "pending" or existing.issued):
+        return
+
+    # 2. Get all topic IDs
+    topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
+    if not topic_ids: return
+
+    # 3. Check Videos (100% completion)
+    video_ids = [v.id for v in db.query(models.Video.id).filter(models.Video.topic_id.in_(topic_ids)).all()]
+    if video_ids:
+        watched_count = db.query(models.VideoProgress).filter(
+            models.VideoProgress.student_id == student_id,
+            models.VideoProgress.video_id.in_(video_ids),
+            models.VideoProgress.watch_percentage >= 80
+        ).count()
+        if watched_count < len(video_ids): return
+
+    # 4. Check Quizzes (All attempted)
+    quiz_ids = [q.id for q in db.query(models.Quiz.id).filter(models.Quiz.topic_id.in_(topic_ids)).all()]
+    if quiz_ids:
+        attempted = {a.quiz_id for a in db.query(models.QuizAttempt.quiz_id).filter(
+            models.QuizAttempt.student_id == student_id,
+            models.QuizAttempt.quiz_id.in_(quiz_ids)
+        ).all()}
+        if len(attempted) < len(quiz_ids): return
+
+    # 5. Check Assignments (All submitted)
+    assign_ids = [a.id for a in db.query(models.Assignment.id).filter(models.Assignment.topic_id.in_(topic_ids)).all()]
+    if assign_ids:
+        submitted = {s.assignment_id for s in db.query(models.AssignmentSubmission.assignment_id).filter(
+            models.AssignmentSubmission.student_id == student_id,
+            models.AssignmentSubmission.assignment_id.in_(assign_ids)
+        ).all()}
+        if len(submitted) < len(assign_ids): return
+
+    # 6. Criteria Met! Create or Update request
+    if existing:
+        existing.status = "pending"
+        existing.request_date = datetime.utcnow()
+    else:
+        new_cert = models.Certificate(
+            student_id=student_id, course_id=course_id,
+            status="pending", eligible=True
+        )
+        db.add(new_cert)
+    
+    db.commit()
+    
+    # Notify Student and Admin
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    create_notification(
+        db, student_id,
+        "Eligibility Achieved! 🎓",
+        f"You have completed all requirements for {course.title if course else 'your course'}. A certificate request has been sent to the admin.",
+        "student-performnace.html"
+    )
+    
+    # Find Admin(s) and Course Teacher
+    org_id = course.organization_id if course else None
+    if org_id:
+        admins = db.query(models.User.id).filter(models.User.organization_id == org_id, models.User.role == "admin").all()
+        for (aid,) in admins:
+            create_notification(
+                db, aid,
+                "New Certificate Request",
+                f"A student has completed {course.title if course else 'a course'} and is requesting a certificate.",
+                "certificates.html"
+            )
+    
+    # Notify Teacher specifically
+    if course and course.created_by:
+        create_notification(
+            db, course.created_by,
+            "Student Course Completion",
+            f"Your student {student.name if hasattr(student, 'name') else 'A student'} has completed '{course.title}' and requested a certificate.",
+            "certificates.html"
+        )
+
+    print(f"[Auto-Cert] Created/Updated request for Student {student_id} in Course {course_id}")
 
 @router.post("/courses/{course_id}/request-certificate")
 def request_certificate(
@@ -269,8 +389,13 @@ def request_certificate(
         models.Certificate.student_id == student.id,
         models.Certificate.course_id  == course_id
     ).first()
+    
     if existing:
-        return {"message": "Request already exists", "status": existing.status}
+        if existing.issued:
+            return {"message": "Certificate already issued", "status": "verified"}
+        if existing.status == "pending":
+            return {"message": "Request already exists and is pending", "status": "pending"}
+        # If status is rejected, we allow re-request below
 
     # ── Get all topic IDs for this course ──────────────────────────────────
     topic_ids = [t.id for t in
@@ -383,6 +508,8 @@ def download_certificate(
             student_name=student.name,
             course_name=course.title,
             org_name=org.platform_name or org.name,
+            logo_url=org.logo,
+            signature_url=org.signature_url,
             issue_date=cert.issued_at.strftime("%B %d, %Y")
         )
         safe_course = "".join(
@@ -437,6 +564,12 @@ def save_video_progress(
             skip_count=data.skip_count, playback_speed=data.playback_speed
         ))
     db.commit()
+
+    # ── Auto-Request Check ──
+    topic = db.query(models.Topic).join(models.Video).filter(models.Video.id == video_id).first()
+    if topic:
+        check_and_auto_request_certificate(db, current_user.id, topic.course_id)
+
     return {"message": "Progress saved"}
 
 
@@ -551,6 +684,11 @@ def submit_quiz(
         student_id=current_user.id, quiz_id=quiz_id, score=correct_count
     )
     db.add(attempt); db.commit(); db.refresh(attempt)
+
+    # ── Auto-Request Check ──
+    quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
+    if quiz:
+        check_and_auto_request_certificate(db, current_user.id, quiz.topic_id)
 
     return {
         "attempt_id":      attempt.id,
@@ -729,6 +867,11 @@ def submit_assignment(
     submission = models.AssignmentSubmission(**sub_data)
     db.add(submission); db.commit(); db.refresh(submission)
 
+    # ── Auto-Request Check ──
+    topic = db.query(models.Topic).filter(models.Topic.id == assignment.topic_id).first()
+    if topic:
+        check_and_auto_request_certificate(db, current_user.id, topic.course_id)
+
     return {
         "submission_id":  submission.id,
         "obtained_marks": grading["obtained_marks"],
@@ -740,6 +883,108 @@ def submit_assignment(
 # ────────────────────────────────────────────
 #  PERFORMANCE UPDATE (with ML prediction)
 # ────────────────────────────────────────────
+
+@router.get("/skill-gap/{course_id}")
+def get_skill_gap_analysis(
+    course_id: int,
+    current_user: models.User = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    # 1. Get Course Topics
+    topics = db.query(models.Topic).filter(models.Topic.course_id == course_id).all()
+    if not topics:
+        raise HTTPException(status_code=404, detail="No topics found for this course")
+
+    # 2. Gather topic-wise performance
+    analysis_data = []
+    for t in topics:
+        # Get quizzes for this topic
+        quizzes = db.query(models.Quiz).filter(models.Quiz.topic_id == t.id).all()
+        quiz_scores = []
+        for q in quizzes:
+            attempt = db.query(models.QuizAttempt).filter(
+                models.QuizAttempt.student_id == current_user.id,
+                models.QuizAttempt.quiz_id == q.id
+            ).first()
+            if attempt:
+                # Find total questions for this quiz
+                q_count = db.query(models.QuizQuestion).filter(models.QuizQuestion.quiz_id == q.id).count()
+                if q_count > 0:
+                    quiz_scores.append((attempt.score / q_count) * 100)
+
+        # Get assignments for this topic
+        assignments = db.query(models.Assignment).filter(models.Assignment.topic_id == t.id).all()
+        assign_scores = []
+        for a in assignments:
+            sub = db.query(models.AssignmentSubmission).filter(
+                models.AssignmentSubmission.student_id == current_user.id,
+                models.AssignmentSubmission.assignment_id == a.id
+            ).order_by(models.AssignmentSubmission.obtained_marks.desc()).first()
+            if sub:
+                assign_scores.append((sub.obtained_marks / (a.total_marks or 10)) * 100)
+
+        avg_score = None
+        combined = quiz_scores + assign_scores
+        if combined:
+            avg_score = sum(combined) / len(combined)
+
+        analysis_data.append({
+            "topic_title": t.title,
+            "avg_score": avg_score,
+            "status": "Attempted" if combined else "Not Attempted"
+        })
+
+    # 3. AI Analysis with Llama-3 (Groq)
+    perf_summary = json.dumps(analysis_data)
+    
+    # Check if student is struggling
+    struggling = any(d["avg_score"] is not None and d["avg_score"] < 60 for d in analysis_data)
+    
+    prompt = f"""
+    Analyze the following student performance data and provide a Personal Recovery Plan.
+    Data: {perf_summary}
+
+    If the student has scores < 60% or many 'Not Attempted' topics, be firm but encouraging.
+    
+    Requirements:
+    1. Identify 'Strengths' (topics where score > 80%).
+    2. Identify 'Weaknesses' (topics where score < 60% or 'Not Attempted').
+    3. For EACH Weakness, provide a specific 'Recovery Action' (e.g., 'Watch Topic X video again focus on Y', 'Read material Z').
+    4. Generate a 'Mini-Review Guide': A short (2-sentence) summary of the core concept the student is missing in their weakest topic.
+    5. Provide a 'Motivation Message' that acknowledges their current struggles but shows a clear path to success.
+
+    Return ONLY a valid JSON object:
+    {{
+      "strengths": ["...", "..."],
+      "weaknesses": ["...", "..."],
+      "recovery_plan": [
+          {{"topic": "Topic Name", "action": "Specific remedial action", "video_suggestion": "Timestamp or specific sub-topic to re-watch"}}
+      ],
+      "review_guide": "...",
+      "motivation": "..."
+    }}
+    """
+
+    try:
+        chat_completion = http_requests.post(
+            GROQ_URL,
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+                "response_format": {"type": "json_object"}
+            },
+            timeout=30
+        )
+        if chat_completion.status_code != 200:
+            return {"error": "AI analysis unavailable"}
+        
+        result = chat_completion.json()["choices"][0]["message"]["content"]
+        return json.loads(result)
+    except Exception as e:
+        print(f"[Skill-Gap Error] {e}")
+        return {"error": "Analysis failed"}
 
 @router.post("/update-performance")
 def update_student_performance(
@@ -767,16 +1012,20 @@ def update_student_performance(
         if val is not None and hasattr(perf, field):
             setattr(perf, field, val)
 
-    # ML prediction
-    level = predict_learner_level(data.model_dump())
+    # ML predictions (Backend as Source of Truth)
+    features = data.model_dump()
+    level = predict_learner_level(features)
+    risk  = predict_dropout_risk(features)
+    
     perf.learner_level = level
+    perf.dropout_risk = risk
 
     # global level if flagged
     if getattr(data, "is_global", False) and hasattr(perf, "global_learner_level"):
         perf.global_learner_level = level
 
     db.commit()
-    return {"message": "Performance updated successfully", "level": level}
+    return {"message": "Performance updated successfully", "level": level, "risk": risk}
 
 
 # ────────────────────────────────────────────

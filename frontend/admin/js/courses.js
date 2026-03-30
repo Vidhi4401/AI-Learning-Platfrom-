@@ -69,10 +69,51 @@ function renderCourses() {
                 <button class="btn btn-ghost" onclick="toggleStatus(${c.id}, ${c.status})" title="Toggle Visibility">
                     ${c.status ? '📁 Hide' : '🚀 Publish'}
                 </button>
+                <button class="btn btn-ghost" onclick="openAssignModal(${c.id}, '${c.teacher_name}')" title="Assign Teacher">👤 Assign</button>
                 <button class="btn btn-ghost" style="color:#ef4444;" onclick="deleteCourse(${c.id}, '${c.title}')" title="Delete Course">🗑</button>
             </div>
         </div>
     `).join("") || '<div style="grid-column: 1/-1; text-align:center; padding:5rem; color:var(--muted);">No courses found matching your filters.</div>';
+}
+
+async function openAssignModal(courseId, currentTeacher) {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`${API}/admin/teachers`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const teachers = await res.json();
+        
+        let promptMsg = `Currently assigned to: ${currentTeacher}\n\nSelect a new teacher by typing their ID:\n`;
+        teachers.forEach(t => {
+            promptMsg += `[ID: ${t.id}] - ${t.name}\n`;
+        });
+
+        const newId = prompt(promptMsg);
+        if (newId) {
+            assignTeacher(courseId, newId);
+        }
+    } catch (err) { alert("Failed to load teachers list"); }
+}
+
+async function assignTeacher(courseId, teacherId) {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("teacher_id", teacherId);
+
+    const res = await fetch(`${API}/admin/courses/${courseId}/assign`, {
+        method: "PUT",
+        headers: { Authorization: "Bearer " + token },
+        body: formData
+    });
+
+    if (res.ok) {
+        alert("Teacher assigned successfully!");
+        loadAllCourses();
+    } else {
+        const err = await res.json();
+        alert(err.detail || "Failed to assign teacher");
+    }
 }
 
 async function toggleStatus(id, currentStatus) {

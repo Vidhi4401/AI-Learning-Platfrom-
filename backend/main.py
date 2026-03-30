@@ -6,7 +6,7 @@ import models
 import os
 
 # ── Import all routers ──
-from routers import auth, organization, dashboard, courses, topics, videos, assignments, quizzes, profile, student, chatbot, admin_router, materials, meetings
+from routers import auth, organization, dashboard, courses, topics, videos, assignments, quizzes, profile, student, chatbot, admin_router, materials, meetings, notifications
 
 app = FastAPI()
 
@@ -43,3 +43,4 @@ app.include_router(chatbot.router)
 app.include_router(admin_router.router)
 app.include_router(materials.router)
 app.include_router(meetings.router)
+app.include_router(notifications.router)

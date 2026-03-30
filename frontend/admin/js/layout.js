@@ -21,6 +21,22 @@ function isActive(page) {
   return currentPage === page ? "active" : "";
 }
 
+/* ===== VALIDATION UTILITIES ===== */
+window.utils = {
+  validateEmail: (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  },
+  validateName: (name) => {
+    return /[a-zA-Z]/.test(name) && name.trim().length >= 2;
+  },
+  validatePassword: (password) => {
+    return password.length >= 8;
+  },
+  showError: (msg) => {
+    alert(msg); // Default implementation, can be overridden
+  }
+};
+
 /* ===== SIDEBAR ===== */
 document.getElementById("sidebar").innerHTML = `
   <div class="sidebar-brand">
@@ -60,35 +76,153 @@ document.getElementById("sidebar").innerHTML = `
       <span class="nav-icon">🏆</span>
       <span>Certificates</span>
     </a>
-    <a href="settings.html" class="${isActive("settings.html")}">
-      <span class="nav-icon">⚙️</span>
-      <span>Settings</span>
-    </a>
-  </div>
-
-  <div class="sidebar-footer">
-    <button id="logoutBtn">
-      <span>Logout</span>
-    </button>
   </div>
 `;
 
 /* ===== NAVBAR ===== */
 document.getElementById("navbar").innerHTML = `
   <div class="navbar-left">
-    <input class="search" type="text" placeholder="Search data…">
+    <button id="sidebarToggle" class="nav-toggle-btn" title="Toggle Sidebar">☰</button>
+    <div style="position:relative;">
+        <input class="search" type="text" id="globalSearchInput" placeholder="Search data…">
+    </div>
   </div>
 
   <div class="navbar-right">
-    <div class="profile">
+    <div class="profile" id="profileDropdownTrigger">
       <div class="profile-info">
         <div class="profile-name">${user.name || "Admin"}</div>
         <div class="profile-email">Administrator</div>
       </div>
       <div class="avatar">${user.name?.charAt(0).toUpperCase() || "A"}</div>
+      
+      <div class="profile-dropdown">
+        <a href="settings.html"><span>⚙️</span> Settings</a>
+        <button id="logoutBtn"><span>Logout</span></button>
+      </div>
     </div>
   </div>
 `;
+
+/* ===== GLOBAL SEARCH LOGIC ===== */
+document.getElementById("globalSearchInput").addEventListener("input", (e) => {
+  const query = e.target.value.toLowerCase();
+  
+  // Find local search inputs (excluding the global one)
+  const localSearch = document.getElementById("teacherSearch") || 
+                      document.getElementById("searchInput") || 
+                      document.getElementById("courseSearch");
+
+  if (localSearch) {
+    localSearch.value = e.target.value;
+    // Dispatch input event to trigger local listeners
+    localSearch.dispatchEvent(new Event('input'));
+  }
+  
+  // Direct function calls as fallback
+  if (typeof renderTeachers === "function") renderTeachers();
+  if (typeof render === "function") render();
+  if (typeof renderCourses === "function") renderCourses();
+});
+
+/* ===== TOGGLE SIDEBAR ===== */
+document.getElementById("sidebarToggle").addEventListener("click", () => {
+  document.body.classList.toggle("sidebar-collapsed");
+});
+
+/* ===== PROFILE DROPDOWN ===== */
+const profileTrigger = document.getElementById("profileDropdownTrigger");
+profileTrigger.addEventListener("click", (e) => {
+  e.stopPropagation();
+  profileTrigger.classList.toggle("active");
+});
+
+document.addEventListener("click", () => {
+  profileTrigger.classList.remove("active");
+});
+
+/* ===== NOTIFICATIONS LOGIC ===== */
+function toggleNotif(e) {
+    e.stopPropagation();
+    document.getElementById("notifDropdown").classList.toggle("active");
+    if (document.getElementById("notifDropdown").classList.contains("active")) {
+        fetchNotifications();
+    }
+}
+
+async function fetchNotifications() {
+    try {
+        const res = await fetch(`http://127.0.0.1:8000/api/v1/notifications/`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const notifications = await res.json();
+        renderNotifications(notifications);
+    } catch (err) {}
+}
+
+async function checkUnreadCount() {
+    try {
+        const res = await fetch(`http://127.0.0.1:8000/api/v1/notifications/unread-count`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const data = await res.json();
+        const badge = document.getElementById("notifCount");
+        if (data.count > 0) {
+            badge.textContent = data.count;
+            badge.style.display = "flex";
+        } else {
+            badge.style.display = "none";
+        }
+    } catch (err) {}
+}
+
+function renderNotifications(list) {
+    const container = document.getElementById("notifList");
+    if (!list || list.length === 0) {
+        container.innerHTML = '<div class="notif-empty">No new notifications</div>';
+        return;
+    }
+
+    container.innerHTML = list.map(n => `
+        <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markNotificationRead(${n.id}, '${n.link}')">
+            <div class="notif-item-title">${n.title}</div>
+            <div class="notif-item-msg">${n.message}</div>
+            <div class="notif-item-time">${new Date(n.created_at).toLocaleString()}</div>
+        </div>
+    `).join("");
+}
+
+async function markNotificationRead(id, link) {
+    try {
+        await fetch(`http://127.0.0.1:8000/api/v1/notifications/${id}/read`, {
+            method: "POST",
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (link && link !== 'null') window.location.href = link;
+        else fetchNotifications();
+        checkUnreadCount();
+    } catch (err) {}
+}
+
+async function markAllNotificationsRead(e) {
+    e.stopPropagation();
+    try {
+        await fetch(`http://127.0.0.1:8000/api/v1/notifications/read-all`, {
+            method: "POST",
+            headers: { Authorization: "Bearer " + token }
+        });
+        fetchNotifications();
+        checkUnreadCount();
+    } catch (err) {}
+}
+
+checkUnreadCount();
+setInterval(checkUnreadCount, 30000);
+
+document.addEventListener("click", () => {
+    const drop = document.getElementById("notifDropdown");
+    if(drop) drop.classList.remove("active");
+});
 
 /* ===== LOGOUT ===== */
 document.getElementById("logoutBtn").addEventListener("click", () => {
