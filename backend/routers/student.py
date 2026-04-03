@@ -335,6 +335,8 @@ def check_and_auto_request_certificate(db: Session, student_id: int, course_id: 
         if len(submitted) < len(assign_ids): return
 
     # 6. Criteria Met! Create or Update request
+    student = db.query(models.User).filter(models.User.id == student_id).first()
+    
     if existing:
         existing.status = "pending"
         existing.request_date = datetime.utcnow()
@@ -370,10 +372,11 @@ def check_and_auto_request_certificate(db: Session, student_id: int, course_id: 
     
     # Notify Teacher specifically
     if course and course.created_by:
+        student_name = student.name if student else "A student"
         create_notification(
             db, course.created_by,
             "Student Course Completion",
-            f"Your student {student.name if hasattr(student, 'name') else 'A student'} has completed '{course.title}' and requested a certificate.",
+            f"Your student {student_name} has completed '{course.title}' and requested a certificate.",
             "certificates.html"
         )
 
@@ -683,7 +686,17 @@ def submit_quiz(
     attempt = models.QuizAttempt(
         student_id=current_user.id, quiz_id=quiz_id, score=correct_count
     )
-    db.add(attempt); db.commit(); db.refresh(attempt)
+    db.add(attempt); db.flush() # flush to get attempt.id
+
+    # Save answers
+    for ans in payload.answers:
+        db.add(models.QuizAttemptAnswer(
+            attempt_id=attempt.id,
+            question_id=ans.question_id,
+            selected_option=ans.selected_option
+        ))
+
+    db.commit(); db.refresh(attempt)
 
     # ── Auto-Request Check ──
     quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
@@ -699,6 +712,45 @@ def submit_quiz(
         "skipped":         skipped_count,
         "percentage":      round((correct_count / total) * 100, 2) if total > 0 else 0
     }
+
+@router.get("/quizzes/{quiz_id}/review")
+def review_quiz(
+    quiz_id: int,
+    current_user: models.User = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    attempt = db.query(models.QuizAttempt).filter(
+        models.QuizAttempt.student_id == current_user.id,
+        models.QuizAttempt.quiz_id == quiz_id
+    ).order_by(models.QuizAttempt.attempted_at.desc()).first()
+
+    if not attempt:
+        raise HTTPException(status_code=404, detail="No attempt found for this quiz")
+
+    questions = db.query(models.QuizQuestion).filter(models.QuizQuestion.quiz_id == quiz_id).all()
+    answers = db.query(models.QuizAttemptAnswer).filter(models.QuizAttemptAnswer.attempt_id == attempt.id).all()
+    ans_map = {a.question_id: a.selected_option for a in answers}
+
+    review_data = []
+    for q in questions:
+        review_data.append({
+            "question_text": q.question_text,
+            "option_a": q.option_a,
+            "option_b": q.option_b,
+            "option_c": q.option_c,
+            "option_d": q.option_d,
+            "correct_option": q.correct_option,
+            "selected_option": ans_map.get(q.id)
+        })
+
+    return {
+        "quiz_id": quiz_id,
+        "score": attempt.score,
+        "total": len(questions),
+        "attempted_at": attempt.attempted_at,
+        "questions": review_data
+    }
+
 
 
 # ────────────────────────────────────────────

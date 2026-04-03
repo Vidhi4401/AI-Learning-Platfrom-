@@ -240,7 +240,6 @@
     async function loadAllMaterials() {
       const container = document.getElementById("materialsList");
       try {
-        // Fetch materials for every course
         const all = (await Promise.all(
           myCourses.map(async c => {
             try {
@@ -264,7 +263,8 @@
               <div class="mat-course-cell">${m.courseTitle}</div>
             </div>
             <div class="mat-actions">
-              <a href="${getFileUrl(m.file_url)}" target="_blank" class="mat-view-btn">👁 View</a>
+              <button onclick="viewMaterial('${m.file_url}')" class="mat-view-btn">👁 View</button>
+              <button onclick="downloadMaterial('${m.file_url}', '${m.title}')" class="mat-view-btn" style="background:#f0fdf4; color:#16a34a; border:none; cursor:pointer;">📥 Download</button>
               <button class="mat-del-btn" onclick="deleteMaterial(${m.id})">🗑 Delete</button>
             </div>
           </div>
@@ -272,6 +272,86 @@
       } catch (e) {
         container.innerHTML = '<div class="empty-row">Failed to load materials.</div>';
       }
+    }
+
+    function getFileExtension(url) {
+      if (!url) return "pdf";
+      const parts = url.split('?')[0].split('/');
+      const lastPart = parts[parts.length - 1];
+      if (lastPart.includes('.')) {
+        return lastPart.split('.').pop();
+      }
+      return "pdf";
+    }
+
+    function getMimeType(url) {
+      const ext = getFileExtension(url).toLowerCase();
+      if (ext === "pdf")  return "application/pdf";
+      if (ext === "txt")  return "text/plain";
+      if (ext === "doc")  return "application/msword";
+      if (ext === "docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      return "application/octet-stream";
+    }
+
+    async function downloadMaterial(url, title) {
+      if (!url) return;
+      const ext = getFileExtension(url);
+      const safeTitle = (title || "Document").replace(/[^a-z0-9]/gi, '_');
+      const filename = `${safeTitle}.${ext}`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Download failed");
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        console.error("Download error", e);
+        window.open(url, "_blank");
+      }
+    }
+
+    async function viewMaterial(url) {
+      if (!url) return;
+      
+      if (url.includes("cloudinary.com") && url.includes("/raw/upload/")) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            const blob = await res.blob();
+            const mime = getMimeType(url);
+            const newBlob = new Blob([blob], { type: mime });
+            const blobUrl = URL.createObjectURL(newBlob);
+            window.open(blobUrl, "_blank");
+            return;
+          }
+        } catch (e) {
+          console.warn("Blob view failed", e);
+        }
+        window.open(url, "_blank");
+        return;
+      }
+
+      if (url.includes("cloudinary.com")) {
+        const viewUrl = url.replace("/upload/", "/upload/fl_inline/");
+        window.open(viewUrl, "_blank");
+        return;
+      }
+
+      window.open(getFileUrl(url), "_blank");
+    }
+
+    function getFileUrl(path) {
+      if (!path) return "#";
+      if (path.startsWith("http")) return path;
+      return `http://127.0.0.1:8000/${path}`;
     }
 
     function onFileChosen(input) {
@@ -317,7 +397,6 @@
         succ.textContent   = "✅ Material uploaded successfully!";
         succ.style.display = "block";
 
-        // Reset form
         document.getElementById("matTitle").value = "";
         document.getElementById("matFile").value  = "";
         document.getElementById("fileChosen").style.display = "none";

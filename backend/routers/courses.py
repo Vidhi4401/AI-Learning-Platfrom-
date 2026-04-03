@@ -90,6 +90,48 @@ async def process_course_pdf_preview(
         print(f"[AI Error] {str(e)}")
         raise HTTPException(status_code=500, detail="AI generation failed. Please try a different PDF.")
 
+@router.post("/courses/{course_id}/generate-ai-content")
+async def generate_course_content_ai(
+    course_id: int,
+    teacher: models.User = Depends(get_current_teacher),
+    db: Session = Depends(get_db)
+):
+    """
+    Generates a full course curriculum (topics, quizzes, assignments) 
+    based only on the course title and difficulty.
+    """
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    prompt = f"""
+    You are an expert curriculum designer. Create a comprehensive and structured course curriculum for:
+    Course Title: "{course.title}"
+    Difficulty Level: {course.difficulty}
+
+    Requirements:
+    1. Extract EXACTLY 5 high-quality topics that cover the subject thoroughly.
+    2. For EACH topic:
+       - Provide a 'topic_name'.
+       - Create ONE 'assignment' with a 'title' and a detailed 'description' (at least 2 sentences).
+       - Create ONE 'quiz' with a 'title' and EXACTLY 5 Multiple Choice Questions (MCQs).
+       - Each 'question' must have: 'text', 'a', 'b', 'c', 'd', and the 'correct_answer' (must be one of "A", "B", "C", or "D").
+
+    Return ONLY a valid JSON object with a "topics" key.
+    """
+
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"}
+        )
+        data = json.loads(chat_completion.choices[0].message.content)
+        return data
+    except Exception as e:
+        print(f"[AI Content Generation Error] {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate AI content. Please try again.")
+
 from routers.notifications import create_notification
 
 @router.post("/courses/{course_id}/save-pdf-content")

@@ -114,6 +114,14 @@ class QuizAttempt(Base):
     score = Column(Integer)
     attempted_at = Column(DateTime(timezone=True), server_default=func.now())
 
+class QuizAttemptAnswer(Base):
+    __tablename__ = "quiz_attempt_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    attempt_id = Column(Integer, ForeignKey("quiz_attempts.id"))
+    question_id = Column(Integer, ForeignKey("quiz_questions.id"))
+    selected_option = Column(String, nullable=True) # A, B, C, or D
+
 class VideoProgress(Base):
     __tablename__ = "video_progress"
 

@@ -95,35 +95,46 @@ async function loadCourses() {
 async function createCourse() {
   const token = localStorage.getItem("token");
 
+  const title = document.getElementById("courseTitle").value.trim();
+  const desc = document.getElementById("courseDesc").value.trim();
+  
+  if (!title || !desc) {
+    showToast("Please fill in course title and description", "error");
+    return;
+  }
+
   const formData = new FormData();
-  formData.append("title", courseTitle.value);
-  formData.append("description", courseDesc.value);
+  formData.append("title", title);
+  formData.append("description", desc);
   formData.append("difficulty", difficulty.value);
   formData.append("status", true);
 
   if (thumbnail.files.length > 0)
     formData.append("logo", thumbnail.files[0]);
 
-  const res = await fetch(`${API}/teacher/courses`, {
-    method: "POST",
-    headers: { Authorization: "Bearer " + token },
-    body: formData
-  });
+  try {
+    const res = await fetch(`${API}/teacher/courses`, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token },
+      body: formData
+    });
 
-  if (res.ok) {
-    const data = await res.json();
-    showToast("Course created! Move to next step to add content.");
-    await loadCourses();
-    
-    // Auto select the new course in Step 2
-    document.getElementById("pdfCourseSelect").value = data.course_id;
-    
-    // Move to Step 2
-    setTimeout(() => {
+    if (res.ok) {
+      const data = await res.json();
+      showToast("Course created!");
+      await loadCourses();
+      
+      const courseId = data.course_id;
+      document.getElementById("pdfCourseSelect").value = courseId;
+      
+      // Move to Step 2
       document.querySelector('[data-step="2"]').click();
-    }, 1000);
-  } else {
-    showToast("Failed to create course", "error");
+    } else {
+      const err = await res.json();
+      showToast(err.detail || "Failed to create course", "error");
+    }
+  } catch (err) {
+    showToast("Server error", "error");
   }
 }
 

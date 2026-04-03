@@ -78,32 +78,34 @@
           <h3>AI-Powered Content Generation</h3>
           <p style="color: #64748b; font-size: 14px; margin-bottom: 1.5rem;">
             Upload a PDF document containing your course material. Our AI will automatically extract topics, 
-            create quizzes with questions, and design assignments for you.
+            create quizzes, and design assignments for you.
           </p>
 
           <label>Select Course</label>
           <select id="pdfCourseSelect"></select>
 
-          <div class="upload-box" id="dropZone">
-            <input type="file" id="coursePdf" accept=".pdf" style="display: none;">
-            <div id="pdfPlaceholder" onclick="document.getElementById('coursePdf').click()">
-              <span style="font-size: 40px;">📄</span>
-              <p>Click to upload course PDF</p>
-              <small>(Maximum 10MB)</small>
+          <div id="pdfUploadSection">
+            <div class="upload-box" id="dropZone">
+              <input type="file" id="coursePdf" accept=".pdf" style="display: none;">
+              <div id="pdfPlaceholder" onclick="document.getElementById('coursePdf').click()">
+                <span style="font-size: 40px;">📄</span>
+                <p>Click to upload course PDF</p>
+                <small>(Maximum 10MB)</small>
+              </div>
+              <div id="pdfSelected" style="display: none;">
+                <p id="pdfFileName" style="font-weight: 600; color: #1e40af;"></p>
+                <button class="btn-ghost" onclick="document.getElementById('coursePdf').click()">Change File</button>
+              </div>
             </div>
-            <div id="pdfSelected" style="display: none;">
-              <p id="pdfFileName" style="font-weight: 600; color: #1e40af;"></p>
-              <button class="btn-ghost" onclick="document.getElementById('coursePdf').click()">Change File</button>
+
+            <div class="btn-row" id="processBtnRow">
+              <button class="primary" id="btnGenerate" onclick="generateFromPdf()">✨ Generate Content from PDF</button>
             </div>
           </div>
 
           <div id="processingStatus" style="display: none; margin-top: 1.5rem; text-align: center;">
             <div class="spinner" style="margin: 0 auto 10px;"></div>
-            <p id="statusText">AI is reading your PDF and generating content... This may take up to a minute.</p>
-          </div>
-
-          <div class="btn-row" id="processBtnRow">
-            <button class="primary" id="btnGenerate" onclick="generateFromPdf()">✨ Generate Content</button>
+            <p id="statusText">AI is generating your course content... This may take up to a minute.</p>
           </div>
 
           <!-- PREVIEW AREA (NEW) -->
