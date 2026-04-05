@@ -417,7 +417,7 @@ def get_admin_student_detail(student_id: int, admin=Depends(get_current_admin), 
         if not course:
             continue
         c_metrics, c_level, c_risk = get_student_metrics(db, student_id, course.id)
-        topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course.id).all()]
+        topic_ids = [t[0] for t in db.query(models.Topic.id).filter(models.Topic.course_id == course.id).all()]
         total_vids    = db.query(models.Video).filter(models.Video.topic_id.in_(topic_ids)).count() if topic_ids else 0
         total_quizzes = db.query(models.Quiz).filter(models.Quiz.topic_id.in_(topic_ids)).count() if topic_ids else 0
         total_assigns = db.query(models.Assignment).filter(models.Assignment.topic_id.in_(topic_ids)).count() if topic_ids else 0

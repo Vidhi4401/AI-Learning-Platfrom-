@@ -66,10 +66,26 @@ class AssignmentUpdate(BaseModel):
 
 class QuizCreate(BaseModel):
     title: str
+    num_questions: Optional[int] = None
 
 
 class QuizUpdate(BaseModel):
     title: str
+    num_questions: Optional[int] = None
+
+class QuizAIRequest(BaseModel):
+    title: str
+    description: str
+    num_questions: int
+    difficulty: str
+    topic_id: int
+
+class AssignmentAIRequest(BaseModel):
+    title: str
+    description: str
+    topic_id: int
+    difficulty: str
+    num_questions: int
 
 class QuizQuestionCreate(BaseModel):
     question_text: str

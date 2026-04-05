@@ -148,7 +148,7 @@ def build_teacher_report(students: list, teacher_name: str, org_name: str, db, g
             course = db.query(models.Course).filter(models.Course.id == enr.course_id).first()
             if not course: continue
             cm, cl, cr = get_student_metrics(db, s["id"], course.id)
-            topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course.id).all()]
+            topic_ids = [t[0] for t in db.query(models.Topic.id).filter(models.Topic.course_id == course.id).all()]
             v_total = db.query(models.Video).filter(models.Video.topic_id.in_(topic_ids)).count() if topic_ids else 0
             q_total = db.query(models.Quiz).filter(models.Quiz.topic_id.in_(topic_ids)).count() if topic_ids else 0
             a_total = db.query(models.Assignment).filter(models.Assignment.topic_id.in_(topic_ids)).count() if topic_ids else 0

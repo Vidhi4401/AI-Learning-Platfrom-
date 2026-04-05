@@ -32,7 +32,19 @@ def migrate():
             print("Adding 'global_learner_level' to performance table...")
             conn.execute(text("ALTER TABLE student_performance_summary ADD COLUMN global_learner_level VARCHAR(20);"))
 
-        # 3. Check and Create Meetings Table if missing
+        # 3. Check Assignments table
+        columns_assign = [c['name'] for c in inspector.get_columns('assignments')]
+        if 'file_url' not in columns_assign:
+            print("Adding 'file_url' to assignments table...")
+            conn.execute(text("ALTER TABLE assignments ADD COLUMN file_url VARCHAR;"))
+
+        # 4. Check Quizzes table
+        columns_quiz = [c['name'] for c in inspector.get_columns('quizzes')]
+        if 'num_questions' not in columns_quiz:
+            print("Adding 'num_questions' to quizzes table...")
+            conn.execute(text("ALTER TABLE quizzes ADD COLUMN num_questions INTEGER;"))
+
+        # 5. Check and Create Meetings Table if missing
         print("Checking for meetings table...")
         if not inspector.has_table('meetings'):
             print("Creating 'meetings' table...")

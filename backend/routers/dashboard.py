@@ -114,8 +114,9 @@ def get_dashboard(
 from sqlalchemy import func
 from routers.student import predict_learner_level
 
-import pickle
+import joblib
 import pandas as pd
+import numpy as np
 
 # ── Absolute path to /backend/ml/ regardless of CWD ──
 _ROUTER_DIR = os.path.dirname(os.path.abspath(__file__))          # .../routers/
@@ -123,8 +124,7 @@ _ML_DIR     = os.path.join(os.path.dirname(_ROUTER_DIR), "ml")   # .../ml/
 
 def _load_pkl(filename):
     path = os.path.join(_ML_DIR, filename)
-    with open(path, "rb") as f:
-        return pickle.load(f)
+    return joblib.load(path)
 
 try:
     risk_model         = _load_pkl("final_risk_model.pkl")
@@ -164,11 +164,11 @@ def get_student_metrics(db: Session, student_id: int, course_id: int = None):
     # ── 2. Fallback: Manual Calculation (Filtered or Missing) ──
     # 1. Filter Topics
     if course_id:
-        topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
+        topic_ids = [t[0] for t in db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
     else:
         # Get ALL courses this specific student is enrolled in
-        enrolled_course_ids = [e.course_id for e in db.query(models.Enrollment.course_id).filter(models.Enrollment.student_id == student_id).all()]
-        topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id.in_(enrolled_course_ids)).all()] if enrolled_course_ids else []
+        enrolled_course_ids = [e[0] for e in db.query(models.Enrollment.course_id).filter(models.Enrollment.student_id == student_id).all()]
+        topic_ids = [t[0] for t in db.query(models.Topic.id).filter(models.Topic.course_id.in_(enrolled_course_ids)).all()] if enrolled_course_ids else []
     
     if not topic_ids:
         return {k: 0.0 for k in ["overall_score", "quiz_average", "assignment_average", "completion_rate", "avg_watch_time", "quiz_attempt_rate", "assignment_submission_rate", "videos_completed", "quizzes_attempted", "assignments_submitted", "total_course_items"]}, "Weak", "High"
@@ -238,13 +238,24 @@ def get_student_metrics(db: Session, student_id: int, course_id: int = None):
     
     # 5. Predict Risk
     risk = "Low"
-    if risk_model:
+    if risk_model and model_feature_names and risk_scaler:
         try:
             feat_df = pd.DataFrame([features])[model_feature_names]
             scaled = risk_scaler.transform(feat_df)
             risk_pred = risk_model.predict(scaled)[0]
-            risk = risk_pred # Assumes model returns 'Low', 'Medium', 'High'
-        except: risk = "Medium" if overall < 50 else "Low"
+            # Handle numeric predictions (0=Low, 1=High) if model returns numbers
+            if isinstance(risk_pred, (int, np.integer)):
+                risk = "High" if int(risk_pred) == 1 else "Low"
+            else:
+                risk = str(risk_pred)
+        except Exception as e:
+            print(f"[ML Risk Prediction Error] {e}")
+            risk = "High" if overall < 40 else ("Medium" if overall < 70 else "Low")
+    else:
+        # Better rule-based fallback when model is missing
+        if overall < 40: risk = "High"
+        elif overall < 70: risk = "Medium"
+        else: risk = "Low"
 
     return features, level, risk
 
@@ -257,7 +268,7 @@ def get_all_students(
     teacher: models.User = Depends(get_current_teacher)
 ):
     # 1. Get IDs of courses owned/assigned to this teacher
-    managed_course_ids = [c.id for c in db.query(models.Course.id).filter(
+    managed_course_ids = [c[0] for c in db.query(models.Course.id).filter(
         models.Course.organization_id == teacher.organization_id,
         models.Course.created_by == teacher.id
     ).all()]
@@ -266,7 +277,7 @@ def get_all_students(
         return []
 
     # 2. Find students enrolled in those courses
-    student_ids = [e.student_id for e in db.query(models.Enrollment.student_id).filter(
+    student_ids = [e[0] for e in db.query(models.Enrollment.student_id).filter(
         models.Enrollment.course_id.in_(managed_course_ids)
     ).distinct().all()]
     
@@ -354,7 +365,7 @@ def get_student_detail(
         c_features, c_level, c_risk = get_student_metrics(db, student_id, course.id)
         
         # Format video string for UI (watched/total)
-        topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course.id).all()]
+        topic_ids = [t[0] for t in db.query(models.Topic.id).filter(models.Topic.course_id == course.id).all()]
         v_count = db.query(models.Video).filter(models.Video.topic_id.in_(topic_ids)).count() if topic_ids else 0
 
         total_quizzes_c = db.query(models.Quiz).filter(models.Quiz.topic_id.in_(topic_ids)).count() if topic_ids else 0
@@ -513,7 +524,7 @@ def get_analytics(
         topics = db.query(models.Topic).filter(models.Topic.course_id == course_id).all()
         course_stats = []
         for t in topics:
-            q_ids = [q.id for q in db.query(models.Quiz.id).filter(models.Quiz.topic_id == t.id).all()]
+            q_ids = [q[0] for q in db.query(models.Quiz.id).filter(models.Quiz.topic_id == t.id).all()]
             avg_q = db.query(func.avg(models.QuizAttempt.score)).filter(models.QuizAttempt.quiz_id.in_(q_ids)).scalar() or 0 if q_ids else 0
             course_stats.append({"title": t.title, "students": round(avg_q, 1)})
     else:

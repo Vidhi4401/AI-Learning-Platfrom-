@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from database import SessionLocal
-import models, schemas, joblib, pandas as pd
+import models, schemas, joblib, pandas as pd, numpy as np
 from dependencies import get_current_user
 from routers.notifications import create_notification
 from config import GROQ_API_KEY
@@ -39,7 +39,8 @@ except Exception as e:
 def predict_learner_level(features: dict) -> str:
     try:
         if level_model is None or scaler is None:
-            return "Average"
+            overall = features.get("overall_score", 0)
+            return "Strong" if overall >= 70 else ("Average" if overall >= 40 else "Weak")
 
         recognized = [
             "overall_score", "quiz_average", "assignment_average",
@@ -51,15 +52,23 @@ def predict_learner_level(features: dict) -> str:
         df     = pd.DataFrame([clean])
         scaled = scaler.transform(df)
         pred   = level_model.predict(scaled)[0]
+        
+        # Handle numeric labels if they exist
+        if isinstance(pred, (int, np.integer)):
+             levels = {0: "Weak", 1: "Average", 2: "Strong"}
+             return levels.get(int(pred), "Average")
+
         return str(pred) # Ensure it's a standard Python string
     except Exception as e:
         print(f"[ML Level Prediction Error] {e}")
-        return "Average"
+        overall = features.get("overall_score", 0)
+        return "Strong" if overall >= 70 else ("Average" if overall >= 40 else "Weak")
 
 def predict_dropout_risk(features: dict) -> str:
     try:
         if risk_model is None or scaler is None:
-            return "Low"
+            overall = features.get("overall_score", 0)
+            return "High" if overall < 40 else ("Medium" if overall < 70 else "Low")
 
         recognized = [
             "overall_score", "quiz_average", "assignment_average",
@@ -73,13 +82,14 @@ def predict_dropout_risk(features: dict) -> str:
         pred   = risk_model.predict(scaled)[0]
         
         # If the model returns 0/1 instead of strings, map them
-        if isinstance(pred, (int, float, pd.api.types.is_integer_dtype, pd.api.types.is_float_dtype)):
+        if isinstance(pred, (int, np.integer, float, pd.api.types.is_integer_dtype, pd.api.types.is_float_dtype)):
             return "High" if int(pred) == 1 else "Low"
             
         return str(pred) # Ensure it's a standard Python string
     except Exception as e:
         print(f"[ML Risk Prediction Error] {e}")
-        return "Low"
+        overall = features.get("overall_score", 0)
+        return "High" if overall < 40 else ("Medium" if overall < 70 else "Low")
 
 
 # =========================
@@ -303,11 +313,11 @@ def check_and_auto_request_certificate(db: Session, student_id: int, course_id: 
         return
 
     # 2. Get all topic IDs
-    topic_ids = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
+    topic_ids = [t[0] for t in db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
     if not topic_ids: return
 
     # 3. Check Videos (100% completion)
-    video_ids = [v.id for v in db.query(models.Video.id).filter(models.Video.topic_id.in_(topic_ids)).all()]
+    video_ids = [v[0] for v in db.query(models.Video.id).filter(models.Video.topic_id.in_(topic_ids)).all()]
     if video_ids:
         watched_count = db.query(models.VideoProgress).filter(
             models.VideoProgress.student_id == student_id,
@@ -317,16 +327,16 @@ def check_and_auto_request_certificate(db: Session, student_id: int, course_id: 
         if watched_count < len(video_ids): return
 
     # 4. Check Quizzes (All attempted)
-    quiz_ids = [q.id for q in db.query(models.Quiz.id).filter(models.Quiz.topic_id.in_(topic_ids)).all()]
+    quiz_ids = [q[0] for q in db.query(models.Quiz.id).filter(models.Quiz.topic_id.in_(topic_ids)).all()]
     if quiz_ids:
-        attempted = {a.quiz_id for a in db.query(models.QuizAttempt.quiz_id).filter(
+        attempted = {a[0] for a in db.query(models.QuizAttempt.quiz_id).filter(
             models.QuizAttempt.student_id == student_id,
             models.QuizAttempt.quiz_id.in_(quiz_ids)
         ).all()}
         if len(attempted) < len(quiz_ids): return
 
     # 5. Check Assignments (All submitted)
-    assign_ids = [a.id for a in db.query(models.Assignment.id).filter(models.Assignment.topic_id.in_(topic_ids)).all()]
+    assign_ids = [a[0] for a in db.query(models.Assignment.id).filter(models.Assignment.topic_id.in_(topic_ids)).all()]
     if assign_ids:
         submitted = {s.assignment_id for s in db.query(models.AssignmentSubmission.assignment_id).filter(
             models.AssignmentSubmission.student_id == student_id,
@@ -398,7 +408,7 @@ def request_certificate(
         # If status is rejected, we allow re-request below
 
     # ── Get all topic IDs for this course ──────────────────────────────────
-    topic_ids = [t.id for t in
+    topic_ids = [t[0] for t in
                  db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
 
     if not topic_ids:
@@ -406,7 +416,7 @@ def request_certificate(
                             detail="This course has no content yet.")
 
     # ── Check 1: All videos watched >= 80% ────────────────────────────────
-    video_ids = [v.id for v in
+    video_ids = [v[0] for v in
                  db.query(models.Video.id).filter(models.Video.topic_id.in_(topic_ids)).all()]
 
     if video_ids:
@@ -422,12 +432,12 @@ def request_certificate(
             )
 
     # ── Check 2: All quizzes attempted ────────────────────────────────────
-    quiz_ids = [q.id for q in
+    quiz_ids = [q[0] for q in
                 db.query(models.Quiz.id).filter(models.Quiz.topic_id.in_(topic_ids)).all()]
 
     if quiz_ids:
         attempted_quiz_ids = {
-            a.quiz_id for a in db.query(models.QuizAttempt.quiz_id).filter(
+            a[0] for a in db.query(models.QuizAttempt.quiz_id).filter(
                 models.QuizAttempt.student_id == student.id,
                 models.QuizAttempt.quiz_id.in_(quiz_ids)
             ).all()
@@ -439,7 +449,7 @@ def request_certificate(
             )
 
     # ── Check 3: All assignments submitted ────────────────────────────────
-    assign_ids = [a.id for a in
+    assign_ids = [a[0] for a in
                   db.query(models.Assignment.id).filter(
                       models.Assignment.topic_id.in_(topic_ids)).all()]
 
@@ -822,6 +832,7 @@ def get_assignment_detail(
         "title":        assignment.title,
         "description":  assignment.description,
         "total_marks":  assignment.total_marks,
+        "file_url":     assignment.file_url,
         "topic_title":  topic.title  if topic  else "",
         "course_title": course.title if course else ""
     }

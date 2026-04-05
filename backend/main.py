@@ -44,3 +44,7 @@ app.include_router(admin_router.router)
 app.include_router(materials.router)
 app.include_router(meetings.router)
 app.include_router(notifications.router)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

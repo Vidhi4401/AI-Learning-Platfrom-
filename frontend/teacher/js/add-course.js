@@ -71,8 +71,10 @@ async function loadCourses() {
   const courses = await res.json();
 
   const selects = [
-    "pdfCourseSelect",
     "videoCourseSelect",
+    "assignmentCourseSelect",
+    "quizCourseSelect",
+    "questionCourseSelect",
     "reviewCourseSelect"
   ];
 
@@ -87,6 +89,30 @@ async function loadCourses() {
       select.appendChild(option);
     });
   });
+
+  // Handle direct step landing from URL
+  const params = new URLSearchParams(window.location.search);
+  const step = params.get("step");
+  const courseId = params.get("course");
+
+  if (step) {
+    const stepEl = document.querySelector(`[data-step="${step}"]`);
+    if (stepEl) stepEl.click();
+  }
+  if (courseId) {
+    selects.forEach(id => {
+      const select = document.getElementById(id);
+      if (select) {
+        select.value = courseId;
+        // Trigger onchange manually
+        if (id === "videoCourseSelect") loadTopicsForVideo();
+        if (id === "assignmentCourseSelect") loadTopicsForAssignment();
+        if (id === "quizCourseSelect") loadTopicsForQuiz();
+        if (id === "questionCourseSelect") loadTopicsForQuestion();
+        if (id === "reviewCourseSelect") loadFullCoursePreview();
+      }
+    });
+  }
 }
 
 /* =========================
@@ -115,12 +141,12 @@ async function createCourse() {
     showToast("Course created! Move to next step to add content.");
     await loadCourses();
     
-    // Auto select the new course in Step 2
-    document.getElementById("pdfCourseSelect").value = data.course_id;
-    
     // Move to Step 2
     setTimeout(() => {
       document.querySelector('[data-step="2"]').click();
+      // Pre-select the course in next step
+      document.getElementById("videoCourseSelect").value = data.course_id;
+      loadTopicsForVideo();
     }, 1000);
   } else {
     showToast("Failed to create course", "error");
@@ -128,171 +154,16 @@ async function createCourse() {
 }
 
 /* =========================
-   PDF GENERATION
+   VIEW MODAL LOGIC
 =========================*/
-// Handle file selection UI
-document.getElementById('coursePdf').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) {
-    document.getElementById('pdfPlaceholder').style.display = 'none';
-    document.getElementById('pdfSelected').style.display = 'block';
-    document.getElementById('pdfFileName').textContent = file.name;
-  }
-});
-
-let currentPdfData = null; // Store generated JSON for saving
-
-async function generateFromPdf() {
-  const token = localStorage.getItem("token");
-  const courseId = document.getElementById("pdfCourseSelect").value;
-  const pdfFile = document.getElementById("coursePdf").files[0];
-
-  if (!courseId || !pdfFile) {
-    showToast("Please select a course and upload a PDF", "error");
-    return;
-  }
-
-  // UI state: processing
-  const btnRow = document.getElementById("processBtnRow");
-  const status = document.getElementById("processingStatus");
-  const preview = document.getElementById("pdfPreviewArea");
-  
-  btnRow.style.display = 'none';
-  status.style.display = 'block';
-  preview.style.display = 'none';
-
-  const formData = new FormData();
-  formData.append("file", pdfFile);
-
-  try {
-    const res = await fetch(`${API}/teacher/courses/${courseId}/process-pdf-preview`, {
-      method: "POST",
-      headers: { Authorization: "Bearer " + token },
-      body: formData
-    });
-
-    if (res.ok) {
-      currentPdfData = await res.json();
-      renderPdfPreview(currentPdfData);
-      preview.style.display = "block";
-      showToast("Content generated! Please review below.", "success");
-    } else {
-      const result = await res.json();
-      showToast(result.detail || "PDF processing failed", "error");
-      btnRow.style.display = 'flex';
-    }
-  } catch (err) {
-    console.error(err);
-    showToast("Server error during PDF processing", "error");
-    btnRow.style.display = 'flex';
-  } finally {
-    status.style.display = 'none';
-  }
+function openView(title, html) {
+    document.getElementById("viewTitle").textContent = title;
+    document.getElementById("viewContent").innerHTML = html;
+    document.getElementById("viewOverlay").classList.add("show");
 }
 
-function renderPdfPreview(data) {
-    const list = document.getElementById("generatedContentList");
-    list.innerHTML = "";
-
-    if (!data.topics || data.topics.length === 0) {
-        list.innerHTML = "<p>No content could be generated from this PDF.</p>";
-        return;
-    }
-
-    data.topics.forEach((t, i) => {
-        const topicDiv = document.createElement("div");
-        topicDiv.style = "background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px;";
-        
-        let quizHtml = "";
-        if (t.quiz && t.quiz.questions) {
-            quizHtml = `
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #cbd5e1;">
-                    <h5 style="margin: 0 0 10px 0; color: #334155; font-size: 14px;">📝 Quiz: ${t.quiz.title}</h5>
-                    <div style="font-size: 12px; color: #64748b;">${t.quiz.questions.length} Questions generated</div>
-                </div>
-            `;
-        }
-
-        let assignHtml = "";
-        if (t.assignment) {
-            assignHtml = `
-                <div style="margin-top: 10px;">
-                    <h5 style="margin: 0 0 5px 0; color: #334155; font-size: 14px;">📂 Assignment: ${t.assignment.title}</h5>
-                    <p style="font-size: 12px; color: #64748b; margin: 0;">${t.assignment.description.substring(0, 100)}...</p>
-                </div>
-            `;
-        }
-
-        topicDiv.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <h4 style="margin: 0; color: #1e40af; font-size: 16px;">Topic ${i+1}: ${t.topic_name}</h4>
-                <button class="btn-ghost" onclick="removeGeneratedTopic(${i})" style="color: #ef4444; padding: 2px 8px; font-size: 12px;">Remove</button>
-            </div>
-            ${quizHtml}
-            ${assignHtml}
-        `;
-        list.appendChild(topicDiv);
-    });
-}
-
-function removeGeneratedTopic(index) {
-    if (currentPdfData && currentPdfData.topics) {
-        currentPdfData.topics.splice(index, 1);
-        renderPdfPreview(currentPdfData);
-        if (currentPdfData.topics.length === 0) {
-            resetPdfStep();
-        }
-    }
-}
-
-async function saveGeneratedContent() {
-    const token = localStorage.getItem("token");
-    const courseId = document.getElementById("pdfCourseSelect").value;
-    const btn = document.getElementById("btnSavePdf");
-    
-    if (!currentPdfData || !courseId) return;
-
-    btn.disabled = true;
-    btn.textContent = "Saving...";
-
-    try {
-        const res = await fetch(`${API}/teacher/courses/${courseId}/save-pdf-content`, {
-            method: "POST",
-            headers: { 
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(currentPdfData)
-        });
-
-        if (res.ok) {
-            showToast("Course content saved successfully!", "success");
-            setTimeout(() => {
-                // Move to Step 3
-                document.querySelector('[data-step="3"]').click();
-                // Pre-select course in next steps
-                document.getElementById("videoCourseSelect").value = courseId;
-                loadTopicsForVideo();
-            }, 1000);
-        } else {
-            const err = await res.json();
-            showToast(err.detail || "Failed to save content", "error");
-        }
-    } catch (err) {
-        showToast("Server error while saving", "error");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = "💾 Save All to Course";
-    }
-}
-
-function resetPdfStep() {
-    currentPdfData = null;
-    document.getElementById("pdfPreviewArea").style.display = "none";
-    document.getElementById("processBtnRow").style.display = "flex";
-    document.getElementById("coursePdf").value = "";
-    document.getElementById("pdfSelected").style.display = "none";
-    document.getElementById("pdfPlaceholder").style.display = "block";
+function closeView() {
+    document.getElementById("viewOverlay").classList.remove("show");
 }
 
 /* =========================
@@ -517,7 +388,31 @@ async function loadAssignmentsList() {
       showToast("Assignment deleted");
       loadAssignmentsList();
     });
+  }, (a) => {
+    viewAssignment(a);
   });
+}
+
+function viewAssignment(a) {
+    let html = "";
+    if (a.file_url) {
+        // Show PDF directly in iframe
+        html = `
+            <div style="margin-bottom: 15px;">
+                <p><strong>Assignment View:</strong></p>
+                <iframe src="${a.file_url}" style="width:100%; height:500px; border: 1px solid #e2e8f0; border-radius: 8px;" frameborder="0"></iframe>
+            </div>
+            <p><small>If PDF doesn't load, <a href="${a.file_url}" target="_blank" style="color: #1e40af; text-decoration: underline;">click here to open in new tab</a></small></p>
+        `;
+    } else {
+        // Fallback for older assignments without PDF
+        html = `
+            <p><strong>Description:</strong><br>${a.description || "No description"}</p>
+            <p><strong>Total Marks:</strong> ${a.total_marks}</p>
+            <p><strong>Model Answer:</strong><br>${a.model_answer || "No model answer"}</p>
+        `;
+    }
+    openView(a.title, html);
 }
 
 /* =========================
@@ -573,7 +468,40 @@ async function loadQuizzesList() {
       showToast("Quiz deleted");
       loadQuizzesList();
     });
+  }, (q) => {
+    viewQuiz(q);
   });
+}
+
+async function viewQuiz(q) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API}/quizzes/${q.id}/questions`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const questions = await res.json();
+    
+    let html = `<p><strong>Limit:</strong> ${q.num_questions || "No limit"}</p>`;
+    if (questions.length === 0) {
+        html += "<p>No questions added yet.</p>";
+    } else {
+        html += `<div style="margin-top: 15px;">`;
+        questions.forEach((question, i) => {
+            html += `
+                <div style="margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                    <p><strong>Q${i+1}:</strong> ${question.question_text}</p>
+                    <ul style="list-style: none; padding-left: 10px; font-size: 13px;">
+                        <li>A: ${question.option_a}</li>
+                        <li>B: ${question.option_b}</li>
+                        <li>C: ${question.option_c}</li>
+                        <li>D: ${question.option_d}</li>
+                    </ul>
+                    <p style="color: #059669; font-weight: 600; font-size: 13px;">Correct: ${question.correct_option}</p>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    }
+    openView(q.title, html);
 }
 
 /* =========================
@@ -747,43 +675,109 @@ async function addVideo() {
 /* =========================
    ADD ASSIGNMENT
 =========================*/
+function toggleAssignmentInput(method) {
+  document.getElementById('manualAssignmentFields').style.display = method === 'manual' ? 'block' : 'none';
+  document.getElementById('aiAssignmentFields').style.display = method === 'ai' ? 'block' : 'none';
+  document.getElementById('btnAddAssignment').textContent = method === 'manual' ? 'Save Assignment' : '✨ Generate Assignment';
+}
+
 async function addAssignment() {
   const token = localStorage.getItem("token");
   const topicId = document.getElementById("assignmentTopicSelect").value;
+  const method = document.querySelector('input[name="assignmentMethod"]:checked').value;
 
   if (!topicId) { showToast("Please select a topic", "error"); return; }
 
-  const res = await fetch(`${API}/teacher/topics/${topicId}/assignments`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token
-    },
-    body: JSON.stringify({
-      title: document.getElementById("assignmentTitle").value,
-      description: document.getElementById("assignmentDesc").value,
-      total_marks: document.getElementById("assignmentMarks").value,
-      model_answer: document.getElementById("assignmentAnswer").value
-    })
-  });
+  if (method === 'manual') {
+    const formData = new FormData();
+    formData.append("topic_id", topicId);
+    formData.append("title", document.getElementById("assignmentTitle").value);
+    formData.append("description", document.getElementById("assignmentDesc").value);
+    formData.append("total_marks", document.getElementById("assignmentMarks").value);
+    formData.append("model_answer", document.getElementById("assignmentAnswer").value);
+    
+    const fileInput = document.getElementById("assignmentFile");
+    if (fileInput.files.length > 0) {
+      formData.append("file", fileInput.files[0]);
+    }
 
-  if (!res.ok) {
-    const error = await res.json();
-    showToast(error.detail, "error");
-    return;
+    const res = await fetch(`${API}/teacher/assignments/manual`, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token },
+      body: formData
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      showToast(error.detail || "Failed to add assignment", "error");
+      return;
+    }
+    showToast("Assignment added successfully!");
+  } else {
+    // AI Generate
+    const data = {
+      title: document.getElementById("aiAssignmentTitle").value,
+      description: document.getElementById("aiAssignmentContext").value,
+      topic_id: parseInt(topicId),
+      difficulty: document.getElementById("aiAssignmentDiff").value,
+      num_questions: parseInt(document.getElementById("aiAssignmentNum").value)
+    };
+
+    if (!data.title) { showToast("Please enter a title for the AI to follow", "error"); return; }
+
+    document.getElementById("assignmentStatus").style.display = "block";
+    document.getElementById("btnAddAssignment").disabled = true;
+
+    try {
+      const res = await fetch(`${API}/teacher/assignments/generate-ai`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        showToast("AI Assignment generated!");
+      } else {
+        const err = await res.json();
+        showToast(err.detail || "AI generation failed", "error");
+      }
+    } catch (e) {
+      showToast("Network error", "error");
+    } finally {
+      document.getElementById("assignmentStatus").style.display = "none";
+      document.getElementById("btnAddAssignment").disabled = false;
+    }
   }
 
-  showToast("Assignment added successfully!");
   loadAssignmentsList();
 }
 
 /* =========================
    ADD QUIZ
 =========================*/
+function toggleQuizInput(method) {
+  document.getElementById('manualQuizFields').style.display = method === 'manual' ? 'block' : 'none';
+  document.getElementById('aiQuizFields').style.display = method === 'ai' ? 'block' : 'none';
+  document.getElementById('btnCreateQuiz').textContent = method === 'manual' ? 'Create Quiz' : '✨ Generate Quiz';
+}
+
+async function handleQuizCreation() {
+  const method = document.querySelector('input[name="quizMethod"]:checked').value;
+  if (method === 'manual') {
+    addQuiz();
+  } else {
+    generateAIQuizFromStep();
+  }
+}
+
 async function addQuiz() {
   const token = localStorage.getItem("token");
   const topicId = document.getElementById("quizTopicSelect").value;
   const quizTitle = document.getElementById("quizTitle").value;
+  const numQuestions = document.getElementById("quizNumQuestions").value;
 
   if (!topicId || !quizTitle) {
     showToast("Please select topic and enter quiz title", "error");
@@ -796,7 +790,10 @@ async function addQuiz() {
       "Content-Type": "application/json",
       Authorization: "Bearer " + token
     },
-    body: JSON.stringify({ title: quizTitle })
+    body: JSON.stringify({ 
+      title: quizTitle,
+      num_questions: parseInt(numQuestions)
+    })
   });
 
   if (!res.ok) {
@@ -810,17 +807,221 @@ async function addQuiz() {
 
   // Move to Step 6
   setTimeout(() => {
-    document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
-    document.querySelectorAll(".step-content").forEach(c => c.classList.remove("active"));
-    document.querySelector('[data-step="6"]').classList.add("active");
-    document.getElementById("step-6").classList.add("active");
+    const step6 = document.querySelector('[data-step="6"]');
+    if (step6) step6.click();
+    // Pre-select the quiz in step 6? 
+    // We'll need to reload quizzes for questions
+    loadTopicsForQuestion();
   }, 800);
+}
+
+async function generateAIQuizFromStep() {
+  const token = localStorage.getItem("token");
+  const topicId = document.getElementById("quizTopicSelect").value;
+  const data = {
+    title: document.getElementById("aiManualQuizTitle").value,
+    description: document.getElementById("aiManualQuizDesc").value,
+    num_questions: parseInt(document.getElementById("aiManualQuizNum").value),
+    difficulty: document.getElementById("aiManualQuizDiff").value,
+    topic_id: parseInt(topicId)
+  };
+
+  if (!topicId || !data.title) {
+    showToast("Please select a topic and enter a title", "error");
+    return;
+  }
+
+  document.getElementById("quizStatus").style.display = "block";
+  document.getElementById("btnCreateQuiz").disabled = true;
+
+  try {
+    const res = await fetch(`${API}/teacher/quizzes/generate-ai`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+      showToast("AI Quiz generated successfully!");
+      loadQuizzesList();
+    } else {
+      const err = await res.json();
+      showToast(err.detail || "AI generation failed", "error");
+    }
+  } catch (e) {
+    showToast("Network error", "error");
+  } finally {
+    document.getElementById("quizStatus").style.display = "none";
+    document.getElementById("btnCreateQuiz").disabled = false;
+  }
+}
+
+/* =========================
+   QUIZ QUESTIONS STEP (Step 6)
+=========================*/
+let currentEditingQuestionId = null;
+
+async function loadQuizzesForQuestion() {
+  const token = localStorage.getItem("token");
+  const topicId = questionTopicSelect.value;
+  if (!topicId) return;
+
+  const res = await fetch(`${API}/topics/${topicId}/quizzes`, {
+    headers: { Authorization: "Bearer " + token }
+  });
+  const quizzes = await res.json();
+
+  const select = document.getElementById("questionQuizSelect");
+  select.innerHTML = "<option value=''>— Select a quiz —</option>";
+  quizzes.forEach(quiz => {
+    const option = document.createElement("option");
+    option.value = quiz.id;
+    option.textContent = quiz.title;
+    select.appendChild(option);
+  });
+  
+  // Clear questions list if no quiz selected
+  document.getElementById("questionsList").innerHTML = `<div class="empty-list">Select a quiz to view questions</div>`;
+}
+
+// Add event listener to reload questions when quiz changes
+document.getElementById("questionQuizSelect").addEventListener("change", loadQuestionsList);
+
+async function loadQuestionsList() {
+  const token = localStorage.getItem("token");
+  const quizId = document.getElementById("questionQuizSelect").value;
+  if (!quizId) return;
+
+  const listEl = document.getElementById("questionsList");
+  listEl.innerHTML = `<div class="loading-items">Loading questions…</div>`;
+
+  const res = await fetch(`${API}/quizzes/${quizId}/questions`, {
+    headers: { Authorization: "Bearer " + token }
+  });
+  const questions = await res.json();
+
+  if (questions.length === 0) {
+    listEl.innerHTML = `<div class="empty-list">No questions added yet.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = "";
+  questions.forEach((q, i) => {
+    const row = document.createElement("div");
+    row.className = "item-row";
+    row.innerHTML = `
+      <div class="item-row-info">
+        <div class="item-row-title">${i + 1}. ${q.question_text}</div>
+        <div class="item-row-meta">Correct: ${q.correct_option} | A: ${q.option_a}, B: ${q.option_b}...</div>
+      </div>
+      <div class="item-row-btns">
+        <button class="item-edit-btn" onclick="editQuestion(${JSON.stringify(q).replace(/"/g, '&quot;')})">✏️</button>
+        <button class="item-delete-btn" onclick="deleteQuestion(${q.id})">🗑</button>
+      </div>
+    `;
+    listEl.appendChild(row);
+  });
+}
+
+async function addQuizQuestion() {
+  const token = localStorage.getItem("token");
+  const quizId = questionQuizSelect.value;
+
+  if (!quizId) { showToast("Please select a quiz", "error"); return; }
+
+  // 1. Check question limit
+  const quizRes = await fetch(`${API}/quizzes/${quizId}`, {
+      headers: { Authorization: "Bearer " + token }
+  });
+  const quizData = await quizRes.json();
+  const maxQ = quizData.quiz.num_questions;
+  const currentQ = quizData.questions.length;
+
+  if (!currentEditingQuestionId && maxQ && currentQ >= maxQ) {
+      showToast(`Limit reached! This quiz allows only ${maxQ} questions.`, "error");
+      return;
+  }
+
+  const payload = {
+    question_text: questionText.value,
+    option_a: optionA.value,
+    option_b: optionB.value,
+    option_c: optionC.value,
+    option_d: optionD.value,
+    correct_option: correctOption.value
+  };
+
+  let res;
+  if (currentEditingQuestionId) {
+      // UPDATE
+      res = await fetch(`${API}/teacher/questions/${currentEditingQuestionId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify(payload)
+      });
+  } else {
+      // CREATE
+      res = await fetch(`${API}/teacher/quizzes/${quizId}/questions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify(payload)
+      });
+  }
+
+  if (res.ok) {
+      showToast(currentEditingQuestionId ? "Question updated!" : "Question added!");
+      resetQuestionForm();
+      loadQuestionsList();
+  } else {
+      showToast("Operation failed", "error");
+  }
+}
+
+function editQuestion(q) {
+    currentEditingQuestionId = q.id;
+    questionText.value = q.question_text;
+    optionA.value = q.option_a;
+    optionB.value = q.option_b;
+    optionC.value = q.option_c;
+    optionD.value = q.option_d;
+    correctOption.value = q.correct_option;
+    
+    document.getElementById("btnAddQuestion").textContent = "Update Question";
+    window.scrollTo({ top: document.querySelector('.panel').offsetTop - 100, behavior: 'smooth' });
+}
+
+function resetQuestionForm() {
+    currentEditingQuestionId = null;
+    [questionText, optionA, optionB, optionC, optionD, correctOption].forEach(el => el.value = "");
+    document.getElementById("btnAddQuestion").textContent = "+ Add Question to Quiz";
+}
+
+async function deleteQuestion(id) {
+    if (!confirm("Delete this question?")) return;
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API}/teacher/questions/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+    });
+    if (res.ok) {
+        showToast("Question removed");
+        loadQuestionsList();
+    }
 }
 
 /* =========================
    GENERIC LIST RENDERER
 =========================*/
-function renderItemsList(containerEl, items, infoFn, deleteFn) {
+function renderItemsList(containerEl, items, infoFn, deleteFn, viewFn = null) {
   if (!items || items.length === 0) {
     containerEl.innerHTML = `<div class="empty-list">No items found.</div>`;
     return;
@@ -832,13 +1033,24 @@ function renderItemsList(containerEl, items, infoFn, deleteFn) {
     const info = infoFn(item);
     const row = document.createElement("div");
     row.className = "item-row";
+    
+    let buttonsHtml = `<div class="item-row-btns">`;
+    if (viewFn) {
+        buttonsHtml += `<button class="item-view-btn" title="View">👁️</button>`;
+    }
+    buttonsHtml += `<button class="item-delete-btn" title="Delete">🗑</button></div>`;
+
     row.innerHTML = `
       <div class="item-row-info">
         <div class="item-row-title">${info.title}</div>
         ${info.meta ? `<div class="item-row-meta">${info.meta}</div>` : ""}
       </div>
-      <button class="item-delete-btn" title="Delete">🗑</button>
+      ${buttonsHtml}
     `;
+
+    if (viewFn) {
+        row.querySelector(".item-view-btn").addEventListener("click", () => viewFn(item));
+    }
     row.querySelector(".item-delete-btn").addEventListener("click", () => deleteFn(item));
     containerEl.appendChild(row);
   });

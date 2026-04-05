@@ -336,7 +336,7 @@ def get_course_stats(
     ).count()
 
     # Get actual list of topic IDs to avoid Subquery boolean errors
-    topic_id_list = [t.id for t in db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
+    topic_id_list = [t[0] for t in db.query(models.Topic.id).filter(models.Topic.course_id == course_id).all()]
 
     total_quizzes = db.query(models.Quiz).filter(
         models.Quiz.topic_id.in_(topic_id_list)
@@ -363,7 +363,7 @@ def get_course_stats(
     total_enrolled = enrolled_students
     
     # 1. Video Rate
-    video_ids = [v.id for v in db.query(models.Video.id).filter(models.Video.topic_id.in_(topic_id_list)).all()] if topic_id_list else []
+    video_ids = [v[0] for v in db.query(models.Video.id).filter(models.Video.topic_id.in_(topic_id_list)).all()] if topic_id_list else []
     potential_views = len(video_ids) * total_enrolled
     actual_completions = db.query(models.VideoProgress).filter(
         models.VideoProgress.video_id.in_(video_ids),
@@ -372,13 +372,13 @@ def get_course_stats(
     video_rate = round((actual_completions / potential_views * 100), 1) if potential_views > 0 else 0
 
     # 2. Quiz Rate
-    quiz_ids = [q.id for q in db.query(models.Quiz.id).filter(models.Quiz.topic_id.in_(topic_id_list)).all()] if topic_id_list else []
+    quiz_ids = [q[0] for q in db.query(models.Quiz.id).filter(models.Quiz.topic_id.in_(topic_id_list)).all()] if topic_id_list else []
     potential_quizzes = len(quiz_ids) * total_enrolled
     actual_attempts = db.query(models.QuizAttempt).filter(models.QuizAttempt.quiz_id.in_(quiz_ids)).count() if quiz_ids else 0
     quiz_rate = round((actual_attempts / potential_quizzes * 100), 1) if potential_quizzes > 0 else 0
 
     # 3. Assignment Rate
-    assign_ids = [a.id for a in db.query(models.Assignment.id).filter(models.Assignment.topic_id.in_(topic_id_list)).all()] if topic_id_list else []
+    assign_ids = [a[0] for a in db.query(models.Assignment.id).filter(models.Assignment.topic_id.in_(topic_id_list)).all()] if topic_id_list else []
     potential_assigns = len(assign_ids) * total_enrolled
     actual_subs = db.query(models.AssignmentSubmission).filter(models.AssignmentSubmission.assignment_id.in_(assign_ids)).count() if assign_ids else 0
     assign_rate = round((actual_subs / potential_assigns * 100), 1) if potential_assigns > 0 else 0

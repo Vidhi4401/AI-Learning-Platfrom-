@@ -14,8 +14,8 @@ GROQ_API_KEY = Your groq api   # create groq api and paste here
 
 
 
-  # Install all libaries 
-  pip install fastapi uvicorn sqlalchemy psycopg2-binary python-jose passlib[bcrypt] pydantic python-multipart python-    dotenv
+  # Install all libraries 
+  pip install fastapi uvicorn sqlalchemy psycopg2-binary python-jose passlib[bcrypt] pydantic python-multipart python-dotenv joblib pandas scikit-learn requests groq
   
 # To run backend follow This 
 

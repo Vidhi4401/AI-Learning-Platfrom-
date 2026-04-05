@@ -73,7 +73,8 @@ class Assignment(Base):
     title = Column(String)
     description = Column(String)
     total_marks = Column(Integer)
-    model_answer = Column(String)  
+    model_answer = Column(String)
+    file_url = Column(String, nullable=True) # For manual PDF upload  
 
 class AssignmentSubmission(Base):
     __tablename__ = "assignment_submissions"
@@ -90,6 +91,7 @@ class Quiz(Base):
     id = Column(Integer, primary_key=True, index=True)
     topic_id = Column(Integer, ForeignKey("topics.id"))
     title = Column(String)
+    num_questions = Column(Integer, nullable=True) # Limit for manual quizzes
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class QuizQuestion(Base):
@@ -135,7 +137,7 @@ class Video(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 class Certificate(Base):
-    __tablename__ = "certificatess"
+    __tablename__ = "certificates"
 
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("users.id"))

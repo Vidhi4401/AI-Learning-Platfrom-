@@ -332,11 +332,11 @@ function goToAddTopic() {
 }
 
 function goToAddQuiz() {
-  window.location.href = `add-course.html?step=5&course=${courseId}`;
+  window.location.href = `add-course.html?step=4&course=${courseId}`;
 }
 
 function goToAddAssignment() {
-  window.location.href = `add-course.html?step=4&course=${courseId}`;
+  window.location.href = `add-course.html?step=3&course=${courseId}`;
 }
 
 /* =========================
@@ -390,4 +390,78 @@ async function deleteMaterial(id) {
 
 function goToAddMaterial() {
   window.location.href = `materials.html?course=${courseId}`;
+}
+
+/* =========================
+   AI QUIZ GENERATOR
+=========================*/
+function openAIQuizModal() {
+  document.getElementById("aiQuizModal").classList.add("show");
+  loadTopicsForAIQuiz();
+}
+
+function closeAIQuizModal() {
+  document.getElementById("aiQuizModal").classList.remove("show");
+}
+
+async function loadTopicsForAIQuiz() {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API}/teacher/courses/${courseId}/topics`, {
+    headers: { Authorization: "Bearer " + token }
+  });
+  const topics = await res.json();
+  const select = document.getElementById("aiQuizTopic");
+  select.innerHTML = "";
+  topics.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.title;
+    select.appendChild(opt);
+  });
+}
+
+async function generateAIQuiz() {
+  const token = localStorage.getItem("token");
+  const data = {
+    title: document.getElementById("aiQuizTitle").value,
+    description: document.getElementById("aiQuizDesc").value,
+    num_questions: parseInt(document.getElementById("aiQuizNum").value),
+    difficulty: document.getElementById("aiQuizDiff").value,
+    topic_id: parseInt(document.getElementById("aiQuizTopic").value)
+  };
+
+  if (!data.title || !data.topic_id) {
+    alert("Please enter a title and select a topic.");
+    return;
+  }
+
+  // UI state
+  document.getElementById("aiQuizStatus").style.display = "block";
+  document.getElementById("btnGenerateAI").disabled = true;
+
+  try {
+    const res = await fetch(`${API}/teacher/quizzes/generate-ai`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+      alert("AI Quiz generated successfully!");
+      closeAIQuizModal();
+      loadAllQuizzes();
+      loadStatsCount();
+    } else {
+      const err = await res.json();
+      alert("Failed to generate: " + (err.detail || "Server error"));
+    }
+  } catch (e) {
+    alert("Network error.");
+  } finally {
+    document.getElementById("aiQuizStatus").style.display = "none";
+    document.getElementById("btnGenerateAI").disabled = false;
+  }
 }
