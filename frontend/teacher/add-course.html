@@ -33,22 +33,26 @@
         </div>
         <div class="step" data-step="2">
           <div class="step-bubble">2</div>
-          <span class="step-label">Add Videos</span>
+          <span class="step-label">AI Generation</span>
         </div>
         <div class="step" data-step="3">
           <div class="step-bubble">3</div>
-          <span class="step-label">Add Assignments</span>
+          <span class="step-label">Add Videos</span>
         </div>
         <div class="step" data-step="4">
           <div class="step-bubble">4</div>
-          <span class="step-label">Add Quizzes</span>
+          <span class="step-label">Add Assignments</span>
         </div>
         <div class="step" data-step="5">
           <div class="step-bubble">5</div>
-          <span class="step-label">Quiz Questions</span>
+          <span class="step-label">Add Quizzes</span>
         </div>
         <div class="step" data-step="6">
           <div class="step-bubble">6</div>
+          <span class="step-label">Quiz Questions</span>
+        </div>
+        <div class="step" data-step="7">
+          <div class="step-bubble">7</div>
           <span class="step-label">Review & Manage</span>
         </div>
       </div>
@@ -81,8 +85,61 @@
           </div>
         </div>
 
-        <!-- STEP 2: Videos -->
+        <!-- STEP 2: AI Generation (NEW from Remote) -->
         <div class="step-content" id="step-2">
+          <h3>AI-Powered Content Generation</h3>
+          <p style="color: #64748b; font-size: 14px; margin-bottom: 1.5rem;">
+            Upload a PDF document containing your course material. Our AI will automatically extract topics, 
+            create quizzes, and design assignments for you.
+          </p>
+
+          <label>Select Course</label>
+          <select id="pdfCourseSelect"></select>
+
+          <div id="pdfUploadSection">
+            <div class="upload-box" id="dropZone">
+              <input type="file" id="coursePdf" accept=".pdf" style="display: none;">
+              <div id="pdfPlaceholder" onclick="document.getElementById('coursePdf').click()">
+                <span style="font-size: 40px;">📄</span>
+                <p>Click to upload course PDF</p>
+                <small>(Maximum 10MB)</small>
+              </div>
+              <div id="pdfSelected" style="display: none;">
+                <p id="pdfFileName" style="font-weight: 600; color: #1e40af;"></p>
+                <button class="btn-ghost" onclick="document.getElementById('coursePdf').click()">Change File</button>
+              </div>
+            </div>
+
+            <div class="btn-row" id="processBtnRow">
+              <button class="primary" id="btnGenerate" onclick="generateFromPdf()">✨ Generate Content from PDF</button>
+            </div>
+          </div>
+
+          <div id="processingStatus" style="display: none; margin-top: 1.5rem; text-align: center;">
+            <div class="spinner" style="margin: 0 auto 10px;"></div>
+            <p id="statusText">AI is generating your course content... This may take up to a minute.</p>
+          </div>
+
+          <!-- PREVIEW AREA (NEW) -->
+          <div id="pdfPreviewArea" style="display: none; margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+              <h3 style="margin:0;">Preview Generated Content</h3>
+              <p style="font-size:12px; color: #64748b; margin:0;">Review before saving to course.</p>
+            </div>
+            
+            <div id="generatedContentList" style="display: flex; flex-direction: column; gap: 15px;">
+               <!-- Topics injected here -->
+            </div>
+
+            <div class="btn-row" style="margin-top: 30px; padding-top:20px; border-top:1px solid #e2e8f0;">
+              <button class="btn-ghost" onclick="resetPdfStep()">Cancel</button>
+              <button class="primary" id="btnSavePdf" onclick="saveGeneratedContent()">💾 Save All to Course</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Videos -->
+        <div class="step-content" id="step-3">
           <h3>Add Videos to Topics</h3>
 
           <label>Select Course</label>
@@ -128,8 +185,8 @@
           </div>
         </div>
 
-        <!-- STEP 3: Add Assignments -->
-        <div class="step-content" id="step-3">
+        <!-- STEP 4: Add Assignments -->
+        <div class="step-content" id="step-4">
           <h3>Add Assignments to Topics</h3>
 
           <label>Select Course</label>
@@ -207,8 +264,8 @@
           </div>
         </div>
 
-        <!-- STEP 4: Add Quizzes -->
-        <div class="step-content" id="step-4">
+        <!-- STEP 5: Add Quizzes -->
+        <div class="step-content" id="step-5">
           <h3>Create Course Quizzes</h3>
 
           <label>Select Course</label>
@@ -277,8 +334,8 @@
           </div>
         </div>
 
-        <!-- STEP 5: Quiz Questions -->
-        <div class="step-content" id="step-5">
+        <!-- STEP 6: Quiz Questions -->
+        <div class="step-content" id="step-6">
           <h3>Add Questions to Quiz</h3>
 
           <label>Select Course</label>
@@ -332,8 +389,8 @@
           </div>
         </div>
 
-        <!-- STEP 6: Review & Manage -->
-        <div class="step-content" id="step-6">
+        <!-- STEP 7: Review & Manage -->
+        <div class="step-content" id="step-7">
           <h3>Course Content Overview</h3>
 
           <label>Select Course</label>

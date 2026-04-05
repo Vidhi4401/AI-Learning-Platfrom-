@@ -9,21 +9,21 @@ import xlsxwriter
 
 
 # ── Colour palette ────────────────────────────────────────────────────────────
-PURPLE      = "#7c3aed"
-PURPLE_LIGHT= "#ede9fe"
-DARK        = "#1e293b"
-GREEN       = "#16a34a"
-GREEN_LIGHT = "#dcfce7"
-AMBER       = "#d97706"
-AMBER_LIGHT = "#fef3c7"
-RED         = "#dc2626"
-RED_LIGHT   = "#fee2e2"
-BLUE        = "#1d4ed8"
+PURPLE      = "#a78bfa"
+PURPLE_LIGHT= "#f5f3ff"
+DARK        = "#475569"
+GREEN       = "#22c55e"
+GREEN_LIGHT = "#f0fdf4"
+AMBER       = "#f59e0b"
+AMBER_LIGHT = "#fffbeb"
+RED         = "#ef4444"
+RED_LIGHT   = "#fef2f2"
+BLUE        = "#3b82f6"
 BLUE_LIGHT  = "#eff6ff"
 GREY_BG     = "#f8fafc"
 BORDER      = "#e2e8f0"
 WHITE       = "#ffffff"
-MUTED       = "#64748b"
+MUTED       = "#94a3b8"
 
 
 def _level_colors(level):

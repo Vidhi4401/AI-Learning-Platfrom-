@@ -34,8 +34,8 @@ async def upload_material(
         raise HTTPException(status_code=403,
                             detail="You can only upload materials for your own courses")
 
-    # Upload to Cloudinary (raw type for PDFs/docs)
-    secure_url = upload_to_cloudinary(file, folder="learnhub/materials", resource_type="raw")
+    # Upload to Cloudinary (auto-detect type for PDFs/docs)
+    secure_url = upload_to_cloudinary(file, folder="learnhub/materials", resource_type="auto")
     if not secure_url:
         raise HTTPException(status_code=500, detail="File upload to Cloudinary failed")
 

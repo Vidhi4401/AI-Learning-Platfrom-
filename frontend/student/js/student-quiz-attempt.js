@@ -7,6 +7,10 @@ let questions  = [];
 let quizInfo   = null;
 let answers    = {};   // { question_id: "A"|"B"|"C"|"D" }
 let curIndex   = 0;
+let timeLeft   = 0;
+let timerInterval = null;
+let isReviewMode = false;
+let reviewData = null;
 
 document.addEventListener("DOMContentLoaded", loadQuiz);
 
@@ -56,6 +60,7 @@ async function loadQuiz() {
     show("quizScreen");
     buildDots();
     renderQ(0);
+    startTimer();
 
   } catch (err) {
     console.error("loadQuiz error:", err);
@@ -65,9 +70,70 @@ async function loadQuiz() {
 }
 
 /* =========================
+   QUIZ TIMER LOGIC
+=========================*/
+function startTimer(minutesPerQuestion = 1) {
+  const totalQuestions = questions.length;
+  timeLeft = totalQuestions * minutesPerQuestion * 60; // total seconds
+
+  updateTimerDisplay();
+
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timeLeft = 0;
+      updateTimerDisplay();
+      autoSubmitQuiz();
+    } else {
+      updateTimerDisplay();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  
+  const timerDisplayEl = document.getElementById("timerDisplay");
+  const timerContainer = document.getElementById("quizTimer");
+  
+  if (timerDisplayEl) {
+    timerDisplayEl.textContent = display;
+    
+    // Visual warning when time is low
+    if (timeLeft < 60) {
+      if (timerContainer) {
+        timerContainer.style.borderColor = "#ef4444";
+        timerContainer.style.color = "#ef4444";
+        timerContainer.style.background = "#fee2e2";
+      }
+      timerDisplayEl.style.animation = "pulse 1s infinite";
+    }
+  }
+}
+
+async function autoSubmitQuiz() {
+  const sb = document.getElementById("submitBox");
+  if (sb) {
+    sb.style.display = "block";
+    const msg = document.getElementById("submitMsg");
+    if (msg) msg.innerHTML = "<b style='color:#ef4444;'>Time is up! Submitting your answers...</b>";
+  }
+  await submitQuiz(true);
+}
+
+/* =========================
    RENDER QUESTION
 =========================*/
 function renderQ(index) {
+  if (isReviewMode) {
+    renderReviewQ(index);
+    return;
+  }
+
   curIndex = index;
   const q  = questions[index];
   const n  = index + 1;
@@ -105,7 +171,7 @@ function renderQ(index) {
     sb.style.display = "block";
     updateSubmitMsg();
   } else {
-    sb.style.display = "none";
+    if (timeLeft > 0) sb.style.display = "none";
   }
 
   updateDots();
@@ -115,6 +181,8 @@ function renderQ(index) {
    SELECT OPTION
 =========================*/
 function selectOpt(qId, key, el) {
+  if (timeLeft <= 0 || isReviewMode) return; 
+
   answers[qId] = key;
 
   // Update UI instantly
@@ -134,7 +202,8 @@ function selectOpt(qId, key, el) {
    NAVIGATION
 =========================*/
 function nextQ() {
-  if (curIndex < questions.length - 1) renderQ(curIndex + 1);
+  const qList = isReviewMode ? reviewData.questions : questions;
+  if (curIndex < qList.length - 1) renderQ(curIndex + 1);
 }
 function prevQ() {
   if (curIndex > 0) renderQ(curIndex - 1);
@@ -144,17 +213,27 @@ function prevQ() {
    DOTS
 =========================*/
 function buildDots() {
-  document.getElementById("dotRow").innerHTML = questions.map((_, i) => `
+  const qList = isReviewMode ? reviewData.questions : questions;
+  document.getElementById("dotRow").innerHTML = qList.map((_, i) => `
     <div class="q-dot" id="dot-${i}" onclick="renderQ(${i})" title="Q${i+1}"></div>
   `).join("");
 }
 
 function updateDots() {
-  questions.forEach((q, i) => {
+  const qList = isReviewMode ? reviewData.questions : questions;
+  qList.forEach((q, i) => {
     const d = document.getElementById(`dot-${i}`);
     if (!d) return;
     d.className = "q-dot";
-    if (answers[q.id])  d.classList.add("answered");
+    
+    if (isReviewMode) {
+        if (q.selected_option === q.correct_option) d.style.background = "#16a34a";
+        else if (q.selected_option) d.style.background = "#ef4444";
+        else d.style.background = "#9ca3af";
+    } else {
+        if (answers[q.id])  d.classList.add("answered");
+    }
+    
     if (i === curIndex) d.classList.add("current");
   });
 }
@@ -180,10 +259,14 @@ function updateSubmitMsg() {
 /* =========================
    SUBMIT QUIZ
 =========================*/
-async function submitQuiz() {
+async function submitQuiz(isAuto = false) {
+  if (timerInterval) clearInterval(timerInterval);
+  
   const btn     = document.getElementById("btnSubmit");
-  btn.disabled  = true;
-  btn.textContent = "Submitting…";
+  if (btn) {
+    btn.disabled  = true;
+    btn.textContent = "Submitting…";
+  }
 
   const payload = questions.map(q => ({
     question_id:     q.id,
@@ -210,9 +293,11 @@ async function submitQuiz() {
 
   } catch (err) {
     console.error("Submit error:", err);
-    btn.disabled    = false;
-    btn.textContent = "Submit Quiz";
-    alert(err.message || "Submission failed. Please try again.");
+    if (btn) {
+      btn.disabled    = false;
+      btn.textContent = "Submit Quiz";
+    }
+    if (!isAuto) alert(err.message || "Submission failed. Please try again.");
   }
 }
 
@@ -259,10 +344,86 @@ function showResult(r) {
 }
 
 /* =========================
+   REVIEW QUIZ
+=========================*/
+async function reviewQuiz() {
+    try {
+        const res = await fetch(`${API}/student/quizzes/${quizId}/review`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (!res.ok) throw new Error("Could not load review data");
+        
+        reviewData = await res.json();
+        isReviewMode = true;
+        curIndex = 0;
+        
+        // Setup UI for review
+        show("quizScreen");
+        document.getElementById("quizTimer").style.display = "none";
+        document.getElementById("submitBox").style.display = "none";
+        document.getElementById("quizSub").textContent = "Review Mode - Showing Correct Answers";
+        
+        buildDots();
+        renderReviewQ(0);
+        
+    } catch (err) {
+        console.error("Review error:", err);
+        alert("Failed to load review. Please try again.");
+    }
+}
+
+function renderReviewQ(index) {
+    curIndex = index;
+    const q = reviewData.questions[index];
+    const n = index + 1;
+    const total = reviewData.questions.length;
+
+    document.getElementById("qLabel").textContent = `Review Question ${n} of ${total}`;
+    document.getElementById("qText").textContent = q.question_text;
+    document.getElementById("progressBadge").textContent = `Reviewing ${n}/${total}`;
+    document.getElementById("topBarFill").style.width = `${(n / total) * 100}%`;
+
+    const opts = [
+        { key: "A", text: q.option_a },
+        { key: "B", text: q.option_b },
+        { key: "C", text: q.option_c },
+        { key: "D", text: q.option_d }
+    ];
+
+    document.getElementById("qOptions").innerHTML = opts.map(o => {
+        let cls = "";
+        if (o.key === q.correct_option) cls = "correct-opt";
+        else if (o.key === q.selected_option && o.key !== q.correct_option) cls = "wrong-opt";
+        
+        const isUserSelected = o.key === q.selected_option;
+        
+        return `
+            <div class="q-opt ${cls}">
+                <div class="opt-letter">${o.key}</div>
+                <div class="opt-text">
+                    ${o.text || ""}
+                    ${o.key === q.correct_option ? ' <b style="color:#16a34a; margin-left:8px;">(Correct Answer)</b>' : ''}
+                    ${isUserSelected && o.key !== q.correct_option ? ' <b style="color:#ef4444; margin-left:8px;">(Your Answer)</b>' : ''}
+                    ${isUserSelected && o.key === q.correct_option ? ' <b style="color:#16a34a; margin-left:8px;">(Your Answer - Correct)</b>' : ''}
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    document.getElementById("btnPrev").disabled = index === 0;
+    const isLast = index === total - 1;
+    document.getElementById("btnNext").textContent = isLast ? "Finish Review" : "Next →";
+    document.getElementById("btnNext").onclick = isLast ? () => window.location.href='student-quizzes.html' : nextQ;
+
+    updateDots();
+}
+
+/* =========================
    HELPERS
 =========================*/
 function show(id) {
   ["loadingState","alreadyState","quizScreen","resultScreen"].forEach(s => {
-    document.getElementById(s).style.display = s === id ? "block" : "none";
+    const el = document.getElementById(s);
+    if (el) el.style.display = s === id ? "block" : "none";
   });
 }
