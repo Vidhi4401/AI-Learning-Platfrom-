@@ -517,3 +517,44 @@
   height: 100%; background: var(--accent);
   border-radius: 2px; transition: width 0.5s ease;
 }
+
+/* ── AI SUMMARY MARKDOWN STYLES ── */
+.markdown-body h3 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.markdown-body h3:first-child {
+  margin-top: 0;
+}
+
+.markdown-body p {
+  margin-bottom: 12px;
+  color: #475569;
+}
+
+.markdown-body ul, .markdown-body ol {
+  margin-bottom: 16px;
+  padding-left: 20px;
+}
+
+.markdown-body li {
+  margin-bottom: 6px;
+  color: #475569;
+}
+
+.markdown-body strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.markdown-body em {
+  color: #64748b;
+  font-style: italic;
+}

@@ -440,7 +440,7 @@ async function playVideo(rawUrl, title, videoId, topicId) {
   if (isUploaded) {
     wrap.innerHTML = `
       <video id="videoFrame" controls
-        style="width:100%;height:450px;border-radius:8px;background:#000;">
+        style="width:100%; height:100%; border-radius:0; background:#000; object-fit: contain;">
         <source src="${finalUrl}" type="video/mp4">
         Your browser does not support the video tag.
       </video>`;
@@ -470,7 +470,7 @@ async function playVideo(rawUrl, title, videoId, topicId) {
     wrap.innerHTML = `
       <iframe id="videoFrame" src="${finalUrl}" frameborder="0"
         allow="autoplay; encrypted-media" allowfullscreen
-        style="width:100%;height:450px;border-radius:8px;"></iframe>`;
+        style="width:100%; height:100%; border-radius:0;"></iframe>`;
 
     _progressInterval = setInterval(() => {
       _watchSeconds += 10;
@@ -481,6 +481,59 @@ async function playVideo(rawUrl, title, videoId, topicId) {
   }
 
   document.getElementById("videoModal").classList.add("open");
+
+  // Reset Summary UI
+  const sumBtn = document.getElementById("summarizeBtn");
+  const sumCont = document.getElementById("summaryContent");
+  const sumText = document.getElementById("summaryText");
+  const sumPlace = document.getElementById("summaryPlaceholder");
+
+  if (sumBtn) {
+    sumBtn.disabled = false;
+    sumBtn.innerHTML = "<span>✨</span> Summarize with AI";
+    sumBtn.onclick = () => summarizeVideo(videoId);
+  }
+  if (sumCont) sumCont.style.display = "none";
+  if (sumPlace) sumPlace.style.display = "flex";
+  if (sumText) sumText.textContent = "";
+}
+
+async function summarizeVideo(videoId) {
+  const sumBtn = document.getElementById("summarizeBtn");
+  const sumCont = document.getElementById("summaryContent");
+  const sumText = document.getElementById("summaryText");
+  const sumPlace = document.getElementById("summaryPlaceholder");
+
+  if (!sumBtn || !sumCont || !sumText) return;
+
+  try {
+    sumBtn.disabled = true;
+    sumBtn.innerHTML = "<span>⏳</span> Thinking...";
+    
+    if (sumPlace) sumPlace.style.display = "none";
+    sumCont.style.display = "block";
+    sumText.innerHTML = "<em>Analyzing video content... This may take a minute.</em>";
+
+    const res = await fetch(`${API}/videos/${videoId}/summarize`, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Summarization failed.");
+    }
+
+    const data = await res.json();
+    sumText.innerHTML = marked.parse(data.summary);
+    sumBtn.innerHTML = "<span>✅</span> Summary Generated";
+
+  } catch (err) {
+    console.error("Summary error:", err);
+    sumText.innerHTML = `<span style='color:red;'>Failed to generate summary: ${err.message}</span>`;
+    sumBtn.disabled = false;
+    sumBtn.innerHTML = "<span>❌</span> Try Again";
+  }
 }
 
 async function saveVideoProgress(videoId, topicId, pct, watchTime, skips, speed) {

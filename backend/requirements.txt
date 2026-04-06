@@ -15,3 +15,5 @@ groq
 cloudinary
 reportlab
 xlsxwriter
+google-generativeai
+yt-dlp

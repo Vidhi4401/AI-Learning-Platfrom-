@@ -96,16 +96,44 @@
 
   <!-- Video Modal -->
   <div class="modal-overlay" id="videoModal" onclick="closeVideoModal()">
-    <div class="modal-box" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h3 id="modalTitle">Video</h3>
-        <button class="modal-close" onclick="closeVideoModal()">✕</button>
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width: 1200px; width: 95%;">
+      <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px;">
+        <h3 id="modalTitle" style="margin: 0; font-size: 16px; font-weight: 700; color: #1e293b;">Video</h3>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button id="summarizeBtn" class="btn-summarize" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);">
+            <span>✨</span> Summarize with AI
+          </button>
+          <button class="modal-close" onclick="closeVideoModal()" style="font-size: 20px; color: #64748b; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">✕</button>
+        </div>
       </div>
-      <!-- FIX: id="videoWrap" — JS writes iframe/video tag here, never outerHTML -->
-      <div class="video-wrap" id="videoWrap"></div>
+      
+      <div class="modal-body-split" style="display: flex; background: #fff; height: 70vh; min-height: 500px;">
+        <!-- Left: Video Player -->
+        <div class="video-container-side" style="flex: 1.8; background: #000; position: relative; display: flex; align-items: center; justify-content: center;">
+          <div id="videoWrap" style="width: 100%; height: 100%;"></div>
+        </div>
+        
+        <!-- Right: AI Summary Panel -->
+        <div class="summary-container-side" style="flex: 1; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; background: #fcfcfd;">
+          <div style="padding: 15px 20px; border-bottom: 1px solid #e2e8f0; background: #fff;">
+            <h4 style="margin: 0; font-size: 14px; color: #6366f1; display: flex; align-items: center; gap: 8px;">
+              <span>✨</span> AI Learning Assistant
+            </h4>
+          </div>
+          <div id="summaryContent" style="flex: 1; overflow-y: auto; padding: 20px; display: none;">
+            <div id="summaryText" class="markdown-body"></div>
+          </div>
+          <!-- Placeholder when no summary is generated -->
+          <div id="summaryPlaceholder" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; color: #94a3b8;">
+            <div style="font-size: 40px; margin-bottom: 15px;">🤖</div>
+            <p style="font-size: 14px; margin: 0;">Click <b>"Summarize with AI"</b> above to generate key insights and learning points for this video.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="js/student-layout.js"></script>
   <script src="js/student-course-detail.js"></script>
 </body>
