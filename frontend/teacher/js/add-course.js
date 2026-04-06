@@ -553,11 +553,247 @@ function renderItemsList(containerEl, items, infoFn, deleteFn, viewFn = null) {
 }
 
 // Placeholder for missing functions that might be called
-function loadTopicsForVideo() { /* implemented above logic if needed */ }
-function loadTopicsForAssignment() { /* implemented above logic if needed */ }
-function loadTopicsForQuiz() { /* implemented above logic if needed */ }
-function loadTopicsForQuestion() { /* implemented above logic if needed */ }
-function loadQuizzesList() { /* implemented */ }
-function loadQuizzesForQuestion() { /* implemented */ }
-function addQuiz() { /* implemented */ }
-function addQuizQuestion() { /* implemented */ }
+async function loadTopicsForVideo() {
+  const token = localStorage.getItem("token");
+  const courseId = document.getElementById("videoCourseSelect").value;
+  if (!courseId) return;
+
+  const select = document.getElementById("videoTopicSelect");
+  select.innerHTML = "<option value=''>— Loading topics —</option>";
+
+  try {
+    const res = await fetch(`${API}/teacher/courses/${courseId}/topics`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const topics = await res.json();
+    select.innerHTML = "<option value=''>— Select a topic —</option>";
+    topics.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = t.title;
+      select.appendChild(opt);
+    });
+  } catch (err) {
+    select.innerHTML = "<option value=''>Failed to load</option>";
+  }
+}
+
+async function loadTopicsForAssignment() {
+  const token = localStorage.getItem("token");
+  const courseId = document.getElementById("assignmentCourseSelect").value;
+  if (!courseId) return;
+
+  const select = document.getElementById("assignmentTopicSelect");
+  select.innerHTML = "<option value=''>— Loading topics —</option>";
+
+  try {
+    const res = await fetch(`${API}/teacher/courses/${courseId}/topics`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const topics = await res.json();
+    select.innerHTML = "<option value=''>— Select a topic —</option>";
+    topics.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = t.title;
+      select.appendChild(opt);
+    });
+  } catch (err) {
+    select.innerHTML = "<option value=''>Failed to load</option>";
+  }
+}
+
+async function loadTopicsForQuiz() {
+  const token = localStorage.getItem("token");
+  const courseId = document.getElementById("quizCourseSelect").value;
+  if (!courseId) return;
+
+  const select = document.getElementById("quizTopicSelect");
+  select.innerHTML = "<option value=''>— Loading topics —</option>";
+
+  try {
+    const res = await fetch(`${API}/teacher/courses/${courseId}/topics`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const topics = await res.json();
+    select.innerHTML = "<option value=''>— Select a topic —</option>";
+    topics.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = t.title;
+      select.appendChild(opt);
+    });
+  } catch (err) {
+    select.innerHTML = "<option value=''>Failed to load</option>";
+  }
+}
+
+async function loadTopicsForQuestion() {
+  const token = localStorage.getItem("token");
+  const courseId = document.getElementById("questionCourseSelect").value;
+  if (!courseId) return;
+
+  const select = document.getElementById("questionTopicSelect");
+  select.innerHTML = "<option value=''>— Loading topics —</option>";
+
+  try {
+    const res = await fetch(`${API}/teacher/courses/${courseId}/topics`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const topics = await res.json();
+    select.innerHTML = "<option value=''>— Select a topic —</option>";
+    topics.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = t.title;
+      select.appendChild(opt);
+    });
+  } catch (err) {
+    select.innerHTML = "<option value=''>Failed to load</option>";
+  }
+}
+async function loadQuizzesList() {
+  const token = localStorage.getItem("token");
+  const topicId = document.getElementById("quizTopicSelect").value;
+  if (!topicId) return;
+
+  const listEl = document.getElementById("quizzesList");
+  listEl.innerHTML = `<div class="loading-items">Loading quizzes…</div>`;
+
+  try {
+    const res = await fetch(`${API}/topics/${topicId}/quizzes`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const quizzes = await res.json();
+
+    renderItemsList(listEl, quizzes, (q) => ({
+      title: q.title,
+      meta: `Questions: ${q.num_questions || "—"}`
+    }), (q) => {
+      openConfirm(`Delete quiz "${q.title}"?`, async () => {
+        await fetch(`${API}/teacher/quizzes/${q.id}`, {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + token }
+        });
+        showToast("Quiz deleted");
+        loadQuizzesList();
+      });
+    }, (q) => {
+        // Option to view quiz details if needed
+    });
+  } catch (err) {
+    listEl.innerHTML = `<div class="empty-list">Failed to load quizzes</div>`;
+  }
+}
+
+async function loadQuizzesForQuestion() {
+  const token = localStorage.getItem("token");
+  const topicId = document.getElementById("questionTopicSelect").value;
+  if (!topicId) return;
+
+  const select = document.getElementById("questionQuizSelect");
+  select.innerHTML = "<option value=''>— Loading quizzes —</option>";
+
+  try {
+    const res = await fetch(`${API}/topics/${topicId}/quizzes`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const quizzes = await res.json();
+    select.innerHTML = "<option value=''>— Select a quiz —</option>";
+    quizzes.forEach(q => {
+      const opt = document.createElement("option");
+      opt.value = q.id;
+      opt.textContent = q.title;
+      select.appendChild(opt);
+    });
+    // Add event listener to load questions when quiz is selected
+    select.onchange = loadQuestionsList;
+  } catch (err) {
+    select.innerHTML = "<option value=''>Failed to load</option>";
+  }
+}
+
+async function addQuizQuestion() {
+  const token = localStorage.getItem("token");
+  const quizId = document.getElementById("questionQuizSelect").value;
+  
+  const question = document.getElementById("questionText").value;
+  const a = document.getElementById("optionA").value;
+  const b = document.getElementById("optionB").value;
+  const c = document.getElementById("optionC").value;
+  const d = document.getElementById("optionD").value;
+  const correct = document.getElementById("correctOption").value;
+
+  if (!quizId || !question || !a || !b) {
+    return showToast("Please fill in quiz, question, and at least two options", "error");
+  }
+
+  const data = {
+    quiz_id: parseInt(quizId),
+    question_text: question,
+    option_a: a,
+    option_b: b,
+    option_c: c,
+    option_d: d,
+    correct_option: correct
+  };
+
+  try {
+    const res = await fetch(`${API}/teacher/quizzes/${quizId}/questions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+      showToast("Question added!");
+      // Clear inputs
+      document.getElementById("questionText").value = "";
+      document.getElementById("optionA").value = "";
+      document.getElementById("optionB").value = "";
+      document.getElementById("optionC").value = "";
+      document.getElementById("optionD").value = "";
+      loadQuestionsList();
+    } else {
+      const err = await res.json();
+      showToast(err.detail || "Failed to add question", "error");
+    }
+  } catch (err) {
+    showToast("Network error", "error");
+  }
+}
+
+async function loadQuestionsList() {
+    const token = localStorage.getItem("token");
+    const quizId = document.getElementById("questionQuizSelect").value;
+    if (!quizId) return;
+
+    const listEl = document.getElementById("questionsList");
+    listEl.innerHTML = `<div class="loading-items">Loading questions…</div>`;
+
+    try {
+        const res = await fetch(`${API}/quizzes/${quizId}/questions`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const questions = await res.json();
+
+        renderItemsList(listEl, questions, (q) => ({
+            title: q.question_text,
+            meta: `Correct: ${q.correct_option}`
+        }), (q) => {
+            openConfirm(`Delete this question?`, async () => {
+                await fetch(`${API}/teacher/questions/${q.id}`, {
+                    method: "DELETE",
+                    headers: { Authorization: "Bearer " + token }
+                });
+                showToast("Question deleted");
+                loadQuestionsList();
+            });
+        });
+    } catch (err) {
+        listEl.innerHTML = `<div class="empty-list">Failed to load questions</div>`;
+    }
+}
