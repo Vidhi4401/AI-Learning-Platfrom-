@@ -104,6 +104,18 @@ def ask_question(data: schemas.ChatDoubtCreate, student_id: int, db: Session = D
         db.add(new_doubt)
         db.commit()
         db.refresh(new_doubt)
+
+        # Notify Faculty if mode is FACULTY
+        if data.mode == "FACULTY" and faculty_id:
+            student = db.query(models.User).filter(models.User.id == student_id).first()
+            course = db.query(models.Course).filter(models.Course.id == target_course_id).first()
+            create_notification(
+                db, faculty_id,
+                "New Student Doubt",
+                f"Student {student.name if student else 'A student'} has a question about {course.title if course else 'your course'}: '{data.query[:50]}...'",
+                "doubts.html"
+            )
+
         return new_doubt
     except Exception as e:
         print(f"[Chatbot] ERROR in ask_question: {str(e)}")

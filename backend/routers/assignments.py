@@ -241,3 +241,41 @@ def delete_assignment(
     db.delete(assignment)
     db.commit()
     return {"message": "Assignment deleted"}
+
+class ManualGradeIn(schemas.BaseModel):
+    submission_id: int
+    obtained_marks: int
+    feedback: Optional[str] = None
+
+@router.post("/api/v1/teacher/grade-submission")
+def grade_submission_manually(
+    data: ManualGradeIn,
+    db: Session = Depends(get_db),
+    teacher: models.User = Depends(get_current_teacher)
+):
+    submission = db.query(models.AssignmentSubmission).filter(
+        models.AssignmentSubmission.id == data.submission_id
+    ).first()
+    
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+        
+    # Verify teacher owns the course
+    assignment = db.query(models.Assignment).filter(models.Assignment.id == submission.assignment_id).first()
+    topic = db.query(models.Topic).filter(models.Topic.id == assignment.topic_id).first()
+    course = db.query(models.Course).filter(models.Course.id == topic.course_id).first()
+    
+    if course.created_by != teacher.id and teacher.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to grade this assignment")
+
+    submission.obtained_marks = data.obtained_marks
+    submission.feedback = data.feedback
+    submission.is_manual_review = False
+    
+    db.commit()
+    
+    # Re-trigger certificate check
+    from routers.student import check_and_auto_request_certificate
+    check_and_auto_request_certificate(db, submission.student_id, course.id)
+    
+    return {"message": "Graded successfully"}

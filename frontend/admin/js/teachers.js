@@ -177,3 +177,36 @@ async function deleteTeacher(id, name) {
         alert(err.detail || "Cannot delete teacher");
     }
 }
+
+async function handleBulkImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const res = await fetch(`${API}/admin/bulk-import`, {
+            method: "POST",
+            headers: { Authorization: "Bearer " + token },
+            body: formData
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            let msg = `Bulk Import Complete!\n- Created: ${data.created}\n- Errors: ${data.errors.length}`;
+            if (data.errors.length > 0) {
+                msg += `\n\nFirst few errors:\n` + data.errors.slice(0, 3).map(e => `${e.email}: ${e.error}`).join('\n');
+            }
+            alert(msg);
+            loadTeachers();
+        } else {
+            const err = await res.json();
+            alert(err.detail || "Failed to import users");
+        }
+    } catch (err) { alert("Server error: " + err.message); }
+    
+    // Reset file input
+    event.target.value = "";
+}

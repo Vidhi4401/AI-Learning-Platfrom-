@@ -82,7 +82,10 @@ class AssignmentSubmission(Base):
     id = Column(Integer, primary_key=True, index=True)
     assignment_id = Column(Integer, ForeignKey("assignments.id"))
     student_id = Column(Integer, ForeignKey("users.id"))
-    obtained_marks = Column(Integer)
+    student_answer = Column(String)
+    obtained_marks = Column(Integer, nullable=True)
+    feedback = Column(String, nullable=True)
+    is_manual_review = Column(Boolean, default=False)
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class Quiz(Base):

@@ -16,7 +16,11 @@
     <main class="page-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
         <h1 class="navbar-page-title" style="font-size:24px;">Faculty Management</h1>
-        <button class="btn btn-primary" onclick="openInviteModal()">+ Invite Teacher</button>
+        <div style="display:flex; gap:12px;">
+            <button class="btn btn-secondary" onclick="document.getElementById('bulkImportInput').click()" style="background:#f3f4f6; color:#374151; border:1px solid #d1d5db;">📤 Bulk Import</button>
+            <input type="file" id="bulkImportInput" style="display:none" accept=".csv, .xlsx, .xls" onchange="handleBulkImport(event)">
+            <button class="btn btn-primary" onclick="openInviteModal()">+ Invite Teacher</button>
+        </div>
       </div>
 
       <!-- Filters -->

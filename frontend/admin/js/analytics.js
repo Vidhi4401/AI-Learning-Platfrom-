@@ -29,9 +29,11 @@ async function loadAnalytics() {
         // 3. Charts
         renderGrowthChart(data.monthly_growth);
         renderPerfChart(data.course_performance);
+        renderDoubtChart(data.doubt_stats);
+        renderRiskChart(data.risk_distribution);
 
-        // 4. Weak Topics
-        renderWeakTopics(data.weak_topics);
+        // 4. Content Drop-offs
+        renderDropoffs(data.top_dropoffs);
 
     } catch (err) { console.error(err); }
 }
@@ -80,15 +82,65 @@ function renderPerfChart(perfData) {
     });
 }
 
-function renderWeakTopics(topics) {
-    const body = document.getElementById("weakTopicsBody");
+function renderDoubtChart(stats) {
+    const ctx = document.getElementById("doubtChart").getContext("2d");
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['AI Resolved', 'Faculty Resolved'],
+            datasets: [{
+                data: [stats.ai_count, stats.faculty_count],
+                backgroundColor: ['#8b5cf6', '#3b82f6'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+function renderRiskChart(dist) {
+    const ctx = document.getElementById("riskChart").getContext("2d");
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+            datasets: [{
+                data: [dist.Low, dist.Medium, dist.High],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+function renderDropoffs(topics) {
+    const body = document.getElementById("dropoffBody");
+    if (!topics || topics.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:3rem;">No significant drop-offs detected.</td></tr>';
+        return;
+    }
+
     body.innerHTML = topics.map(t => `
         <tr>
-            <td style="font-weight:600;">${t.topic_name}</td>
-            <td>${t.course_title}</td>
-            <td>${t.teacher_name}</td>
-            <td><span style="color:#ef4444; font-weight:700;">${t.avg_score}%</span></td>
-            <td>${t.affected_students} Students</td>
+            <td style="font-weight:600;">${t.topic}</td>
+            <td>${t.course}</td>
+            <td>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="flex:1; height:6px; background:#f1f5f9; border-radius:3px; overflow:hidden;">
+                        <div style="width:${t.completion}%; height:100%; background:${t.completion < 40 ? '#ef4444' : '#f59e0b'};"></div>
+                    </div>
+                    <span style="font-size:12px; font-weight:700;">${t.completion}%</span>
+                </div>
+            </td>
+            <td><span style="background:${t.completion < 40 ? '#fee2e2' : '#fef3c7'}; color:${t.completion < 40 ? '#ef4444' : '#d97706'}; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700;">${t.completion < 40 ? 'CRITICAL' : 'WARNING'}</span></td>
         </tr>
-    `).join("") || '<tr><td colspan="5" style="text-align:center; padding:3rem;">No weak areas identified currently.</td></tr>';
+    `).join("");
 }

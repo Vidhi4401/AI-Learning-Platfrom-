@@ -216,7 +216,7 @@ chatbotScript.src = 'js/chatbot.js';
 document.body.appendChild(chatbotScript);
 
 /* ===== NOTIFICATIONS LOGIC ===== */
-function toggleNotif(e) {
+window.toggleNotif = function(e) {
     e.stopPropagation();
     document.getElementById("notifDropdown").classList.toggle("active");
     if (document.getElementById("notifDropdown").classList.contains("active")) {
@@ -266,7 +266,7 @@ function renderNotifications(list) {
     `).join("");
 }
 
-async function markNotificationRead(id, link) {
+window.markNotificationRead = async function(id, link) {
     try {
         await fetch(`http://127.0.0.1:8000/api/v1/notifications/${id}/read`, {
             method: "POST",
@@ -278,7 +278,7 @@ async function markNotificationRead(id, link) {
     } catch (err) {}
 }
 
-async function markAllNotificationsRead(e) {
+window.markAllNotificationsRead = async function(e) {
     e.stopPropagation();
     try {
         await fetch(`http://127.0.0.1:8000/api/v1/notifications/read-all`, {

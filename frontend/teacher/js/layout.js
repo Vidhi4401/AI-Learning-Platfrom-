@@ -129,6 +129,23 @@ document.getElementById("navbar").innerHTML = `
   </div>
 
   <div class="navbar-right">
+    <!-- Notifications -->
+    <div class="notif-wrapper" id="notifWrapper">
+        <button class="notif-btn" id="notifBtn" onclick="toggleNotif(event)">
+            <span class="icon">🔔</span>
+            <span class="notif-badge" id="notifCount" style="display:none;">0</span>
+        </button>
+        <div class="notif-dropdown" id="notifDropdown">
+            <div class="notif-header">
+                <span>Notifications</span>
+                <button onclick="markAllNotificationsRead(event)" style="font-size:11px; background:none; border:none; color:var(--accent); cursor:pointer;">Mark all read</button>
+            </div>
+            <div class="notif-list" id="notifList">
+                <div class="notif-empty">No new notifications</div>
+            </div>
+        </div>
+    </div>
+
     <div class="profile" id="profileDropdownTrigger">
       <div class="profile-info">
         <div class="profile-name"  id="navProfileName">${user.name  || "Faculty"}</div>
@@ -197,7 +214,7 @@ setInterval(checkFacultyNotifications, 30000);
 checkFacultyNotifications();
 
 /* ===== NOTIFICATIONS LOGIC ===== */
-function toggleNotif(e) {
+window.toggleNotif = function(e) {
     e.stopPropagation();
     document.getElementById("notifDropdown").classList.toggle("active");
     if (document.getElementById("notifDropdown").classList.contains("active")) {
@@ -247,7 +264,7 @@ function renderNotifications(list) {
     `).join("");
 }
 
-async function markNotificationRead(id, link) {
+window.markNotificationRead = async function(id, link) {
     try {
         await fetch(`http://127.0.0.1:8000/api/v1/notifications/${id}/read`, {
             method: "POST",
@@ -259,7 +276,7 @@ async function markNotificationRead(id, link) {
     } catch (err) {}
 }
 
-async function markAllNotificationsRead(e) {
+window.markAllNotificationsRead = async function(e) {
     e.stopPropagation();
     try {
         await fetch(`http://127.0.0.1:8000/api/v1/notifications/read-all`, {

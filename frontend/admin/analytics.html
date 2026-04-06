@@ -62,22 +62,34 @@
         </div>
       </div>
 
-      <!-- Weak Topics Table -->
-      <div class="table-card fade-up" style="animation-delay:0.3s;">
-        <div style="padding:20px 24px; border-bottom:1px solid var(--border);">
-            <h3 class="panel-title" style="margin:0;">Weak Areas (Avg Score < 60%)</h3>
+      <!-- Unique ML & Content Metrics -->
+      <div class="charts-row fade-up" style="animation-delay:0.3s; margin-bottom:24px;">
+        <div class="chart-card">
+          <h3 class="chart-title">🤖 AI vs Faculty Doubt Resolution</h3>
+          <div class="chart-container" style="height:250px;"><canvas id="doubtChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">⚖️ Dropout Risk Distribution (ML Predicted)</h3>
+          <div class="chart-container" style="height:250px;"><canvas id="riskChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Content Drop-off Table (Unique Bottleneck detection) -->
+      <div class="table-card fade-up" style="animation-delay:0.4s;">
+        <div style="padding:20px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="panel-title" style="margin:0;">📉 Content Drop-offs (Lowest Completion Topics)</h3>
+            <span style="font-size:12px; color:var(--muted);">Topics where students stop progress</span>
         </div>
         <table class="data-table">
             <thead>
                 <tr>
                     <th>Topic Name</th>
-                    <th>Course</th>
-                    <th>Teacher</th>
-                    <th>Avg Score</th>
-                    <th>Affected Students</th>
+                    <th>Course Name</th>
+                    <th>Completion Rate</th>
+                    <th>Status</th>
                 </tr>
             </thead>
-            <tbody id="weakTopicsBody">
+            <tbody id="dropoffBody">
                 <!-- Dynamic -->
             </tbody>
         </table>

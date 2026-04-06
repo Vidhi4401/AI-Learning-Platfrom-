@@ -59,9 +59,15 @@
           <h1>Student Directory</h1>
           <p>All students — performance, risk, and activity at a glance.</p>
         </div>
-        <button class="btn btn-primary" id="exportBtn" onclick="exportReport()" style="display:flex;align-items:center;gap:8px;min-width:180px;justify-content:center;">
-          <span id="exportIcon">📥</span>&nbsp;Export Full Report
-        </button>
+        <div style="display:flex; gap:12px;">
+            <button class="btn btn-secondary" onclick="document.getElementById('bulkImportInput').click()" style="display:flex;align-items:center;gap:8px;background:#f3f4f6; color:#374151; border:1px solid #d1d5db; padding: 10px 20px;">
+                <span>📤</span> Bulk Import
+            </button>
+            <input type="file" id="bulkImportInput" style="display:none" accept=".csv, .xlsx, .xls" onchange="handleBulkImport(event)">
+            <button class="btn btn-primary" id="exportBtn" onclick="exportReport()" style="display:flex;align-items:center;gap:8px;min-width:180px;justify-content:center;">
+                <span id="exportIcon">📥</span>&nbsp;Export Full Report
+            </button>
+        </div>
       </div>
 
       <div class="summary-bar">
@@ -220,6 +226,39 @@
         icon.textContent = "📥";
         btn.childNodes[2].textContent = " Export Full Report";
       }
+    }
+
+    async function handleBulkImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch(`${API}/admin/bulk-import`, {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token },
+          body: formData
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          let msg = `Bulk Import Complete!\n- Created: ${data.created}\n- Errors: ${data.errors.length}`;
+          if (data.errors.length > 0) {
+            msg += `\n\nFirst few errors:\n` + data.errors.slice(0, 3).map(e => `${e.email}: ${e.error}`).join('\n');
+          }
+          alert(msg);
+          load();
+        } else {
+          const err = await res.json();
+          alert(err.detail || "Failed to import users");
+        }
+      } catch (err) { alert("Server error: " + err.message); }
+      
+      // Reset file input
+      event.target.value = "";
     }
   </script>
 </body>

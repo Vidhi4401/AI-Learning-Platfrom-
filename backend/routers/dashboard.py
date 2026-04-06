@@ -426,19 +426,25 @@ def get_student_detail(
         })
 
     # 4. Recent Assignment Submissions
-    subs = db.query(models.AssignmentSubmission, models.Assignment.title, models.Assignment.total_marks, models.Course.title.label("course_title"))\
+    subs = db.query(models.AssignmentSubmission, models.Assignment.title, models.Assignment.total_marks, models.Course.title.label("course_title"), models.Assignment.model_answer)\
         .join(models.Assignment, models.AssignmentSubmission.assignment_id == models.Assignment.id)\
         .join(models.Topic, models.Assignment.topic_id == models.Topic.id)\
         .join(models.Course, models.Topic.course_id == models.Course.id)\
         .filter(models.AssignmentSubmission.student_id == student_id)\
-        .order_by(models.AssignmentSubmission.submitted_at.desc()).limit(5).all()
+        .order_by(models.AssignmentSubmission.submitted_at.desc()).limit(10).all()
     
     assign_history = []
-    for sub, a_title, t_marks, c_title in subs:
+    for sub, a_title, t_marks, c_title, m_answer in subs:
         assign_history.append({
-            "title": a_title, "course": c_title, "score": f"{sub.obtained_marks} / {t_marks}",
-            "pct": f"{round((sub.obtained_marks/t_marks)*100) if t_marks>0 else 0}%",
-            "date": sub.submitted_at.strftime("%b %d, %Y")
+            "id": sub.id,
+            "title": a_title,
+            "course": c_title,
+            "score": f"{sub.obtained_marks or 0} / {t_marks}",
+            "pct": f"{round((sub.obtained_marks/t_marks)*100) if t_marks and sub.obtained_marks else 0}%",
+            "date": sub.submitted_at.strftime("%b %d, %Y"),
+            "student_answer": sub.student_answer,
+            "model_answer": m_answer,
+            "is_manual_review": sub.is_manual_review
         })
 
     return {
@@ -490,11 +496,17 @@ def get_student_submissions(
     # We need to include total_marks for the teacher's UI to calculate percentages correctly
     result = []
     for s in subs:
-        total_m = db.query(models.Assignment.total_marks).filter(models.Assignment.id == s.assignment_id).scalar() or 10
+        assignment = db.query(models.Assignment).filter(models.Assignment.id == s.assignment_id).first()
+        total_m = assignment.total_marks if assignment else 10
         result.append({
+            "id": s.id,
             "assignment_id": s.assignment_id,
+            "assignment_title": assignment.title if assignment else "Unknown",
+            "student_answer": s.student_answer,
             "obtained_marks": s.obtained_marks,
-            "total_marks": total_m
+            "total_marks": total_m,
+            "is_manual_review": s.is_manual_review,
+            "submitted_at": s.submitted_at
         })
     return result
 

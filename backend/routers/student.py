@@ -191,6 +191,15 @@ def enroll_course(
 
     e = models.Enrollment(student_id=current_user.id, course_id=course_id)
     db.add(e); db.commit(); db.refresh(e)
+
+    # Notify Teacher
+    create_notification(
+        db, course.created_by,
+        "New Enrollment",
+        f"Student {current_user.name} has enrolled in your course '{course.title}'.",
+        f"student-detail.html?id={current_user.id}"
+    )
+
     return {"message": "Enrolled successfully", "enrollment_id": e.id}
 
 
@@ -475,6 +484,28 @@ def request_certificate(
         status="pending", eligible=True
     )
     db.add(new_cert); db.commit()
+
+    # Notify Admin(s) and Course Teacher
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    org_id = course.organization_id if course else None
+    if org_id:
+        admins = db.query(models.User.id).filter(models.User.organization_id == org_id, models.User.role == "admin").all()
+        for (aid,) in admins:
+            create_notification(
+                db, aid,
+                "New Certificate Request",
+                f"Student {student.name} is requesting a certificate for '{course.title if course else 'a course'}'.",
+                "certificates.html"
+            )
+    
+    if course and course.created_by:
+        create_notification(
+            db, course.created_by,
+            "Student Certificate Request",
+            f"Your student {student.name} has requested a certificate for '{course.title}'.",
+            "certificates.html"
+        )
+
     return {"message": "Certificate request submitted.", "status": "pending"}
 
 
@@ -711,7 +742,9 @@ def submit_quiz(
     # ── Auto-Request Check ──
     quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
     if quiz:
-        check_and_auto_request_certificate(db, current_user.id, quiz.topic_id)
+        topic = db.query(models.Topic).filter(models.Topic.id == quiz.topic_id).first()
+        if topic:
+            check_and_auto_request_certificate(db, current_user.id, topic.course_id)
 
     return {
         "attempt_id":      attempt.id,
@@ -772,10 +805,9 @@ class AssignmentSubmitIn(BaseModel):
 
 
 def grade_with_ai(question: str, model_answer: str,
-                  student_answer: str, total_marks: int) -> dict:
+                  student_answer: str, total_marks: int) -> Optional[dict]:
     if not GROQ_API_KEY:
-        return {"obtained_marks": 0,
-                "feedback": "Grading unavailable — GROQ_API_KEY not configured."}
+        return None
 
     if model_answer and model_answer.strip():
         grading_instruction = (
@@ -810,14 +842,11 @@ def grade_with_ai(question: str, model_answer: str,
                   "temperature": 0.1},
             timeout=30
         )
-        print(f"[Groq] status={res.status_code}")
         if res.status_code != 200:
             print(f"[Groq] error: {res.text}")
-            return {"obtained_marks": 0,
-                    "feedback": f"Grading API error ({res.status_code})."}
+            return None
 
         raw     = res.json()["choices"][0]["message"]["content"].strip()
-        print(f"[Groq] raw: {raw}")
         cleaned = raw.replace("```json", "").replace("```", "").strip()
         result  = json.loads(cleaned)
         return {
@@ -826,8 +855,7 @@ def grade_with_ai(question: str, model_answer: str,
         }
     except Exception as e:
         print(f"[Groq] Exception: {e}")
-        return {"obtained_marks": 0,
-                "feedback": "Grading failed. Please contact your instructor."}
+        return None
 
 
 # ────────────────────────────────────────────
@@ -855,6 +883,7 @@ def get_submissions(
             "assignment_id":  assignment_id,
             "obtained_marks": best.obtained_marks,
             "feedback":       getattr(best, "feedback", None),
+            "is_manual_review": getattr(best, "is_manual_review", False),
             "submitted_at":   best.submitted_at,
             "attempt_count":  len(attempts),
             "can_resubmit":   len(attempts) < 2
@@ -917,29 +946,46 @@ def submit_assignment(
         total_marks=   assignment.total_marks or 10
     )
 
-    # Build submission — only include feedback if column exists
-    sub_data = {
-        "student_id":     current_user.id,
-        "assignment_id":  assignment_id,
-        "obtained_marks": grading["obtained_marks"]
-    }
-    sub_cols = {c.key for c in models.AssignmentSubmission.__table__.columns}
-    if "feedback" in sub_cols:
-        sub_data["feedback"] = grading["feedback"]
+    is_manual = False
+    if grading is None:
+        is_manual = True
+        grading = {"obtained_marks": 0, "feedback": "AI grading failed. Waiting for teacher review."}
 
-    submission = models.AssignmentSubmission(**sub_data)
+    submission = models.AssignmentSubmission(
+        student_id=current_user.id,
+        assignment_id=assignment_id,
+        student_answer=payload.student_answer,
+        obtained_marks=grading["obtained_marks"],
+        feedback=grading["feedback"],
+        is_manual_review=is_manual
+    )
     db.add(submission); db.commit(); db.refresh(submission)
 
-    # ── Auto-Request Check ──
-    topic = db.query(models.Topic).filter(models.Topic.id == assignment.topic_id).first()
-    if topic:
-        check_and_auto_request_certificate(db, current_user.id, topic.course_id)
+    # ── Notify Teacher if manual review needed ──
+    if is_manual:
+        topic = db.query(models.Topic).filter(models.Topic.id == assignment.topic_id).first()
+        if topic:
+            course = db.query(models.Course).filter(models.Course.id == topic.course_id).first()
+            if course and course.created_by:
+                create_notification(
+                    db, course.created_by,
+                    "Manual Grading Required",
+                    f"AI grading failed for {current_user.name}'s assignment '{assignment.title}'. Please grade manually.",
+                    f"student-detail.html?id={current_user.id}"
+                )
+
+    # ── Auto-Request Check (Only if AI succeeded) ──
+    if not is_manual:
+        topic = db.query(models.Topic).filter(models.Topic.id == assignment.topic_id).first()
+        if topic:
+            check_and_auto_request_certificate(db, current_user.id, topic.course_id)
 
     return {
         "submission_id":  submission.id,
         "obtained_marks": grading["obtained_marks"],
         "total_marks":    assignment.total_marks,
-        "feedback":       grading["feedback"]
+        "feedback":       grading["feedback"],
+        "is_manual_review": is_manual
     }
 
 
