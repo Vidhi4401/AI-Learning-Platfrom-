@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
 import models, schemas
+from datetime import datetime
 from dependencies import get_current_teacher, get_current_user
 from typing import List
 
@@ -66,12 +67,26 @@ def create_meeting(
         print(f"[Meeting DB Error] {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+from datetime import datetime
+
 @router.get("/teacher", response_model=List[schemas.MeetingResponse])
 def get_teacher_meetings(
     db: Session = Depends(get_db),
     teacher: models.User = Depends(get_current_teacher)
 ):
-    return db.query(models.Meeting).filter(models.Meeting.teacher_id == teacher.id).all()
+    now = datetime.utcnow()
+    # 1. Automatically delete past meetings
+    db.query(models.Meeting).filter(
+        models.Meeting.teacher_id == teacher.id,
+        models.Meeting.meeting_date < now
+    ).delete()
+    db.commit()
+
+    # 2. Return current/future meetings
+    return db.query(models.Meeting).filter(
+        models.Meeting.teacher_id == teacher.id,
+        models.Meeting.meeting_date >= now
+    ).all()
 
 @router.get("/course/{course_id}", response_model=List[schemas.MeetingResponse])
 def get_course_meetings(
@@ -79,6 +94,7 @@ def get_course_meetings(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user)
 ):
+    now = datetime.utcnow()
     # Check if user is enrolled or is the teacher
     if user.role == "student":
         enrollment = db.query(models.Enrollment).filter(
@@ -88,7 +104,11 @@ def get_course_meetings(
         if not enrollment:
             raise HTTPException(status_code=403, detail="Not enrolled in this course")
     
-    return db.query(models.Meeting).filter(models.Meeting.course_id == course_id).all()
+    # Return current/future meetings
+    return db.query(models.Meeting).filter(
+        models.Meeting.course_id == course_id,
+        models.Meeting.meeting_date >= now
+    ).all()
 
 @router.delete("/{meeting_id}")
 def delete_meeting(

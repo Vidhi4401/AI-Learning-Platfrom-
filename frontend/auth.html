@@ -138,7 +138,7 @@
 
     <div class="form-group">
       <label>Email address</label>
-      <input type="email" id="loginEmail" placeholder="you@organization.com"
+      <input type="email" id="loginEmail" placeholder="yourname@example.com"
              onkeydown="if(event.key==='Enter') login()">
     </div>
 
@@ -152,12 +152,6 @@
     </div>
 
     <button class="btn" id="loginBtn" onclick="login()">Sign In</button>
-
-    <div class="contact-note">
-      <strong>Need access?</strong><br>
-      Accounts are created by your organization's administrator.<br>
-      Contact your admin to get your login credentials or to reset your password.
-    </div>
 
   </div>
 
@@ -181,7 +175,7 @@
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
       },
       validatePassword: (password) => {
-        return password.length >= 8;
+        return password.length >= 4;
       }
     };
 
@@ -204,7 +198,7 @@
         return;
       }
       if (!utils.validatePassword(pwd)) {
-        showError("Password must be at least 8 characters long.");
+        showError("Password must be at least 4 characters long.");
         return;
       }
 
@@ -232,10 +226,12 @@
           email:         data.email,
           role:          data.role,
           platform_name: data.platform_name,
+          org_name:      data.org_name,
           org_logo:      data.org_logo
         }));
 
-        if      (data.role === "admin")   window.location.href = "admin/dashboard.html";
+        if      (data.role === "superadmin")window.location.href = "superadmin/super-dashboard.html";
+        else if (data.role === "admin")   window.location.href = "admin/dashboard.html";
         else if (data.role === "teacher") window.location.href = "teacher/dashboard.html";
         else                              window.location.href = "student/student-courses.html";
 

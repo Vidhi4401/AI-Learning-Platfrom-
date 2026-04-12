@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Certificates</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .cert-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      margin-bottom: 16px;
+      background: #fff;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .cert-card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .cert-info h3 {
+      margin: 0;
+      font-size: 16px;
+      color: var(--text-main);
+    }
+    .cert-info p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .cert-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .btn-download {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-view {
+      background: #f1f5f9;
+      color: #475569;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar" class="sidebar"></div>
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+    <div class="page-content">
+
+      <div style="margin-bottom: 32px;">
+        <h1 style="font-size: 28px; margin-bottom: 8px;">My Certificates 🏆</h1>
+        <p style="color: var(--text-muted);">View and download your earned certificates for completed courses.</p>
+      </div>
+
+      <div id="certsContainer">
+        <div style="text-align:center; padding: 4rem; color: var(--text-muted);">
+          Loading certificates...
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/student-layout.js"></script>
+  <script src="js/certificates.js"></script>
+</body>
+</html>

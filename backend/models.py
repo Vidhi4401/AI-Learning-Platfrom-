@@ -233,3 +233,23 @@ class Notification(Base):
     link        = Column(String, nullable=True) # Where to redirect on click
     is_read     = Column(Boolean, default=False)
     created_at  = Column(DateTime(timezone=True), server_default=func.now())
+
+class ContactRequest(Base):
+    __tablename__ = "contact_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    org_name = Column(String, unique=True)
+    admin_name = Column(String)
+    admin_email = Column(String, unique=True)
+    admin_password = Column(String)  # hashed
+    status = Column(String, default="pending")  # pending, approved, rejected
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    org_name = Column(String)
+    admin_name = Column(String)
+    email = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

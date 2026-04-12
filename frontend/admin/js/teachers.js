@@ -93,7 +93,7 @@ async function submitInvite() {
         return;
     }
     if (!window.utils.validatePassword(password)) {
-        alert("Password must be at least 8 characters long.");
+        alert("Password must be at least 4 characters long.");
         return;
     }
 

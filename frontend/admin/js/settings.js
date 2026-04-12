@@ -48,7 +48,6 @@ async function loadBranding() {
         const data = await res.json();
         
         document.getElementById("orgName").value = data.org_name;
-        document.getElementById("platformName").value = data.platform_name;
         
         if (data.logo) {
             document.getElementById("logoPreview").innerHTML = `<img src="${data.logo}" style="width:100%;height:100%;object-fit:cover;">`;
@@ -63,7 +62,6 @@ async function saveBranding() {
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("org_name", document.getElementById("orgName").value);
-    formData.append("platform_name", document.getElementById("platformName").value);
     
     const logoFile = document.getElementById("logoFile").files[0];
     if (logoFile) formData.append("logo", logoFile);
@@ -84,7 +82,7 @@ async function saveBranding() {
             
             // Sync with storage
             const user = JSON.parse(localStorage.getItem("user"));
-            user.platform_name = data.platform_name || data.org_name;
+            user.platform_name = data.org_name;
             if (data.logo) user.org_logo = data.logo;
             localStorage.setItem("user", JSON.stringify(user));
             
@@ -208,7 +206,7 @@ async function addUser() {
 
   if (!window.utils.validateName(name)) { err.textContent = "Please enter a valid name (at least 2 characters)."; err.style.display = "block"; return; }
   if (!window.utils.validateEmail(email)) { err.textContent = "Please enter a valid email address."; err.style.display = "block"; return; }
-  if (!window.utils.validatePassword(pwd)) { err.textContent = "Password must be at least 8 characters long."; err.style.display = "block"; return; }
+  if (!window.utils.validatePassword(pwd)) { err.textContent = "Password must be at least 4 characters long."; err.style.display = "block"; return; }
 
   const token    = localStorage.getItem("token");
   const endpoint = role === "teacher" ? "add-teacher" : "add-student";
@@ -242,7 +240,7 @@ async function resetUserPassword() {
 
   if (!userId)         { err.textContent = "Please select a user."; err.style.display = "block"; return; }
   if (!newPwd)         { err.textContent = "Please enter a new password."; err.style.display = "block"; return; }
-  if (!window.utils.validatePassword(newPwd)) { err.textContent = "Password must be at least 8 characters long."; err.style.display = "block"; return; }
+  if (!window.utils.validatePassword(newPwd)) { err.textContent = "Password must be at least 4 characters long."; err.style.display = "block"; return; }
 
   const token = localStorage.getItem("token");
   try {

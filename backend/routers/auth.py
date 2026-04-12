@@ -19,14 +19,41 @@ def get_db():
 # ── Login (public) ────────────────────────────────────────────────────────────
 @router.post("/login")
 def login(data: schemas.LoginSchema, db: Session = Depends(get_db)):
+    print(f"[Login Debug] Attempting login for email: {data.email}")
     user = db.query(models.User).filter(models.User.email == data.email).first()
 
-    if not user or not verify_password(data.password, user.password_hash):
+    if not user:
+        print(f"[Login Debug] User not found for email: {data.email}")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    password_verified = verify_password(data.password, user.password_hash)
+    print(f"[Login Debug] User found: {user.email}, role: {user.role}, password verified: {password_verified}")
+
+    if not password_verified:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     if not user.status:
         raise HTTPException(status_code=403,
                             detail="Your account has been deactivated. Contact your administrator.")
+
+    # ── Super Admin Check ──
+    if user.role == "superadmin":
+        token = create_access_token({
+            "user_id":         user.id,
+            "role":            user.role,
+            "organization_id": None
+        })
+        return {
+            "success":       True,
+            "id":            user.id,
+            "name":          user.name,
+            "email":         user.email,
+            "role":          user.role,
+            "access_token":  token,
+            "platform_name": "LearnHub Global",
+            "org_name":      "LearnHub Global",
+            "org_logo":      None
+        }
 
     org = db.query(models.Organization).filter(
         models.Organization.id == user.organization_id
@@ -46,6 +73,7 @@ def login(data: schemas.LoginSchema, db: Session = Depends(get_db)):
         "role":          user.role,
         "access_token":  token,
         "platform_name": org.platform_name or org.name if org else "LearnHub",
+        "org_name":      org.name if org else "LearnHub",
         "org_logo":      org.logo if org else None
     }
 

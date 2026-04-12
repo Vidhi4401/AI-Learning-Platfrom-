@@ -4,7 +4,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 import models, os, shutil, json
 from dependencies import get_db, get_current_admin
-from routers.student import predict_learner_level
+# from routers.student import predict_learner_level  <-- Commented out to prevent circular import
 from routers.dashboard import get_student_metrics
 from auth import hash_password
 from typing import List, Optional

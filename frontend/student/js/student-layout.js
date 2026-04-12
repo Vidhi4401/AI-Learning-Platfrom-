@@ -52,7 +52,7 @@ window.utils = {
     return /[a-zA-Z]/.test(name) && name.trim().length >= 2;
   },
   validatePassword: (password) => {
-    return password.length >= 8;
+    return password.length >= 4;
   },
   showError: (msg) => {
     alert(msg);
@@ -94,6 +94,9 @@ document.getElementById("sidebar").innerHTML = `
     <a href="student-performnace.html" class="${isActive("student-performnace.html")}">
       <span>Performance</span>
     </a>
+    <a href="student-certificates.html" class="${isActive("student-certificates.html")}">
+      <span>Certificates</span>
+    </a>
   </div>
 `;
 
@@ -101,9 +104,6 @@ document.getElementById("sidebar").innerHTML = `
 document.getElementById("navbar").innerHTML = `
   <div class="navbar-left">
     <button id="sidebarToggle" class="nav-toggle-btn" title="Toggle Sidebar">☰</button>
-    <div style="position:relative;">
-        <input class="search" type="text" id="globalSearchInput" placeholder="Search courses…">
-    </div>
   </div>
 
   <div class="navbar-right">
@@ -138,23 +138,6 @@ document.getElementById("navbar").innerHTML = `
     </div>
   </div>
 `;
-
-/* ===== GLOBAL SEARCH LOGIC ===== */
-document.getElementById("globalSearchInput").addEventListener("input", (e) => {
-  const localSearch = document.getElementById("courseSearch") || 
-                      document.getElementById("searchInput") || 
-                      document.getElementById("studentSearch");
-
-  if (localSearch) {
-    localSearch.value = e.target.value;
-    localSearch.dispatchEvent(new Event('input'));
-  }
-  
-  // Direct function calls as fallback
-  if (typeof renderCourses === "function") renderCourses();
-  if (typeof filterCourses === "function") filterCourses();
-  if (typeof renderStudents === "function") renderStudents();
-});
 
 /* ===== TOGGLE SIDEBAR ===== */
 document.getElementById("sidebarToggle").addEventListener("click", () => {

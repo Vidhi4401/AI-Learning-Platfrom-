@@ -174,6 +174,11 @@ class AdminAddUserSchema(BaseModel):
     email: str
     password: str
 
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+
 class AdminProfileUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
@@ -183,6 +188,26 @@ class AdminProfileUpdate(BaseModel):
 class OrganizationUpdateSchema(BaseModel):
     org_name: Optional[str] = None
     platform_name: Optional[str] = None
+
+class OrganizationCreate(BaseModel):
+    name: str
+    platform_name: Optional[str] = None
+    admin_name: str
+    admin_email: str
+    admin_password: str
+
+class OrganizationResponse(BaseModel):
+    id: int
+    name: str
+    platform_name: Optional[str] = None
+    logo: Optional[str] = None
+    email: Optional[str] = None
+    status: bool
+    signature_url: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class UserResponse(BaseModel):
     id: int
@@ -212,6 +237,36 @@ class MeetingResponse(BaseModel):
     course_id: int
     teacher_id: int
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class MessageResponse(BaseModel):
+    id: int
+    org_name: str
+    admin_name: str
+    email: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ContactRequestCreate(BaseModel):
+    org_name: str
+    admin_name: str
+    admin_email: str
+    admin_password: str
+
+class ContactRequestResponse(BaseModel):
+    id: int
+    org_name: str
+    admin_name: str
+    admin_email: str
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
     class Config:
         from_attributes = True

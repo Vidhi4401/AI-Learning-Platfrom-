@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
 from database import SessionLocal
 import models, schemas, joblib, pandas as pd, numpy as np
 from dependencies import get_current_user
@@ -111,7 +112,7 @@ def get_current_student(current_user: models.User = Depends(get_current_user)):
 
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 if not GROQ_API_KEY:
     print("[student.py] ERROR: GROQ_API_KEY empty — check backend/.env")
@@ -1171,10 +1172,10 @@ def update_student_profile(
     if password:
         if not current_password:
             raise HTTPException(status_code=400, detail="Current password required")
-        if not pwd_context.verify(current_password, user.password_hash):
-            raise HTTPException(status_code=400, detail="Current password is incorrect")
-        user.password_hash = pwd_context.hash(password)
+        if not verify_password(current_password, user.password_hash):
+            raise HTTPException(status_code=400, detail="Current password incorrect")
 
+        user.password_hash = hash_password(password)
     db.commit(); db.refresh(user)
     return {"id": user.id, "name": user.name, "email": user.email}
 

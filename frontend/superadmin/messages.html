@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages - Super Admin</title>
+  <link rel="stylesheet" href="../admin/css/main.css">
+  <link rel="stylesheet" href="../admin/css/dashboard.css">
+  <style>
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-approve {
+      background-color: #059669;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-approve:hover {
+      background-color: #047857;
+    }
+    .btn-reject {
+      background-color: #dc2626;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-reject:hover {
+      background-color: #b91c1c;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background-color: #f3f4f6;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar" class="sidebar"></div>
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+    <div class="page-content">
+      
+      <div style="margin-bottom: 30px;">
+        <h1 style="font-size: 28px;">Pending Contact Requests</h1>
+        <p style="color: #64748b;">Review and approve organization registration requests.</p>
+      </div>
+
+      <div class="table-card">
+        <table id="requestsTable">
+          <thead>
+            <tr>
+              <th>Organization Name</th>
+              <th>Admin Name</th>
+              <th>Admin Email</th>
+              <th>Submitted On</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="requestsBody">
+            <!-- Requests will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/super-layout.js"></script>
+  <script>
+    // Load contact requests
+    async function loadRequests() {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/v1/superadmin/contact-requests', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          console.error('Failed to load requests:', response.status, result);
+          document.getElementById('requestsBody').innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">${result.detail || result.message || 'Unable to load requests'}</td></tr>`;
+          return;
+        }
+        const requests = result;
+        const tbody = document.getElementById('requestsBody');
+        
+        if (!requests || requests.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No pending requests</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = requests.map(req => `
+          <tr>
+            <td>${req.org_name}</td>
+            <td>${req.admin_name}</td>
+            <td>${req.admin_email}</td>
+            <td>${new Date(req.created_at).toLocaleString()}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-approve" onclick="approveRequest(${req.id})">Approve</button>
+                <button class="btn-reject" onclick="rejectRequest(${req.id})">Reject</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading requests:', error);
+        document.getElementById('requestsBody').innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error loading requests</td></tr>';
+      }
+    }
+
+    async function approveRequest(requestId) {
+      if (!confirm('Are you sure you want to approve this request?')) return;
+      
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/superadmin/approve-contact/${requestId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          console.error('Approve request failed:', response.status, data);
+          alert(data.detail || data.message || 'Error approving request');
+          return;
+        }
+        alert(data.message || 'Request approved');
+        loadRequests();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error approving request');
+      }
+    }
+
+    async function rejectRequest(requestId) {
+      if (!confirm('Are you sure you want to reject this request?')) return;
+      
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/superadmin/reject-contact/${requestId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          console.error('Reject request failed:', response.status, data);
+          alert(data.detail || data.message || 'Error rejecting request');
+          return;
+        }
+        alert(data.message || 'Request rejected');
+        loadRequests();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error rejecting request');
+      }
+    }
+
+    loadRequests();
+  </script>
+</body>
+</html>

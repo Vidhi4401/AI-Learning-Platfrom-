@@ -30,7 +30,7 @@ window.utils = {
     return /[a-zA-Z]/.test(name) && name.trim().length >= 2;
   },
   validatePassword: (password) => {
-    return password.length >= 8;
+    return password.length >= 4;
   },
   showError: (msg) => {
     alert(msg); // Default implementation, can be overridden
@@ -68,10 +68,6 @@ document.getElementById("sidebar").innerHTML = `
       <span class="nav-icon">👨‍🎓</span>
       <span>Students</span>
     </a>
-    <a href="analytics.html" class="${isActive("analytics.html")}">
-      <span class="nav-icon">📊</span>
-      <span>Analytics</span>
-    </a>
     <a href="certificates.html" class="${isActive("certificates.html")}">
       <span class="nav-icon">🏆</span>
       <span>Certificates</span>
@@ -83,9 +79,6 @@ document.getElementById("sidebar").innerHTML = `
 document.getElementById("navbar").innerHTML = `
   <div class="navbar-left">
     <button id="sidebarToggle" class="nav-toggle-btn" title="Toggle Sidebar">☰</button>
-    <div style="position:relative;">
-        <input class="search" type="text" id="globalSearchInput" placeholder="Search data…">
-    </div>
   </div>
 
   <div class="navbar-right">
@@ -104,28 +97,7 @@ document.getElementById("navbar").innerHTML = `
   </div>
 `;
 
-/* ===== GLOBAL SEARCH LOGIC ===== */
-document.getElementById("globalSearchInput").addEventListener("input", (e) => {
-  const query = e.target.value.toLowerCase();
-  
-  // Find local search inputs (excluding the global one)
-  const localSearch = document.getElementById("teacherSearch") || 
-                      document.getElementById("searchInput") || 
-                      document.getElementById("courseSearch");
-
-  if (localSearch) {
-    localSearch.value = e.target.value;
-    // Dispatch input event to trigger local listeners
-    localSearch.dispatchEvent(new Event('input'));
-  }
-  
-  // Direct function calls as fallback
-  if (typeof renderTeachers === "function") renderTeachers();
-  if (typeof render === "function") render();
-  if (typeof renderCourses === "function") renderCourses();
-});
-
-/* ===== TOGGLE SIDEBAR ===== */
+/* ===== PROFILE DROPDOWN ===== */
 document.getElementById("sidebarToggle").addEventListener("click", () => {
   document.body.classList.toggle("sidebar-collapsed");
 });

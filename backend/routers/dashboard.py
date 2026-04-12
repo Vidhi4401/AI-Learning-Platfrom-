@@ -264,6 +264,7 @@ import io
 
 @router.get("/students")
 def get_all_students(
+    course_id: Optional[int] = None,
     db: Session = Depends(get_db),
     teacher: models.User = Depends(get_current_teacher)
 ):
@@ -276,10 +277,17 @@ def get_all_students(
     if not managed_course_ids:
         return []
 
-    # 2. Find students enrolled in those courses
-    student_ids = [e[0] for e in db.query(models.Enrollment.student_id).filter(
+    # 2. Find students enrolled in those courses (or specific course if provided)
+    enrollment_query = db.query(models.Enrollment.student_id).filter(
         models.Enrollment.course_id.in_(managed_course_ids)
-    ).distinct().all()]
+    )
+    
+    if course_id:
+        if course_id not in managed_course_ids:
+            return []  # Teacher doesn't manage this course
+        enrollment_query = enrollment_query.filter(models.Enrollment.course_id == course_id)
+    
+    student_ids = [e[0] for e in enrollment_query.distinct().all()]
     
     if not student_ids:
         return []
@@ -605,3 +613,90 @@ def get_student_certificates_for_teacher(
             "issued_at": cert.issued_at.isoformat() if cert.issued_at else None,
         })
     return result
+
+# ── TEACHER: Certificate Requests (Global for Teacher's Org) ─────────────────
+@router.get("/certificates/requests")
+def get_teacher_pending_requests(
+    teacher: models.User = Depends(get_current_teacher), 
+    db: Session = Depends(get_db)
+):
+    reqs = db.query(models.Certificate, models.User.name, models.User.email, models.Course.title)\
+        .join(models.User, models.Certificate.student_id == models.User.id)\
+        .join(models.Course, models.Certificate.course_id == models.Course.id)\
+        .filter(
+            models.Course.organization_id == teacher.organization_id,
+            models.Certificate.status == "pending"
+        ).all()
+    
+    result = []
+    for cert, name, email, title in reqs:
+        m, l, r = get_student_metrics(db, cert.student_id, cert.course_id)
+        result.append({
+            "id": cert.id, 
+            "student_name": name, 
+            "student_email": email,
+            "course_title": title, 
+            "score": round(m["overall_score"]),
+            "completion": round(m["completion_rate"]),
+            "request_date": cert.request_date.isoformat() if cert.request_date else None
+        })
+    return result
+
+@router.get("/certificates/issued")
+def get_teacher_issued_certificates(
+    teacher: models.User = Depends(get_current_teacher), 
+    db: Session = Depends(get_db)
+):
+    issued = db.query(models.Certificate, models.User.name, models.User.email, models.Course.title)\
+        .join(models.User, models.Certificate.student_id == models.User.id)\
+        .join(models.Course, models.Certificate.course_id == models.Course.id)\
+        .filter(
+            models.Course.organization_id == teacher.organization_id,
+            models.Certificate.issued == True
+        ).all()
+    
+    return [{
+        "id": c.id, 
+        "student_name": name, 
+        "student_email": email,
+        "course_title": title,
+        "issued_at": c.issued_at.isoformat() if c.issued_at else None
+    } for c, name, email, title in issued]
+
+@router.post("/certificates/{cert_id}/issue")
+def issue_certificate_teacher(
+    cert_id: int,
+    teacher: models.User = Depends(get_current_teacher),
+    db: Session = Depends(get_db)
+):
+    cert = db.query(models.Certificate).join(models.Course).filter(
+        models.Certificate.id == cert_id,
+        models.Course.organization_id == teacher.organization_id
+    ).first()
+    
+    if not cert:
+        raise HTTPException(status_code=404, detail="Request not found")
+        
+    cert.status = "verified"
+    cert.issued = True
+    cert.issued_at = datetime.utcnow()
+    db.commit()
+    return {"message": "Certificate issued"}
+
+@router.post("/certificates/{cert_id}/reject")
+def reject_certificate_teacher(
+    cert_id: int,
+    teacher: models.User = Depends(get_current_teacher),
+    db: Session = Depends(get_db)
+):
+    cert = db.query(models.Certificate).join(models.Course).filter(
+        models.Certificate.id == cert_id,
+        models.Course.organization_id == teacher.organization_id
+    ).first()
+    
+    if not cert:
+        raise HTTPException(status_code=404, detail="Request not found")
+        
+    cert.status = "rejected"
+    db.commit()
+    return {"message": "Certificate rejected"}

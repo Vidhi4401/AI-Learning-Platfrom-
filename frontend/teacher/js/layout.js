@@ -56,7 +56,7 @@ window.utils = {
     return /[a-zA-Z]/.test(name) && name.trim().length >= 2;
   },
   validatePassword: (password) => {
-    return password.length >= 8;
+    return password.length >= 4;
   },
   showError: (msg) => {
     alert(msg);
@@ -123,9 +123,6 @@ document.getElementById("sidebar").innerHTML = `
 document.getElementById("navbar").innerHTML = `
   <div class="navbar-left">
     <button id="sidebarToggle" class="nav-toggle-btn" title="Toggle Sidebar">☰</button>
-    <div style="position:relative;">
-        <input class="search" type="text" id="globalSearchInput" placeholder="Search courses, students…">
-    </div>
   </div>
 
   <div class="navbar-right">
@@ -160,24 +157,6 @@ document.getElementById("navbar").innerHTML = `
     </div>
   </div>
 `;
-
-/* ===== GLOBAL SEARCH LOGIC ===== */
-document.getElementById("globalSearchInput").addEventListener("input", (e) => {
-  const localSearch = document.getElementById("courseSearch") || 
-                      document.getElementById("studentSearch") || 
-                      document.getElementById("teacherSearch");
-
-  if (localSearch) {
-    localSearch.value = e.target.value;
-    localSearch.dispatchEvent(new Event('input'));
-  }
-  
-  // Direct function calls as fallback
-  if (typeof renderCourses === "function") renderCourses();
-  if (typeof renderStudents === "function") renderStudents();
-  if (typeof renderTeachers === "function") renderTeachers();
-  if (typeof filterStudents === "function") filterStudents();
-});
 
 /* ===== TOGGLE SIDEBAR ===== */
 document.getElementById("sidebarToggle").addEventListener("click", () => {

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LearnHub | Super Admin Login</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .auth-card {
+      background: #fff;
+      width: 100%;
+      max-width: 420px;
+      padding: 2.5rem;
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      gap: 10px;
+    }
+    .logo-text {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .auth-title {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 1.75rem;
+    }
+    .form-group { margin-bottom: 1.1rem; }
+    label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: .35rem;
+    }
+    input {
+      width: 100%;
+      padding: .7rem .9rem;
+      border-radius: 9px;
+      border: 1.5px solid #cbd5e1;
+      font-size: .97rem;
+      font-family: inherit;
+      color: #1e293b;
+      transition: border-color .2s;
+      outline: none;
+    }
+    input:focus { border-color: #0f172a; }
+
+    .btn {
+      width: 100%;
+      margin-top: 1rem;
+      padding: .75rem;
+      background: #0f172a;
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn:hover { background: #1e293b; }
+    .btn:disabled { opacity: .65; cursor: not-allowed; }
+
+    .alert {
+      border-radius: 8px;
+      padding: .65rem 1rem;
+      font-size: .88rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: none;
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    .badge {
+        display: inline-block;
+        background: #0f172a;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card">
+    <div style="text-align:center;">
+        <span class="badge">Global Management</span>
+    </div>
+    <div class="logo-container">
+      <span class="logo-text">LearnHub</span>
+    </div>
+
+    <div class="auth-title">Super Admin Access</div>
+
+    <div id="alertBox" class="alert"></div>
+
+    <div class="form-group">
+      <label>Super Admin Email</label>
+      <input type="email" id="loginEmail" placeholder="admin@learnhub.com"
+             onkeydown="if(event.key==='Enter') login()">
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') login()">
+    </div>
+
+    <button class="btn" id="loginBtn" onclick="login()">Enter Portal</button>
+
+    <div style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: #64748b;">
+        Secure Global Administrative Interface
+    </div>
+  </div>
+
+  <script>
+    const API = "http://127.0.0.1:8000/api/v1";
+
+    function showError(msg) {
+      const el = document.getElementById("alertBox");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
+    async function login() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const pwd   = document.getElementById("loginPassword").value;
+      const btn   = document.getElementById("loginBtn");
+
+      console.log("Attempting login for:", email);
+
+      if (!email || !pwd) { showError("Required fields missing."); return; }
+      
+      btn.disabled = true;
+      btn.textContent = "Authenticating...";
+      document.getElementById("alertBox").style.display = "none";
+
+      try {
+        const res  = await fetch(`${API}/auth/login`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ email, password: pwd })
+        });
+        const data = await res.json();
+        console.log("Login response:", data);
+
+        if (!res.ok) {
+          showError(data.detail || "Access Denied.");
+          return;
+        }
+
+        if (data.role !== "superadmin") {
+            console.warn("User role is:", data.role);
+            showError("Unauthorized role. Super Admin only.");
+            return;
+        }
+
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("user", JSON.stringify({
+          id:    data.id,
+          name:  data.name,
+          email: data.email,
+          role:  data.role
+        }));
+
+        console.log("Success! Redirecting...");
+        window.location.href = "super-dashboard.html";
+
+      } catch (err) {
+        console.error("Login Error:", err);
+        showError("Backend connection failed. Check if server is running on port 8000.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Enter Portal";
+      }
+    }
+  </script>
+</body>
+</html>

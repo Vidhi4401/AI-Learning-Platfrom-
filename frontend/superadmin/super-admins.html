@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Admins</title>
+  <link rel="stylesheet" href="../admin/css/main.css">
+  <style>
+      .modal {
+        display: none; position: fixed; z-index: 1000; left: 0; top: 0; 
+        width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+      }
+      .modal-content {
+        background: white; margin: 5% auto; padding: 30px; 
+        border-radius: 15px; width: 450px;
+      }
+      input, select {
+          width: 100%; padding: 10px; border-radius: 8px; 
+          border: 1px solid #ccc; margin-bottom: 15px; display: block;
+      }
+  </style>
+</head>
+<body>
+  <div id="sidebar" class="sidebar"></div>
+  <div class="main-content">
+    <div id="navbar" class="navbar"></div>
+    <div class="page-content">
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <h1>Organization Admins</h1>
+        <button class="btn btn-primary" id="manageAdminBtn">Manage Admin</button>
+      </div>
+
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Admin Name</th>
+              <th>Email</th>
+              <th>Organization</th>
+              <th>Status</th>
+              <th id="actionHeader" style="display:none;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="adminsList"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Create Admin Modal -->
+  <div id="adminModal" class="modal">
+    <div class="modal-content">
+      <h2>Create Organization Admin</h2>
+      <div style="margin-top:20px;">
+        <label>Full Name</label>
+        <input type="text" id="adminName">
+        
+        <label>Email Address</label>
+        <input type="email" id="adminEmail">
+
+        <label>Password</label>
+        <input type="password" id="adminPassword">
+
+        <label>Select Organization</label>
+        <select id="orgSelect"></select>
+        
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="createAdmin()" id="saveBtn">Create Account</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/super-layout.js"></script>
+  <script>
+      const SUPER_API = "http://127.0.0.1:8000/api/v1/superadmin";
+
+
+      let manageAdminMode = false;
+      document.addEventListener("DOMContentLoaded", () => {
+          loadAdmins();
+          loadOrgsForSelect();
+          document.getElementById("manageAdminBtn").addEventListener("click", function() {
+            manageAdminMode = !manageAdminMode;
+            this.textContent = manageAdminMode ? "Done" : "Manage Admin";
+            document.getElementById("actionHeader").style.display = manageAdminMode ? '' : 'none';
+            loadAdmins();
+          });
+      });
+
+      async function loadAdmins() {
+          const res = await fetch(`${SUPER_API}/admins`, {
+              headers: { Authorization: "Bearer " + token }
+          });
+          const admins = await res.json();
+          const list = document.getElementById("adminsList");
+          list.innerHTML = admins.map(a => `
+            <tr>
+              <td style="font-weight:600;">${a.name}</td>
+              <td>${a.email}</td>
+              <td style="color:var(--accent); font-weight:600;">${a.org_name}</td>
+              <td><span class="status-badge status-verified">${a.status ? 'Active' : 'Inactive'}</span></td>
+              ${manageAdminMode ? `<td><button class='btn btn-danger' onclick='deleteAdmin(${a.id})'>Delete</button></td>` : ''}
+            </tr>
+          `).join("");
+      }
+
+      // Delete admin function
+      async function deleteAdmin(id) {
+        if (!confirm("Are you sure you want to delete this admin?")) return;
+        try {
+          const res = await fetch(`${SUPER_API}/admins/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: "Bearer " + token }
+          });
+          if (res.ok) {
+            loadAdmins();
+          } else {
+            alert("Failed to delete admin.");
+          }
+        } catch (e) {
+          alert("Error deleting admin.");
+        }
+      }
+
+      async function loadOrgsForSelect() {
+          const res = await fetch(`${SUPER_API}/organizations`, {
+              headers: { Authorization: "Bearer " + token }
+          });
+          const orgs = await res.json();
+          const select = document.getElementById("orgSelect");
+          select.innerHTML = orgs.map(o => `<option value="${o.id}">${o.name}</option>`).join("");
+      }
+
+      function openModal() { document.getElementById("adminModal").style.display = "block"; }
+      function closeModal() { document.getElementById("adminModal").style.display = "none"; }
+
+      async function createAdmin() {
+          const name = document.getElementById("adminName").value;
+          const email = document.getElementById("adminEmail").value;
+          const password = document.getElementById("adminPassword").value;
+          const org_id = document.getElementById("orgSelect").value;
+          const btn = document.getElementById("saveBtn");
+
+          if (!name || !email || !password || !org_id) { alert("All fields required"); return; }
+
+          btn.disabled = true;
+          try {
+              const res = await fetch(`${SUPER_API}/admins?org_id=${org_id}`, {
+                  method: "POST",
+                  headers: { 
+                      "Content-Type": "application/json",
+                      Authorization: "Bearer " + token 
+                  },
+                  body: JSON.stringify({ name, email, password })
+              });
+              if (res.ok) {
+                  closeModal();
+                  loadAdmins();
+                  document.getElementById("adminName").value = "";
+                  document.getElementById("adminEmail").value = "";
+                  document.getElementById("adminPassword").value = "";
+              } else {
+                  const data = await res.json();
+                  alert(data.detail || "Error creating admin");
+              }
+          } catch(e) {}
+          btn.disabled = false;
+      }
+  </script>
+</body>
+</html>

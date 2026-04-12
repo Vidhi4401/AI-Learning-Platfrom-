@@ -70,7 +70,7 @@
     <div class="table-wrap">
       <div class="filters-row">
         <input type="text" id="searchInput" placeholder="🔍  Name or email…" oninput="render()">
-        <select id="courseFilter" onchange="render()"><option value="all">All My Courses</option></select>
+        <select id="courseFilter" onchange="filterByCourse()"><option value="all">All My Courses</option></select>
         <select id="levelFilter" onchange="render()">
           <option value="all">All Levels</option>
           <option>Strong</option><option>Average</option><option>Weak</option>
@@ -111,9 +111,13 @@
 
   document.addEventListener("DOMContentLoaded", () => { load(); loadCourseFilter(); });
 
-  async function load() {
+  async function load(courseId = null) {
     try {
-      const res = await fetch(`${API}/teacher/students`, { headers: { Authorization: "Bearer " + token } });
+      let url = `${API}/teacher/students`;
+      if (courseId && courseId !== 'all') {
+        url += `?course_id=${courseId}`;
+      }
+      const res = await fetch(url, { headers: { Authorization: "Bearer " + token } });
       all = await res.json();
 
       if (!all.length) {
@@ -147,9 +151,13 @@
     } catch(e) {}
   }
 
+  async function filterByCourse() {
+    const courseId = document.getElementById("courseFilter").value;
+    await load(courseId);
+  }
+
   function render() {
     const q      = document.getElementById("searchInput").value.toLowerCase();
-    const course = document.getElementById("courseFilter").value;
     const level  = document.getElementById("levelFilter").value;
     const risk   = document.getElementById("riskFilter").value;
 

@@ -6,7 +6,7 @@ import models
 import os
 
 # ── Import all routers ──
-from routers import auth, organization, dashboard, courses, topics, videos, assignments, quizzes, profile, student, chatbot, admin_router, materials, meetings, notifications, video_summarizer
+from routers import auth, organization, dashboard, courses, topics, videos, assignments, quizzes, profile, student, chatbot, admin_router, materials, meetings, notifications, video_summarizer, superadmin_router
 
 app = FastAPI()
 
@@ -45,6 +45,7 @@ app.include_router(materials.router)
 app.include_router(meetings.router)
 app.include_router(notifications.router)
 app.include_router(video_summarizer.router)
+app.include_router(superadmin_router.router)
 
 if __name__ == "__main__":
     import uvicorn

@@ -347,7 +347,7 @@
         const res = await fetch(`${API}/teacher/organization`, { headers: { Authorization: "Bearer " + token } });
         if (!res.ok) return;
         const org = await res.json();
-        const name = org.platform_name || org.name || "—";
+        const name = org.org_name || org.platform_name || "—";
         document.getElementById("orgNameText").textContent  = name;
         document.getElementById("infoPlatform").textContent = name;
 
@@ -402,7 +402,7 @@
       const confirm = document.getElementById("confirmPwd").value.trim();
 
       if (!curr || !newPwd || !confirm) { inlineMsg("pwdMsg","error","All fields are required."); return; }
-      if (!window.utils.validatePassword(newPwd)) { inlineMsg("pwdMsg","error","Password must be at least 8 characters long."); return; }
+      if (!window.utils.validatePassword(newPwd)) { inlineMsg("pwdMsg","error","Password must be at least 4 characters long."); return; }
       if (newPwd !== confirm)            { inlineMsg("pwdMsg","error","Passwords do not match."); return; }
 
       const btn = document.getElementById("savePwdBtn");

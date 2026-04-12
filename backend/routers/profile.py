@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 from database import SessionLocal
 import models
+from auth import hash_password
 from dependencies import get_current_user
 
 router = APIRouter(prefix="/api/v1/teacher", tags=["Profile"])
@@ -41,9 +42,7 @@ def update_teacher_profile(
     if email: user.email = email
 
     if password:
-        from passlib.context import CryptContext
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        user.password_hash = pwd_context.hash(password)
+        user.password_hash = hash_password(password)
 
     db.commit()
     db.refresh(user)

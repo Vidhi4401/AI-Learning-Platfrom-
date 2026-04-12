@@ -209,7 +209,7 @@ async function generateFromPdf() {
   document.getElementById("processingStatus").style.display = "block";
 
   try {
-    const res = await fetch(`${API}/teacher/courses/generate-from-pdf`, {
+    const res = await fetch(`${API}/teacher/courses/${courseId}/process-pdf-preview`, {
       method: "POST",
       headers: { Authorization: "Bearer " + token },
       body: formData
@@ -240,11 +240,11 @@ function renderPdfPreview(data) {
     card.className = "preview-topic-card";
     card.innerHTML = `
       <div class="preview-topic-header">
-        <strong>Topic ${i+1}:</strong> ${t.title}
+        <strong>Topic ${i+1}:</strong> ${t.topic_name}
       </div>
       <div class="preview-topic-content">
         <div class="preview-item"><span>📝</span> 1 Assignment Generated</div>
-        <div class="preview-item"><span>🧠</span> 1 Quiz (${t.quiz.num_questions} questions) Generated</div>
+        <div class="preview-item"><span>🧠</span> 1 Quiz (${t.quiz.questions.length} questions) Generated</div>
       </div>
     `;
     list.appendChild(card);
@@ -254,13 +254,14 @@ function renderPdfPreview(data) {
 async function saveGeneratedContent() {
   if (!generatedData) return;
   const token = localStorage.getItem("token");
+  const courseId = document.getElementById("pdfCourseSelect").value;
   const btn = document.getElementById("btnSavePdf");
   
   btn.disabled = true;
   btn.textContent = "Saving...";
 
   try {
-    const res = await fetch(`${API}/teacher/courses/save-generated`, {
+    const res = await fetch(`${API}/teacher/courses/${courseId}/save-pdf-content`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -295,6 +296,154 @@ function resetPdfStep() {
   document.getElementById("pdfSelected").style.display = "none";
   document.getElementById("coursePdf").value = "";
   generatedData = null;
+}
+
+/* =========================
+   TOPIC METHOD TOGGLE
+=========================*/
+function toggleTopicInput(method) {
+  document.getElementById('aiTopicFields').style.display = method === 'ai' ? 'block' : 'none';
+  document.getElementById('manualTopicFields').style.display = method === 'manual' ? 'block' : 'none';
+  document.getElementById('pdfPreviewArea').style.display = 'none';
+  document.getElementById('processingStatus').style.display = 'none';
+  
+  if (method === 'manual') {
+    loadTopicsForManual();
+  }
+}
+
+/* =========================
+   MANUAL TOPIC ADDITION
+=========================*/
+let manualTopics = [];
+
+async function addManualTopic() {
+  const token = localStorage.getItem("token");
+  const courseId = document.getElementById("pdfCourseSelect").value;
+  const title = document.getElementById("manualTopicTitle").value.trim();
+  const description = document.getElementById("manualTopicDesc").value.trim();
+
+  if (!courseId) return showToast("Please select a course", "error");
+  if (!title) return showToast("Please enter a topic title", "error");
+
+  const btn = document.getElementById("btnAddManualTopic");
+  btn.disabled = true;
+  btn.textContent = "Adding...";
+
+  try {
+    const res = await fetch(`${API}/teacher/courses/${courseId}/topics`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token 
+      },
+      body: JSON.stringify({
+        title: title
+      })
+    });
+
+    if (!res.ok) throw new Error("Failed to add topic");
+
+    const data = await res.json();
+    manualTopics.push({ id: data.topic_id, title: title, description: description });
+    
+    // Clear form
+    document.getElementById("manualTopicTitle").value = "";
+    document.getElementById("manualTopicDesc").value = "";
+    
+    // Update list
+    renderManualTopicsList();
+    
+    showToast("Topic added successfully!");
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "+ Add Topic";
+  }
+}
+
+function renderManualTopicsList() {
+  const container = document.getElementById("manualTopicsList");
+  
+  if (manualTopics.length === 0) {
+    container.className = "empty-list";
+    container.textContent = "No topics added yet";
+    return;
+  }
+
+  container.className = "";
+  container.innerHTML = manualTopics.map(topic => `
+    <div class="item-card">
+      <div class="item-header">
+        <strong>${topic.title}</strong>
+        <button class="btn-danger btn-small" onclick="removeManualTopic(${topic.id})">×</button>
+      </div>
+      ${topic.description ? `<div class="item-desc">${topic.description}</div>` : ''}
+    </div>
+  `).join("");
+}
+
+async function removeManualTopic(topicId) {
+  const token = localStorage.getItem("token");
+  
+  // Check if this topic exists in the database (has been saved)
+  const existingTopic = manualTopics.find(t => t.id === topicId);
+  if (!existingTopic) return;
+  
+  openConfirm("Remove this topic?", async () => {
+    try {
+      const res = await fetch(`${API}/teacher/topics/${topicId}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      });
+      
+      if (res.ok) {
+        manualTopics = manualTopics.filter(t => t.id !== topicId);
+        renderManualTopicsList();
+        showToast("Topic removed");
+      } else {
+        showToast("Failed to remove topic", "error");
+      }
+    } catch (err) {
+      showToast("Error removing topic", "error");
+    }
+  });
+}
+
+function onCourseChange() {
+  const method = document.querySelector('input[name="topicMethod"]:checked').value;
+  if (method === 'manual') {
+    loadTopicsForManual();
+  }
+}
+
+/* =========================
+   LOAD TOPICS FOR MANUAL
+=========================*/
+async function loadTopicsForManual() {
+  const token = localStorage.getItem("token");
+  const courseId = document.getElementById("pdfCourseSelect").value;
+  
+  if (!courseId) {
+    manualTopics = [];
+    renderManualTopicsList();
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/teacher/courses/${courseId}/topics`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if (res.ok) {
+      const topics = await res.json();
+      manualTopics = topics.map(t => ({ id: t.id, title: t.title, description: '' })); // No description in API
+      renderManualTopicsList();
+    }
+  } catch (err) {
+    console.error("Failed to load topics:", err);
+  }
 }
 
 /* =========================
